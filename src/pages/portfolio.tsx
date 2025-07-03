@@ -7,7 +7,7 @@ import Layout from "@/components/layout/Layout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 
 export default function Portfolio() {
-  const [match, params] = useRoute("/portfolio/:id");
+  const [match, params] = useRoute("/admin/portfolio/:id");
   const user = exampleData.find((u) => String(u.id) === params?.id);
 
   // Mock posts (replace with real data if available)

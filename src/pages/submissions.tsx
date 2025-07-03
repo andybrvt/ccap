@@ -96,7 +96,7 @@ export default function Submissions() {
   };
 
   const handleViewDetails = (item: Submission) => {
-    setLocation(`/portfolio/${item.id}`);
+    setLocation(`/admin/portfolio/${item.id}`);
   };
 
   const handleFilterChange = (value: string) => {

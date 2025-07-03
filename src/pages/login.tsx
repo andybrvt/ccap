@@ -26,7 +26,7 @@ export default function LoginPage() {
   // Redirect to home if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      setLocation("/");
+      setLocation("/admin");
     }
   }, [isAuthenticated, setLocation]);
 
@@ -48,7 +48,7 @@ export default function LoginPage() {
       })
       
       setTimeout(() => {
-        setLocation("/");
+        setLocation("/admin");
       }, 100);
     } else {
       toast.error('Login Failed', {

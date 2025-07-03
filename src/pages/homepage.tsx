@@ -78,7 +78,7 @@ export default function Homepage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Submissions Card */}
             <div className="lg:col-span-1">
-              <Link href="/submissions">
+              <Link href="/admin/submissions">
                 <div className="group min-h-36 relative bg-gradient-to-r from-black to-gray-800 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full">
                   <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10 h-full flex items-center">
@@ -106,7 +106,7 @@ export default function Homepage() {
 
             {/* Portfolio Lookup Card */}
             <div className="lg:col-span-1">
-              <Link href="/portfolio">
+              <Link href="/admin/portfolio-lookup">
                 <div className="group min-h-36 relative bg-gradient-to-r from-gray-800 to-black rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full">
                   <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10 h-full flex items-center">
@@ -148,7 +148,7 @@ export default function Homepage() {
               <h2 className="text-2xl font-bold text-black">Announcements</h2>
             </div>
             <Link
-              href="/announcements"
+              href="/admin/announcements"
               className="text-sm text-gray-600 hover:text-black transition-colors"
             >
               View all →

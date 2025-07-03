@@ -20,27 +20,27 @@ function Router() {
     <Switch>
 
       {/* Protected routes - automatically handle authentication */}
-      <Route path="/">
+      <Route path="/admin">
         <ProtectedRoute>
           <Homepage />
         </ProtectedRoute>
       </Route>
-      <Route path="/announcements">
+      <Route path="/admin/announcements">
         <ProtectedRoute>
           <Announcements />
         </ProtectedRoute>
       </Route>
-      <Route path="/submissions">
+      <Route path="/admin/submissions">
         <ProtectedRoute>
           <Submissions />
         </ProtectedRoute>
       </Route>
-      <Route path="/portfolio/:id">
+      <Route path="/admin/portfolio/:id">
         <ProtectedRoute>
           <Portfolio />
         </ProtectedRoute>
       </Route>
-      <Route path="/portfolio-lookup">
+      <Route path="/admin/portfolio-lookup">
         <ProtectedRoute>
           <PortfolioLookup />
         </ProtectedRoute>

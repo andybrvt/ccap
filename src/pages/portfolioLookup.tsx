@@ -474,7 +474,7 @@ export default function PortfolioLookup() {
                                 </div>
                                 <Button
                                     className="mt-4 md:mt-0"
-                                    onClick={() => setLocation(`/portfolio/${user.id}`)}
+                                    onClick={() => setLocation(`/admin/portfolio/${user.id}`)}
                                     variant="default"
                                 >
                                     View Portfolio

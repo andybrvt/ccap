@@ -10,17 +10,17 @@ import { useAuth } from "@/hooks/useAuth";
 const navItems = [
   {
     label: "Home",
-    href: "/",
+    href: "/admin",
     icon: Home,
   },
   {
     label: "Submissions",
-    href: "/submissions",
+    href: "/admin/submissions",
     icon: FileText,
   },
   {
     label: "Portfolio Lookup",
-    href: "/portfolio-lookup",
+    href: "/admin/portfolio-lookup",
     icon: FileText,
   },
   // Add more items as needed
@@ -30,7 +30,7 @@ export function Navigation() {
   const [location, setLocation] = useLocation();
   const [isMobile, setIsMobile] = useState(false);
   const { user, logout } = useAuth();
-  
+
   // Safely access user properties with fallbacks
   const userName = user?.full_name || user?.email;
   const userEmail = user?.email;
@@ -40,15 +40,15 @@ export function Navigation() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const isActive = (path: string) => {
-    if (path === "/" && location === "/") return true;
-    if (path !== "/" && location.startsWith(path)) return true;
+    if (path === "/admin" && location === "/admin") return true;
+    if (path !== "/admin" && location.startsWith(path)) return true;
     return false;
   };
 
@@ -57,8 +57,8 @@ export function Navigation() {
       <div className="px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div 
-              onClick={() => setLocation("/")}
+            <div
+              onClick={() => setLocation("/admin")}
               className="cursor-pointer flex items-center space-x-3"
             >
               <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
@@ -69,26 +69,25 @@ export function Navigation() {
               </h1>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {/* Navigation Links - Desktop only */}
             <div className="hidden lg:flex items-center gap-2">
               {navItems.map((item) => (
                 <Link href={item.href} key={item.href}>
-                  <Button 
-                    variant="ghost" 
-                    className={`px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ${
-                      isActive(item.href) 
-                        ? "text-black bg-gray-100" 
+                  <Button
+                    variant="ghost"
+                    className={`px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ${isActive(item.href)
+                        ? "text-black bg-gray-100"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
+                      }`}
                   >
                     {item.label}
                   </Button>
                 </Link>
               ))}
             </div>
-          
+
             {/* User Profile - Responsive */}
             <div className="flex items-center gap-2 lg:gap-3">
               {/* Mobile/Tablet - Avatar only with side sheet */}
@@ -160,21 +159,21 @@ export function Navigation() {
                             {userInitial}
                           </span>
                         </div>
-                        
+
                         {/* User info */}
                         <div className="text-left">
                           <div className="font-medium text-gray-900 text-sm leading-tight">{userName}</div>
                           <div className="text-gray-500 text-xs leading-tight">{userEmail}</div>
                         </div>
-                        
+
                         {/* Dropdown arrow */}
                         <ChevronDown className="w-4 h-4 text-gray-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
-                  
-                  <DropdownMenuContent 
-                    align="end" 
+
+                  <DropdownMenuContent
+                    align="end"
                     className="w-56 mt-2 bg-white border border-gray-200 shadow-lg rounded-lg"
                   >
                     <div className="px-4 py-3 border-b border-gray-100">
@@ -190,41 +189,22 @@ export function Navigation() {
                         </div>
                       </div>
                     </div>
-                    
-                    <DropdownMenuItem asChild>
-                      <Link href="/" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
-                        <Home className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">Business Registration</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuItem asChild>
-                      <Link href="/submissions" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
-                        <FileText className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">Submissions</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuItem asChild>
-                      <Link href="/business-lookup" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
-                        <Search className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">Business Lookup</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
-                      <User className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">Business Profile</span>
-                    </DropdownMenuItem>
-                    
+                    {/* Dynamically render navItems as dropdown links */}
+                    {navItems.map((item) => (
+                      <DropdownMenuItem asChild key={item.href}>
+                        <Link href={item.href} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
+                          {item.icon && <item.icon className="w-4 h-4 text-gray-500" />}
+                          <span className="text-sm text-gray-700">{item.label}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                    {/* Static profile/settings/sign out */}
                     <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
                       <Settings className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-700">Account Settings</span>
                     </DropdownMenuItem>
-                    
                     <DropdownMenuSeparator className="bg-gray-100" />
-                    
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-red-50 text-red-600"
                       onClick={() => {
                         logout();
