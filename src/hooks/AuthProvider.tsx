@@ -6,7 +6,7 @@ import {
 import { useLocation, Redirect } from "wouter";
 import { authApi } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
-import { AuthContext, type User } from "./useAuth";
+import { AuthContext, type User, type UserRole } from "./useAuth";
 import type { ReactNode } from "react";
 
 
@@ -98,23 +98,40 @@ export function AuthProvider({
   //   }
   // };
 
-  // --- Dummy logic ---
+  // --- Dummy logic with role-based authentication ---
   const login = async (email: string, password: string): Promise<boolean> => {
     if (!email || !password) {
       return false;
     }
     setIsLoading(true);
     try {
-      // Dummy credentials
-      const dummyEmail = "nishant@test.com";
-      const dummyPassword = "123456";
-      if (email === dummyEmail && password === dummyPassword) {
-        const dummyUser: User = {
+      // Dummy credentials for different user types
+      const adminEmail = "admin@test.com";
+      const adminPassword = "admin123";
+      const studentEmail = "student@test.com";
+      const studentPassword = "student123";
+
+      let dummyUser: User | null = null;
+
+      if (email === adminEmail && password === adminPassword) {
+        dummyUser = {
           id: 1,
-          email: dummyEmail,
-          full_name: "Test Nishant",
-          username: "test_nishant",
+          email: adminEmail,
+          full_name: "Admin User",
+          username: "admin_user",
+          role: "admin",
         };
+      } else if (email === studentEmail && password === studentPassword) {
+        dummyUser = {
+          id: 2,
+          email: studentEmail,
+          full_name: "Student User",
+          username: "student_user",
+          role: "student",
+        };
+      }
+
+      if (dummyUser) {
         setUser(dummyUser);
         localStorage.setItem("auth_user", JSON.stringify(dummyUser));
         localStorage.setItem("authToken", "dummy-token");
@@ -134,8 +151,8 @@ export function AuthProvider({
     setLocation("/login");
   };
 
-  // Protected Route component that handles authentication automatically
-  const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  // Protected Route component that handles authentication and role-based access
+  const ProtectedRoute = ({ children, requiredRole }: { children: ReactNode; requiredRole?: UserRole }) => {
     if (isLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -143,9 +160,21 @@ export function AuthProvider({
         </div>
       );
     }
+    
     if (!user) {
       return <Redirect to="/login" />;
     }
+
+    // Check role-based access if requiredRole is specified
+    if (requiredRole && user.role !== requiredRole) {
+      // Redirect to appropriate dashboard based on user role
+      if (user.role === "admin") {
+        return <Redirect to="/admin" />;
+      } else {
+        return <Redirect to="/student" />;
+      }
+    }
+
     return <>{children}</>;
   };
 

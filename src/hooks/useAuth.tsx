@@ -2,11 +2,14 @@ import React, { useContext, createContext } from "react";
 import type { ReactNode } from "react";
 
 // Types
+export type UserRole = "admin" | "student";
+
 export interface User {
   id: number;
   email: string;
   full_name: string;
   username: string;
+  role: UserRole;
 }
 
 export interface AuthContextType {
@@ -15,7 +18,7 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  ProtectedRoute: (props: { children: ReactNode }) => React.JSX.Element;
+  ProtectedRoute: (props: { children: ReactNode; requiredRole?: UserRole }) => React.JSX.Element;
 }
 
 // Context

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { MultiSelect } from '@/components/ui/multi-select';
 import DataTable, { Column, FilterOption } from '@/components/ui/data-table';
-import Layout from '@/components/layout/Layout';
+import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
 
 // Custom hook to calculate dynamic itemsPerPage based on available height

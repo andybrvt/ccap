@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mail, GraduationCap, Search, User2, Award, Sparkles } from "lucide-react";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/components/layout/AdminLayout";
 
 // Example data type and data (copy from portfolio.tsx)
 interface Submission extends Record<string, unknown> {

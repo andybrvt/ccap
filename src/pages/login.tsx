@@ -21,14 +21,15 @@ type LoginData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
-  const { isAuthenticated, login, isLoading } = useAuth();
+  const { user, login, isLoading } = useAuth();
 
-  // Redirect to home if already authenticated
+  // Redirect to appropriate dashboard if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      setLocation("/admin");
+    if (user) {
+      const redirectPath = user.role === "admin" ? "/admin" : "/student";
+      setLocation(redirectPath);
     }
-  }, [isAuthenticated, setLocation]);
+  }, [user, setLocation]);
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -42,14 +43,21 @@ export default function LoginPage() {
     const success = await login(data.email, data.password);
     
     if (success) {
-      toast.success('Login Successful', {
-        description: 'Welcome back! Redirecting to dashboard...',
-        duration: 5000,
-      })
-      
-      setTimeout(() => {
-        setLocation("/admin");
-      }, 100);
+      // Get the user role to determine redirect path
+      const storedUser = localStorage.getItem("auth_user");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        const redirectPath = userData.role === "admin" ? "/admin" : "/student";
+        
+        toast.success('Login Successful', {
+          description: `Welcome back! Redirecting to ${userData.role} dashboard...`,
+          duration: 5000,
+        });
+        
+        setTimeout(() => {
+          setLocation(redirectPath);
+        }, 100);
+      }
     } else {
       toast.error('Login Failed', {
         description: "Please check your credentials and try again",
@@ -158,6 +166,15 @@ export default function LoginPage() {
                   Privacy Policy
                 </a>
               </p>
+            </div>
+
+            {/* Test credentials info - remove in production */}
+            <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+              <p className="text-xs text-gray-400 mb-2 font-medium">Test Credentials:</p>
+              <div className="space-y-1 text-xs text-gray-500">
+                <p><span className="text-blue-400">Admin:</span> admin@test.com / admin123</p>
+                <p><span className="text-green-400">Student:</span> student@test.com / student123</p>
+              </div>
             </div>
           </CardContent>
         </Card>

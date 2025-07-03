@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigation } from "./Navigation";
+import { Navigation } from "./StudentNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;

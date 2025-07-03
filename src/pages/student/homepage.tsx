@@ -23,7 +23,7 @@ import {
   Mail,
   MessageCircle,
 } from "lucide-react";
-import Layout from "@/components/layout/AdminLayout";
+import Layout from "@/components/layout/StudentLayout";
 import { useAuth } from "@/hooks/useAuth";   
 
 // Dummy announcements data
@@ -137,79 +137,25 @@ export default function Homepage() {
       <section className="px-6 py-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6">
-            <h1 className="text-4xl font-bold text-black mb-3">
+          <h1 className="text-4xl font-bold text-black mb-3">
+              CCAP Student Dashboard
+            </h1>
+            <h1 className="text-2xl font-medium text-gray-600 mb-3">
               Welcome back, {user?.full_name}
             </h1>
-            <p className="text-lg text-gray-600">
+            {/* <p className="text-lg text-gray-600">
               CCAP Application Management System
-            </p>
+            </p> */}
           </div>
 
-          {/* Two Column Layout - Start Application + Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Submissions Card */}
-            <div className="lg:col-span-1">
-              <Link href="/admin/submissions">
-                <div className="group min-h-36 relative bg-gradient-to-r from-black to-gray-800 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full">
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative z-10 h-full flex items-center">
-                    <div className="flex items-center w-full">
-                      <div className="flex-1 items-start gap-4 flex flex-col"> 
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                        <FileText className="h-5 w-5 text-gray-600 " />
-                      </div>
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-white mb-1">
-                          Submissions
-                        </h2>
-                        <p className="text-gray-300">
-                          View and manage all your applications
-                        </p>
-                      </div>
-                      </div>
-                    
-                      <ChevronRight className="h-6 w-6 text-white group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
-
-            {/* Portfolio Lookup Card */}
-            <div className="lg:col-span-1">
-              <Link href="/admin/portfolio-lookup">
-                <div className="group min-h-36 relative bg-gradient-to-r from-gray-800 to-black rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full">
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative z-10 h-full flex items-center">
-                    <div className="flex items-center w-full">
-                      <div className="flex-1 items-start gap-4 flex flex-col"> 
-                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                          <Search className="h-6 w-6 text-black" />
-                        </div>
-                        <div className="flex-1">
-                          <h2 className="text-2xl font-bold text-white mb-1">
-                            Portfolio Lookup
-                          </h2>
-                          <p className="text-gray-300">
-                            View students portfolio
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <ChevronRight className="h-6 w-6 text-white group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </div>
+    
         </div>
       </section>
 
   
 
       {/* Announcements */}
-      <section className="px-6 py-8 bg-gray-50">
+      <section className="px-6 py-0 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -219,7 +165,7 @@ export default function Homepage() {
               <h2 className="text-2xl font-bold text-black">Announcements</h2>
             </div>
             <Link
-              href="/admin/announcements"
+              href="/student/announcements"
               className="text-sm text-gray-600 hover:text-black transition-colors"
             >
               View all →

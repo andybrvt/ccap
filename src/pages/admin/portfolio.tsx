@@ -3,7 +3,7 @@ import { useRoute } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X } from "lucide-react";
-import Layout from "@/components/layout/Layout";
+import Layout from "@/components/layout/AdminLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 
 export default function Portfolio() {
@@ -157,7 +157,7 @@ export default function Portfolio() {
                       onClick={() => setSelectedPost(post)}
                       style={{ width: "100%" }}
                     >
-                      <img src={post.url} alt="Post" className="object-cover w-full h-full" />
+                      <img src={post.url} alt="Post" className="object-cover w-full h-full hover:scale-115 transition-transform duration-200 cursor-pointer" />
                     </button>
                   ))}
                 </div>

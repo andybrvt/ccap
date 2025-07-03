@@ -3,11 +3,6 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Navigation } from "@/components/layout/AdminNavigation";
 import {
   Megaphone,
   Search,
@@ -31,7 +26,7 @@ import {
   Mail,
   MessageCircle,
 } from "lucide-react";
-import Layout from "@/components/layout/AdminLayout";
+import Layout from "@/components/layout/StudentLayout";
 
 // Extended dummy announcements data
 const allAnnouncements = [
@@ -202,14 +197,6 @@ function renderAnnouncementIcon(icon: string): React.ReactNode {
 export default function Announcements() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPriority, setSelectedPriority] = useState('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newAnnouncement, setNewAnnouncement] = useState({
-    title: '',
-    description: '',
-    priority: 'medium',
-    category: 'general',
-    icon: '📢'
-  });
 
   // Filter announcements based on search term and priority
   const filteredAnnouncements = allAnnouncements.filter(announcement => {
@@ -232,36 +219,6 @@ export default function Announcements() {
     }
   };
 
-  const handleCreateAnnouncement = () => {
-    const announcementData = {
-      id: Date.now(), // Simple ID generation
-      ...newAnnouncement,
-      date: 'Just now'
-    };
-    
-    console.log('New Announcement Data:', JSON.stringify(announcementData, null, 2));
-    
-    // Reset form
-    setNewAnnouncement({
-      title: '',
-      description: '',
-      priority: 'medium',
-      category: 'general',
-      icon: '📢'
-    });
-    
-    setIsDialogOpen(false);
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setNewAnnouncement(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const isFormValid = newAnnouncement.title.trim() && newAnnouncement.description.trim();
-
   return (
     <Layout>
       <div className="flex flex-col max-h-[calc(100vh-6rem)]">
@@ -275,108 +232,6 @@ export default function Announcements() {
               </div>
               <h1 className="text-3xl font-bold text-black">Announcements</h1>
             </div>
-            
-            {/* Create Announcement Button */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Announcement
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Announcement</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="Enter announcement title"
-                      value={newAnnouncement.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description *</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter announcement description"
-                      value={newAnnouncement.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select value={newAnnouncement.priority} onValueChange={(value) => handleInputChange('priority', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select value={newAnnouncement.category} onValueChange={(value) => handleInputChange('category', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="feature">Feature</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="policy">Policy</SelectItem>
-                          <SelectItem value="hours">Office Hours</SelectItem>
-                          <SelectItem value="team">Team</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                          <SelectItem value="scholarship">Scholarship</SelectItem>
-                          <SelectItem value="safety">Safety</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="icon">Icon</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {ICON_OPTIONS.map(opt => (
-                        <button
-                          type="button"
-                          key={opt.value}
-                          className={`p-2 rounded border ${newAnnouncement.icon === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} hover:border-blue-400`}
-                          onClick={() => handleInputChange('icon', opt.value)}
-                          aria-label={opt.label}
-                        >
-                          {opt.icon}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleCreateAnnouncement}
-                    disabled={!isFormValid}
-                  >
-                    Create Announcement
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
 
           {/* Search and Filter */}
