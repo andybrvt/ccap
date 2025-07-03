@@ -14,8 +14,180 @@ import {
 import { MultiSelect } from '@/components/ui/multi-select';
 import DataTable, { Column, FilterOption } from '@/components/ui/data-table';
 import Layout from '@/components/layout/Layout';
+import { useLocation } from "wouter";
 
-// Column definitions
+// Custom hook to calculate dynamic itemsPerPage based on available height
+function useDynamicItemsPerPage() {
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      if (!containerRef.current) return;
+
+      // Get the container element
+      const container = containerRef.current;
+
+      // Get the table element within the container
+      const table = container.querySelector('table');
+      if (!table) return;
+
+      // Calculate available height for the table
+      const containerRect = container.getBoundingClientRect();
+      const containerTop = containerRect.top;
+      const viewportHeight = window.innerHeight;
+
+      // Reserve space for other elements (filters, pagination, margins)
+      const reservedSpace = 400; // Adjust this value based on your layout
+      const availableHeight = viewportHeight - containerTop - reservedSpace;
+
+      // Get the height of a single table row (including header)
+      const tableHeader = table.querySelector('thead');
+      const tableBody = table.querySelector('tbody');
+
+      if (!tableHeader || !tableBody) return;
+
+      const headerHeight = tableHeader.getBoundingClientRect().height;
+      const firstRow = tableBody.querySelector('tr');
+      const rowHeight = firstRow ? firstRow.getBoundingClientRect().height : 80; // Fallback height
+
+      // Calculate how many items can fit
+      const tableContentHeight = availableHeight - headerHeight;
+      const calculatedItemsPerPage = Math.max(1, Math.floor(tableContentHeight / rowHeight));
+
+      // Set a reasonable range (between 3 and 20 items)
+      const clampedItemsPerPage = Math.min(20, Math.max(3, calculatedItemsPerPage));
+
+      setItemsPerPage(clampedItemsPerPage);
+    };
+
+    // Calculate on mount and window resize
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+
+    // Recalculate after a short delay to ensure DOM is fully rendered
+    const timeoutId = setTimeout(calculateItemsPerPage, 100);
+
+    return () => {
+      window.removeEventListener('resize', calculateItemsPerPage);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return { itemsPerPage, containerRef };
+}
+
+export default function Submissions() {
+  // State for search
+  const [searchKey, setSearchKey] = useState("");
+
+  // State for filters
+  const [selectedGraduationYear, setSelectedGraduationYear] = useState<string | null>(null);
+  const [selectedStatesOfResidence, setSelectedStatesOfResidence] = useState<string[]>([]);
+  const [selectedStatesOfRelocation, setSelectedStatesOfRelocation] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Dynamic items per page calculation
+  const { itemsPerPage, containerRef } = useDynamicItemsPerPage();
+  const [, setLocation] = useLocation();
+
+  const handleRowClick = (item: Submission) => {
+    console.log('Clicked on:', item);
+  };
+
+  const handleViewDetails = (item: Submission) => {
+    setLocation(`/portfolio/${item.id}`);
+  };
+
+  const handleFilterChange = (value: string) => {
+    setStatusFilter(value);
+    console.log('Filter changed to:', value);
+  };
+
+  // Get unique values for dropdowns
+  const uniqueGraduationYears = useMemo(() => {
+    return Array.from(
+      new Set(
+        exampleData
+          .map((item) => item.graduationYear)
+          .filter((year) => year !== undefined && year !== "")
+      )
+    ).map((year) => ({ value: year, label: year }));
+  }, []);
+
+  const uniqueStatesOfResidence = useMemo(() => {
+    return Array.from(
+      new Set(exampleData.map((item) => item.state))
+    ).map((state) => ({ value: state, label: state }));
+  }, []);
+
+  const uniqueStatesOfRelocation = useMemo(() => {
+    return Array.from(
+      new Set(exampleData.flatMap((item) => item.relocationStates))
+    ).map((state) => ({ value: state, label: state }));
+  }, []);
+
+  // Filter data based on search and filters
+  const filteredData = useMemo(() => {
+    return exampleData.filter((item) => {
+      // Search filtering
+      const matchesSearch = !searchKey ||
+        `${item.firstName} ${item.lastName}`.toLowerCase().includes(searchKey.toLowerCase()) ||
+        item.email.toLowerCase().includes(searchKey.toLowerCase()) ||
+        item.highSchool.toLowerCase().includes(searchKey.toLowerCase());
+
+      // Graduation year filtering
+      const matchesGraduationYear = !selectedGraduationYear ||
+        item.graduationYear === selectedGraduationYear;
+
+      // State of residence filtering
+      const matchesStateOfResidence = selectedStatesOfResidence.length === 0 ||
+        selectedStatesOfResidence.includes(item.state);
+
+      // State of relocation filtering
+      const matchesStateOfRelocation = selectedStatesOfRelocation.length === 0 ||
+        item.relocationStates.some((state) => selectedStatesOfRelocation.includes(state));
+
+      // Status filtering
+      let matchesStatus = true;
+      if (statusFilter !== "all") {
+        switch (statusFilter) {
+          case 'has_resume':
+            matchesStatus = item.hasResume === "Yes";
+            break;
+          case 'currently_working':
+            matchesStatus = item.currentJob === "Yes";
+            break;
+          case 'food_handlers':
+            matchesStatus = item.foodHandlersCard === "Yes";
+            break;
+          case 'servsafe':
+            matchesStatus = item.servsafeCredentials === "Yes";
+            break;
+          case 'will_relocate':
+            matchesStatus = item.willRelocate === "Yes";
+            break;
+          case 'ready_to_work':
+            matchesStatus = item.readyToWork === "Yes";
+            break;
+        }
+      }
+
+      return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
+        matchesStateOfRelocation && matchesStatus;
+    });
+  }, [searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, statusFilter]);
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setSearchKey("");
+    setSelectedGraduationYear(null);
+    setSelectedStatesOfResidence([]);
+    setSelectedStatesOfRelocation([]);
+    setStatusFilter("all");
+  };
+
+  // Column definitions
 const columns: Column<Submission>[] = [
   {
     key: 'name',
@@ -208,7 +380,7 @@ const columns: Column<Submission>[] = [
     align: 'right',
     render: (item) => (
       <div className="flex items-center justify-end space-x-2">
-        <Button size="sm" className="bg-black text-white hover:bg-gray-800">
+        <Button size="sm" className="bg-black text-white hover:bg-gray-800" onClick={() => handleViewDetails(item)}>
           View Details
         </Button>
       </div>
@@ -216,205 +388,6 @@ const columns: Column<Submission>[] = [
   },
 ];
 
-// Filter options
-const filterOptions: FilterOption[] = [
-  {
-    value: 'has_resume',
-    label: 'Has Resume',
-    icon: <FileCheck className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
-    value: 'currently_working',
-    label: 'Currently Working',
-    icon: <Briefcase className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
-    value: 'food_handlers',
-    label: 'Food Handlers Card',
-    icon: <Utensils className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
-    value: 'servsafe',
-    label: 'ServSafe Certified',
-    icon: <Shield className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
-    value: 'will_relocate',
-    label: 'Willing to Relocate',
-    icon: <MapPin className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
-    value: 'ready_to_work',
-    label: 'Ready to Work',
-    icon: <Clock className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-];
-
-// Custom hook to calculate dynamic itemsPerPage based on available height
-function useDynamicItemsPerPage() {
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const calculateItemsPerPage = () => {
-      if (!containerRef.current) return;
-
-      // Get the container element
-      const container = containerRef.current;
-
-      // Get the table element within the container
-      const table = container.querySelector('table');
-      if (!table) return;
-
-      // Calculate available height for the table
-      const containerRect = container.getBoundingClientRect();
-      const containerTop = containerRect.top;
-      const viewportHeight = window.innerHeight;
-
-      // Reserve space for other elements (filters, pagination, margins)
-      const reservedSpace = 400; // Adjust this value based on your layout
-      const availableHeight = viewportHeight - containerTop - reservedSpace;
-
-      // Get the height of a single table row (including header)
-      const tableHeader = table.querySelector('thead');
-      const tableBody = table.querySelector('tbody');
-
-      if (!tableHeader || !tableBody) return;
-
-      const headerHeight = tableHeader.getBoundingClientRect().height;
-      const firstRow = tableBody.querySelector('tr');
-      const rowHeight = firstRow ? firstRow.getBoundingClientRect().height : 80; // Fallback height
-
-      // Calculate how many items can fit
-      const tableContentHeight = availableHeight - headerHeight;
-      const calculatedItemsPerPage = Math.max(1, Math.floor(tableContentHeight / rowHeight));
-
-      // Set a reasonable range (between 3 and 20 items)
-      const clampedItemsPerPage = Math.min(20, Math.max(3, calculatedItemsPerPage));
-
-      setItemsPerPage(clampedItemsPerPage);
-    };
-
-    // Calculate on mount and window resize
-    calculateItemsPerPage();
-    window.addEventListener('resize', calculateItemsPerPage);
-
-    // Recalculate after a short delay to ensure DOM is fully rendered
-    const timeoutId = setTimeout(calculateItemsPerPage, 100);
-
-    return () => {
-      window.removeEventListener('resize', calculateItemsPerPage);
-      clearTimeout(timeoutId);
-    };
-  }, []);
-
-  return { itemsPerPage, containerRef };
-}
-
-export default function Submissions() {
-  // State for search
-  const [searchKey, setSearchKey] = useState("");
-
-  // State for filters
-  const [selectedGraduationYear, setSelectedGraduationYear] = useState<string | null>(null);
-  const [selectedStatesOfResidence, setSelectedStatesOfResidence] = useState<string[]>([]);
-  const [selectedStatesOfRelocation, setSelectedStatesOfRelocation] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-
-  // Dynamic items per page calculation
-  const { itemsPerPage, containerRef } = useDynamicItemsPerPage();
-
-  const handleRowClick = (item: Submission) => {
-    console.log('Clicked on:', item);
-  };
-
-  const handleFilterChange = (value: string) => {
-    setStatusFilter(value);
-    console.log('Filter changed to:', value);
-  };
-
-  // Get unique values for dropdowns
-  const uniqueGraduationYears = useMemo(() => {
-    return Array.from(
-      new Set(
-        exampleData
-          .map((item) => item.graduationYear)
-          .filter((year) => year !== undefined && year !== "")
-      )
-    ).map((year) => ({ value: year, label: year }));
-  }, []);
-
-  const uniqueStatesOfResidence = useMemo(() => {
-    return Array.from(
-      new Set(exampleData.map((item) => item.state))
-    ).map((state) => ({ value: state, label: state }));
-  }, []);
-
-  const uniqueStatesOfRelocation = useMemo(() => {
-    return Array.from(
-      new Set(exampleData.flatMap((item) => item.relocationStates))
-    ).map((state) => ({ value: state, label: state }));
-  }, []);
-
-  // Filter data based on search and filters
-  const filteredData = useMemo(() => {
-    return exampleData.filter((item) => {
-      // Search filtering
-      const matchesSearch = !searchKey ||
-        `${item.firstName} ${item.lastName}`.toLowerCase().includes(searchKey.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchKey.toLowerCase()) ||
-        item.highSchool.toLowerCase().includes(searchKey.toLowerCase());
-
-      // Graduation year filtering
-      const matchesGraduationYear = !selectedGraduationYear ||
-        item.graduationYear === selectedGraduationYear;
-
-      // State of residence filtering
-      const matchesStateOfResidence = selectedStatesOfResidence.length === 0 ||
-        selectedStatesOfResidence.includes(item.state);
-
-      // State of relocation filtering
-      const matchesStateOfRelocation = selectedStatesOfRelocation.length === 0 ||
-        item.relocationStates.some((state) => selectedStatesOfRelocation.includes(state));
-
-      // Status filtering
-      let matchesStatus = true;
-      if (statusFilter !== "all") {
-        switch (statusFilter) {
-          case 'has_resume':
-            matchesStatus = item.hasResume === "Yes";
-            break;
-          case 'currently_working':
-            matchesStatus = item.currentJob === "Yes";
-            break;
-          case 'food_handlers':
-            matchesStatus = item.foodHandlersCard === "Yes";
-            break;
-          case 'servsafe':
-            matchesStatus = item.servsafeCredentials === "Yes";
-            break;
-          case 'will_relocate':
-            matchesStatus = item.willRelocate === "Yes";
-            break;
-          case 'ready_to_work':
-            matchesStatus = item.readyToWork === "Yes";
-            break;
-        }
-      }
-
-      return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
-        matchesStateOfRelocation && matchesStatus;
-    });
-  }, [searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, statusFilter]);
-
-  // Reset all filters
-  const handleResetFilters = () => {
-    setSearchKey("");
-    setSelectedGraduationYear(null);
-    setSelectedStatesOfResidence([]);
-    setSelectedStatesOfRelocation([]);
-    setStatusFilter("all");
-  };
 
   return (
     <Layout>
@@ -646,6 +619,7 @@ interface Submission extends Record<string, unknown> {
 // Example data based on Google Sheets structure
 const exampleData: Submission[] = [
   {
+    id: 1,
     submissionId: "JxDW8d",
     formId: "6r5BRY",
     submissionDate: "2024-09-10 19:38:29",
@@ -685,7 +659,8 @@ const exampleData: Submission[] = [
     servsafeCredentials: "",
     culinaryYears: "1"
   },
-  {
+  { 
+    id: 2,
     submissionId: "x1ylvJ",
     formId: "gWroN4",
     submissionDate: "2024-09-10 19:39:18",
@@ -726,6 +701,7 @@ const exampleData: Submission[] = [
     culinaryYears: "2"
   },
   {
+    id: 3,
     submissionId: "ZKYZev",
     formId: "yeka0x",
     submissionDate: "2024-09-10 19:39:32",
@@ -766,6 +742,7 @@ const exampleData: Submission[] = [
     culinaryYears: "0"
   },
   {
+    id: 4,
     submissionId: "r1LkgL",
     formId: "K8yj88",
     submissionDate: "2024-09-10 19:39:56",
@@ -806,6 +783,7 @@ const exampleData: Submission[] = [
     culinaryYears: "2"
   },
   {
+    id: 5,
     submissionId: "r1Lkgp",
     formId: "zWv6WR",
     submissionDate: "2024-09-10 19:40:00",
@@ -846,6 +824,7 @@ const exampleData: Submission[] = [
     culinaryYears: "3"
   },
   {
+    id: 6,
     submissionId: "agEakW",
     formId: "O8yN8R",
     submissionDate: "2024-09-10 19:40:01",
@@ -886,6 +865,7 @@ const exampleData: Submission[] = [
     culinaryYears: "3"
   },
   {
+    id: 7,
     submissionId: "RaYVgv",
     formId: "745k1Z",
     submissionDate: "2024-09-10 19:40:06",
@@ -926,6 +906,7 @@ const exampleData: Submission[] = [
     culinaryYears: "3"
   },
   {
+    id: 8,
     submissionId: "LNY6yz",
     formId: "D0yGAR",
     submissionDate: "2024-09-10 19:40:13",
@@ -965,4 +946,38 @@ const exampleData: Submission[] = [
     servsafeCredentials: "",
     culinaryYears: "3"
   }
+];
+
+// Filter options
+const filterOptions: FilterOption[] = [
+  {
+    value: 'has_resume',
+    label: 'Has Resume',
+    icon: <FileCheck className="w-3 h-3 text-gray-700 mr-2" />,
+  },
+  {
+    value: 'currently_working',
+    label: 'Currently Working',
+    icon: <Briefcase className="w-3 h-3 text-gray-700 mr-2" />,
+  },
+  {
+    value: 'food_handlers',
+    label: 'Food Handlers Card',
+    icon: <Utensils className="w-3 h-3 text-gray-700 mr-2" />,
+  },
+  {
+    value: 'servsafe',
+    label: 'ServSafe Certified',
+    icon: <Shield className="w-3 h-3 text-gray-700 mr-2" />,
+  },
+  {
+    value: 'will_relocate',
+    label: 'Willing to Relocate',
+    icon: <MapPin className="w-3 h-3 text-gray-700 mr-2" />,
+  },
+  {
+    value: 'ready_to_work',
+    label: 'Ready to Work',
+    icon: <Clock className="w-3 h-3 text-gray-700 mr-2" />,
+  },
 ];

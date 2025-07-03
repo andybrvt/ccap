@@ -10,6 +10,8 @@ import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import Announcements from "@/pages/anouncements";
 import Submissions from "@/pages/submissions";
+import Portfolio from "@/pages/portfolio";
+import PortfolioLookup from "@/pages/portfolioLookup";
 
 function Router() {
   const { user, ProtectedRoute } = useAuth();
@@ -31,6 +33,16 @@ function Router() {
       <Route path="/submissions">
         <ProtectedRoute>
           <Submissions />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/portfolio/:id">
+        <ProtectedRoute>
+          <Portfolio />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/portfolio-lookup">
+        <ProtectedRoute>
+          <PortfolioLookup />
         </ProtectedRoute>
       </Route>
 

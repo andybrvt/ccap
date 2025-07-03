@@ -19,8 +19,8 @@ const navItems = [
     icon: FileText,
   },
   {
-    label: "Portfolio",
-    href: "/portfolio",
+    label: "Portfolio Lookup",
+    href: "/portfolio-lookup",
     icon: FileText,
   },
   // Add more items as needed
