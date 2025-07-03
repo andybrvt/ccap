@@ -17,7 +17,7 @@ export function AuthProvider({
   children: ReactNode;
 }): React.JSX.Element {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -30,10 +30,16 @@ export function AuthProvider({
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         // Optionally validate token with auth/me endpoint on app load
-        validateToken();
+        validateToken().finally(() => {
+          setIsLoading(false);
+        });
       } catch (error) {
         logout();
+        setIsLoading(false);
       }
+    } else {
+      // No stored user, set loading to false
+      setIsLoading(false);
     }
   }, []);
 
@@ -98,24 +104,26 @@ export function AuthProvider({
       return false;
     }
     setIsLoading(true);
-    // Dummy credentials
-    const dummyEmail = "nishant@test.com";
-    const dummyPassword = "123456";
-    if (email === dummyEmail && password === dummyPassword) {
-      const dummyUser: User = {
-        id: 1,
-        email: dummyEmail,
-        full_name: "Test Nishant",
-        username: "test_nishant",
-      };
-      setUser(dummyUser);
-      localStorage.setItem("auth_user", JSON.stringify(dummyUser));
-      localStorage.setItem("authToken", "dummy-token");
+    try {
+      // Dummy credentials
+      const dummyEmail = "nishant@test.com";
+      const dummyPassword = "123456";
+      if (email === dummyEmail && password === dummyPassword) {
+        const dummyUser: User = {
+          id: 1,
+          email: dummyEmail,
+          full_name: "Test Nishant",
+          username: "test_nishant",
+        };
+        setUser(dummyUser);
+        localStorage.setItem("auth_user", JSON.stringify(dummyUser));
+        localStorage.setItem("authToken", "dummy-token");
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
       setIsLoading(false);
-      return true;
-    } else {
-      setIsLoading(false);
-      return false;
     }
   };
 
