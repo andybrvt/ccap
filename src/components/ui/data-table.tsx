@@ -247,9 +247,7 @@ export default function Table<T extends Record<string, unknown>>({
               {paginatedData.map((item, index) => (
                 <TableRow
                   key={index}
-                  className={`border-gray-200 hover:bg-gray-50 transition-colors ${
-                    onRowClick ? 'cursor-pointer' : ''
-                  }`}
+                  className={`border-gray-200 hover:bg-gray-50 transition-colors`}
                   onClick={() => onRowClick?.(item)}
                 >
                   {columns.map((column) => (

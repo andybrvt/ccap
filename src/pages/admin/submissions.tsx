@@ -380,7 +380,7 @@ const columns: Column<Submission>[] = [
     align: 'right',
     render: (item) => (
       <div className="flex items-center justify-end space-x-2">
-        <Button size="sm" className="bg-black text-white hover:bg-gray-800" onClick={() => handleViewDetails(item)}>
+        <Button size="sm" className="bg-black text-white hover:bg-gray-800 hover:cursor-pointer" onClick={() => handleViewDetails(item)}>
           View Details
         </Button>
       </div>

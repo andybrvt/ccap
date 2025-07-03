@@ -5,13 +5,13 @@ import { AuthProvider } from "./hooks/AuthProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner"
 
-import Homepage from "@/pages/homepage";
+import Homepage from "@/pages/admin/homepage";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
-import Announcements from "@/pages/anouncements";
-import Submissions from "@/pages/submissions";
-import Portfolio from "@/pages/portfolio";
-import PortfolioLookup from "@/pages/portfolioLookup";
+import Announcements from "@/pages/admin/anouncements";
+import Submissions from "@/pages/admin/submissions";
+import Portfolio from "@/pages/admin/portfolio";
+import PortfolioLookup from "@/pages/admin/portfolioLookup";
 
 function Router() {
   const { user, ProtectedRoute } = useAuth();

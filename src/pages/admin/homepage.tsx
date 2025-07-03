@@ -7,6 +7,21 @@ import {
   Search,
   ChevronRight,
   Megaphone,
+  Bell,
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Info,
+  CheckCircle,
+  Star,
+  Users,
+  Shield,
+  BookOpen,
+  Heart,
+  Gift,
+  Globe,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/hooks/useAuth";   
@@ -16,26 +31,29 @@ const announcements = [
   {
     id: 1,
     title: "New CCAP Application Portal Launch",
-    description: "We're excited to announce the launch of our new CCAP application portal with enhanced features and improved user experience.",
+    description: "We're excited to announce the launch of our new CCAP application portal with enhanced features and improved user experience. This new portal includes better navigation, faster processing times, and improved mobile responsiveness.",
     date: "2 hours ago",
     priority: "high",
-    icon: "🎉"
+    icon: "megaphone",
+    category: "feature"
   },
   {
     id: 2,
     title: "System Maintenance Scheduled",
-    description: "Scheduled maintenance will occur on Sunday, January 15th from 2:00 AM to 6:00 AM EST. Some features may be temporarily unavailable.",
+    description: "Scheduled maintenance will occur on Sunday, January 15th from 2:00 AM to 6:00 AM EST. Some features may be temporarily unavailable during this time. We apologize for any inconvenience.",
     date: "1 day ago",
     priority: "medium",
-    icon: "🔧"
+    icon: "alert",
+    category: "maintenance"
   },
   {
     id: 3,
     title: "Updated Application Guidelines",
-    description: "Please review the updated application guidelines for the 2024-2025 academic year. New requirements have been added.",
+    description: "Please review the updated application guidelines for the 2024-2025 academic year. New requirements have been added and some existing ones have been modified to better serve our students.",
     date: "3 days ago",
     priority: "low",
-    icon: "📋"
+    icon: "📋",
+    category: "policy"
   },
   {
     id: 4,
@@ -43,7 +61,7 @@ const announcements = [
     description: "Our office will be closed for the upcoming holidays. Applications submitted during this period will be processed when we return. Please plan accordingly.",
     date: "1 week ago",
     priority: "medium",
-    icon: "🏢",
+    icon: "calendar",
     category: "hours"
   },
   {
@@ -55,7 +73,60 @@ const announcements = [
     icon: "👋",
     category: "team"
   },
+  {
+    id: 6,
+    title: "Emergency Contact Update Required",
+    description: "All students must update their emergency contact information by the end of this month. This is a mandatory requirement for continued enrollment.",
+    date: "2 weeks ago",
+    priority: "high",
+    icon: "alert",
+    category: "urgent"
+  },
+  {
+    id: 7,
+    title: "Scholarship Application Deadline",
+    description: "The deadline for spring semester scholarship applications is approaching. Don't miss out on this opportunity to reduce your educational costs.",
+    date: "2 weeks ago",
+    priority: "medium",
+    icon: "gift",
+    category: "scholarship"
+  },
+  {
+    id: 8,
+    title: "Campus Safety Reminder",
+    description: "As we approach the winter months, please remember to follow campus safety protocols. Report any suspicious activity immediately.",
+    date: "3 weeks ago",
+    priority: "low",
+    icon: "shield",
+    category: "safety"
+  }
 ];
+
+const lucideIconMap: Record<string, React.ReactNode> = {
+  megaphone: <Megaphone className="h-5 w-5 text-white" />,
+  bell: <Bell className="h-5 w-5 text-white" />,
+  alert: <AlertTriangle className="h-5 w-5 text-white" />,
+  calendar: <Calendar className="h-5 w-5 text-white" />,
+  clock: <Clock className="h-5 w-5 text-white" />,
+  info: <Info className="h-5 w-5 text-white" />,
+  check: <CheckCircle className="h-5 w-5 text-white" />,
+  star: <Star className="h-5 w-5 text-white" />,
+  users: <Users className="h-5 w-5 text-white" />,
+  shield: <Shield className="h-5 w-5 text-white" />,
+  book: <BookOpen className="h-5 w-5 text-white" />,
+  heart: <Heart className="h-5 w-5 text-white" />,
+  gift: <Gift className="h-5 w-5 text-white" />,
+  globe: <Globe className="h-5 w-5 text-white" />,
+  mail: <Mail className="h-5 w-5 text-white" />,
+  message: <MessageCircle className="h-5 w-5 text-white" />,
+};
+
+function renderAnnouncementIcon(icon: string): React.ReactNode {
+  if (icon in lucideIconMap) {
+    return lucideIconMap[icon];
+  }
+  return <span className="text-lg">{icon}</span>;
+}
 
 export default function Homepage() {
   const { user, logout } = useAuth();
@@ -170,7 +241,7 @@ export default function Homepage() {
                   <div key={announcement.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-start">
                       <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                        <span className="text-white text-sm">{announcement.icon}</span>
+                        {renderAnnouncementIcon(announcement.icon)}
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-black mb-1">
@@ -179,17 +250,27 @@ export default function Homepage() {
                         <p className="text-sm text-gray-600 mb-2">
                           {announcement.description}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {announcement.date}
-                        </p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="text-xs text-gray-500">
+                            {announcement.date}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'} 
+                            className="text-xs"
+                          >
+                            {announcement.priority === 'high' ? 'Important' : announcement.priority === 'medium' ? 'Notice' : 'Info'}
+                          </Badge>
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs border-gray-300 text-gray-600"
+                          >
+                            {announcement.category.charAt(0).toUpperCase() + announcement.category.slice(1)}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                    <Badge 
-                      variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'} 
-                      className="text-xs ml-4"
-                    >
-                      {announcement.priority === 'high' ? 'Important' : announcement.priority === 'medium' ? 'Notice' : 'Info'}
-                    </Badge>
                   </div>
                 ))}
               </div>
