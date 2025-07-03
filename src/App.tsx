@@ -51,6 +51,11 @@ function Router() {
         {user ? <Redirect to="/" /> : <Login />}
       </Route>
 
+      {/* Redirect root to /admin */}
+      <Route path="/">
+        <Redirect to="/admin" />
+      </Route>
+
       {/* Catch all other routes */}
       <Route component={NotFound} />
     </Switch>
