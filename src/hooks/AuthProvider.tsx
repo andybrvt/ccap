@@ -153,6 +153,30 @@ export function AuthProvider({
 
   // Protected Route component that handles authentication and role-based access
   const ProtectedRoute = ({ children, requiredRole }: { children: ReactNode; requiredRole?: UserRole }) => {
+    const [, setLocation] = useLocation();
+
+    useEffect(() => {
+      // Don't redirect while loading
+      if (isLoading) return;
+      
+      // If not authenticated, redirect to login
+      if (!user) {
+        setLocation('/login');
+        return;
+      }
+
+      // Check role-based access if requiredRole is specified
+      if (requiredRole && user.role !== requiredRole) {
+        // Redirect to appropriate dashboard based on user role
+        if (user.role === "admin") {
+          setLocation('/admin');
+        } else {
+          setLocation('/student');
+        }
+      }
+    }, [requiredRole, setLocation]);
+
+    // Show loading spinner while auth is initializing
     if (isLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -160,21 +184,26 @@ export function AuthProvider({
         </div>
       );
     }
-    
+
+    // Show loading spinner while redirecting (instead of null)
     if (!user) {
-      return <Redirect to="/login" />;
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      );
     }
 
     // Check role-based access if requiredRole is specified
     if (requiredRole && user.role !== requiredRole) {
-      // Redirect to appropriate dashboard based on user role
-      if (user.role === "admin") {
-        return <Redirect to="/admin" />;
-      } else {
-        return <Redirect to="/student" />;
-      }
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      );
     }
 
+    // Only render if authenticated and has correct role
     return <>{children}</>;
   };
 

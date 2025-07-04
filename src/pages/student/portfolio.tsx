@@ -3,10 +3,13 @@ import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload } from "lucide-react";
 import Layout from "@/components/layout/StudentLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Portfolio() {
   const { user, logout } = useAuth();
@@ -29,6 +32,12 @@ export default function Portfolio() {
 
   // Modal state for post popup
   const [selectedPost, setSelectedPost] = useState<null | { url: string; caption: string }>(null);
+  
+  // Modal state for create post
+  const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [newPostImage, setNewPostImage] = useState<File | null>(null);
+  const [newPostCaption, setNewPostCaption] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   if (!student) {
     return (
@@ -145,7 +154,16 @@ export default function Portfolio() {
         </Card>
 
         {/* Instagram-style Posts Grid */}
-        <h2 className="text-xl font-semibold mb-4 text-blue-700">Posts</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-blue-700">Posts</h2>
+          <Button 
+            onClick={() => setCreatePostOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Post
+          </Button>
+        </div>
         <div className="grid grid-cols-3 gap-2 md:gap-4">
           {posts.map((post, i) => (
             <button
@@ -182,6 +200,111 @@ export default function Portfolio() {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Create Post Modal */}
+        <Dialog open={createPostOpen} onOpenChange={setCreatePostOpen}>
+          <DialogContent className="max-w-md w-full">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">Create New Post</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="image-upload" className="text-sm font-medium">
+                  Upload Image
+                </Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setNewPostImage(file);
+                        const reader = new FileReader();
+                        reader.onload = (e) => setImagePreview(e.target?.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    {imagePreview ? (
+                      <div className="space-y-2">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="mx-auto max-h-48 rounded-lg object-cover"
+                        />
+                        <p className="text-sm text-gray-600">Click to change image</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="text-sm text-gray-600">Click to upload an image</p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              {/* Caption Input */}
+              <div className="space-y-2">
+                <Label htmlFor="caption" className="text-sm font-medium">
+                  Caption
+                </Label>
+                <Textarea
+                  id="caption"
+                  placeholder="Write a caption for your post..."
+                  value={newPostCaption}
+                  onChange={(e) => setNewPostCaption(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCreatePostOpen(false);
+                    setNewPostImage(null);
+                    setNewPostCaption('');
+                    setImagePreview(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (newPostImage && newPostCaption.trim()) {
+                      // Here you would typically upload to your backend
+                      // For now, we'll just close the dialog
+                      console.log('Creating post:', { image: newPostImage, caption: newPostCaption });
+                      
+                      // Reset form
+                      setCreatePostOpen(false);
+                      setNewPostImage(null);
+                      setNewPostCaption('');
+                      setImagePreview(null);
+                      
+                      // You could add the new post to the posts array here
+                      // posts.push({ url: imagePreview, caption: newPostCaption });
+                    }
+                  }}
+                  disabled={!newPostImage || !newPostCaption.trim()}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  Create Post
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

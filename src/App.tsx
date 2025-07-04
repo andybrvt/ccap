@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/AuthProvider";
@@ -18,11 +18,23 @@ import StudentAnnouncements from "@/pages/student/anouncements";
 import StudentPortfolio from "@/pages/student/portfolio";
 import StudentEditPortfolio from "@/pages/student/editPortfolio";
 
-function Router() {
-  const { user, ProtectedRoute } = useAuth();
+// Separate component that uses useAuth - must be inside AuthProvider
+function AppRoutes() {
+  const { user, ProtectedRoute, isLoading } = useAuth();
+
+  // Show loading screen while auth is initializing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <Switch>
+      {/* Login route - always accessible */}
+      <Route path="/login" component={Login} />
 
       {/* Admin routes - require admin role */}
       <Route path="/admin">
@@ -73,23 +85,11 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
-      
-      {/* Login route - redirect to appropriate dashboard if already authenticated */}
-      <Route path="/login">
-        {user ? (
-          user.role === "admin" ? <Redirect to="/admin" /> : <Redirect to="/student" />
-        ) : (
-          <Login />
-        )}
-      </Route>
-
-      {/* Redirect root to appropriate dashboard based on user role */}
+      {/* Root route - protected and will redirect based on role */}
       <Route path="/">
-        {user ? (
-          user.role === "admin" ? <Redirect to="/admin" /> : <Redirect to="/student" />
-        ) : (
-          <Redirect to="/login" />
-        )}
+        <ProtectedRoute>
+          {user?.role === "admin" ? <AdminHomepage /> : <StudentHomepage />}
+        </ProtectedRoute>
       </Route>
 
       {/* Catch all other routes */}
@@ -104,7 +104,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
         <AuthProvider>
           <Toaster />
-          <Router />
+          <AppRoutes />
         </AuthProvider>
       </ThemeProvider>
     </TooltipProvider>
