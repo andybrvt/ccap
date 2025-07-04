@@ -101,9 +101,9 @@ function AppRoutes() {
 function App() {
   return (
     <TooltipProvider>
-      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <AuthProvider>
-          <Toaster />
+          <Toaster richColors />
           <AppRoutes />
         </AuthProvider>
       </ThemeProvider>

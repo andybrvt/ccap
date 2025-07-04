@@ -314,7 +314,12 @@ export default function EditPortfolio() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success("Portfolio updated successfully!");
+      toast.success("Portfolio updated successfully!",
+        {
+          description: "Your portfolio has been updated successfully.",
+          duration: 5000,
+        }
+      );
       setLocation('/student/portfolio');
     } catch (error) {
       toast.error("Failed to update portfolio. Please try again.");
