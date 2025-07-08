@@ -60,6 +60,9 @@ interface PortfolioFormData {
   hasServSafe: string;
   culinaryClassYears: number;
   preferredName2: string;
+  profilePicture: File | null;
+  existingProfilePicture: string;
+  bio: string;
 }
 
 // States array
@@ -150,7 +153,9 @@ const exampleData = [
     interestedOptions: ["Baking and Pastry", "Culinary"],
     foodHandlersCard: "No",
     servsafeCredentials: "",
-    culinaryYears: "2"
+    culinaryYears: "2",
+    profilePicture: "https://plus.unsplash.com/premium_photo-1687485794296-68f0d6e934bb?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    bio: "Passionate culinary student with 2 years of experience in baking and pastry. Currently working at Yogurtini while pursuing my culinary education. I love experimenting with new recipes and techniques, and I'm excited to grow my skills in the culinary industry."
   }
 ];
 
@@ -202,7 +207,10 @@ export default function EditPortfolio() {
     existingFoodHandlersUrl: "",
     hasServSafe: student?.servsafeCredentials || "No",
     culinaryClassYears: parseInt(student?.culinaryYears || "0"),
-    preferredName2: student?.preferredName || ""
+    preferredName2: student?.preferredName || "",
+    profilePicture: null,
+    existingProfilePicture: student?.profilePicture || "",
+    bio: student?.bio || ""
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -236,7 +244,7 @@ export default function EditPortfolio() {
   };
 
   // Handle removing existing documents
-  const handleRemoveExistingDocument = (field: 'existingResumeUrl' | 'existingFoodHandlersUrl') => {
+  const handleRemoveExistingDocument = (field: 'existingResumeUrl' | 'existingFoodHandlersUrl' | 'existingProfilePicture') => {
     setFormData(prev => ({
       ...prev,
       [field]: ""
@@ -355,6 +363,122 @@ export default function EditPortfolio() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Profile Picture and Bio */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-blue-700">Profile Picture & Bio</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 gap-6">
+                {/* Profile Picture Upload */}
+                <div className="space-y-4">
+                  <Label htmlFor="profilePicture">Profile Picture</Label>
+                  
+                  <div className="flex flex-col items-center space-y-4">
+                    {/* Hidden file input */}
+                    <input
+                      id="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileUpload('profilePicture', e.target.files?.[0] || null)}
+                    />
+                    
+                    {/* Profile Picture Display */}
+                    <div className="relative group">
+                      <div className="w-32 h-32 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center border-4 border-gray-200 shadow-lg">
+                        {formData.profilePicture ? (
+                          <img
+                            src={URL.createObjectURL(formData.profilePicture)}
+                            alt="Profile Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : formData.existingProfilePicture ? (
+                          <img
+                            src={formData.existingProfilePicture}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-blue-400">
+                            <Upload className="w-8 h-8 mb-1" />
+                            <span className="text-xs">No Image</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Overlay with upload/change button */}
+                      <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <label htmlFor="profilePicture" className="cursor-pointer">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="bg-white text-gray-900 hover:bg-gray-100"
+                            onClick={() => document.getElementById('profilePicture')?.click()}
+                          >
+                            {formData.profilePicture || formData.existingProfilePicture ? 'Change' : 'Upload'}
+                          </Button>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* File info and remove button */}
+                    <div className="flex flex-col items-center space-y-2">
+                      {formData.profilePicture && (
+                        <>
+                          <Badge variant="secondary" className="text-xs">
+                            {formData.profilePicture.name}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleFileUpload('profilePicture', null)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      )}
+                      
+                      {formData.existingProfilePicture && !formData.profilePicture && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveExistingDocument('existingProfilePicture')}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          Remove Current Picture
+                        </Button>
+                      )}
+                      
+                      {!formData.profilePicture && !formData.existingProfilePicture && (
+                        <p className="text-xs text-gray-500 text-center">
+                          Click the upload button above to add a profile picture
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Tell us about yourself, your culinary journey, and what you're passionate about..."
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    className="min-h-[120px] resize-none"
+                  />
+                  <p className="text-xs text-gray-500">Share your story, experience, and what makes you unique as a culinary professional.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Personal Information */}
           <Card>
             <CardHeader>

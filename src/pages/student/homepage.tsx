@@ -263,7 +263,7 @@ export default function Homepage() {
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg font-semibold text-black">
-                Sinatra Insurance Group
+                Sinatra - CCAP
               </span>
             </div>
             <div className="text-sm text-gray-600">

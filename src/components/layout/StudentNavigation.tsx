@@ -65,7 +65,7 @@ export function Navigation() {
                 <Building2 className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-gray-900 font-serif text-lg sm:text-xl lg:text-2xl xl:text-3xl font-medium tracking-tight">
-                Sinatra Insurance Group
+                Sinatra - CCAP
               </h1>
             </div>
           </div>

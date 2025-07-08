@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Portfolio() {
   const { user, logout } = useAuth();
@@ -68,6 +69,7 @@ export default function Portfolio() {
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostCaption, setNewPostCaption] = useState('');
+  const [newPostDish, setNewPostDish] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   if (!student) {
@@ -104,8 +106,16 @@ export default function Portfolio() {
             <div className="flex flex-col md:flex-row gap-8">
               {/* Avatar and Name */}
               <div className="flex flex-col items-center md:items-start md:w-1/3 bg-blue-50 rounded-xl p-6 mb-4 md:mb-0">
-                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-500 mb-4 border-4 border-blue-200">
-                  {student.firstName.charAt(0)}{student.lastName.charAt(0)}
+                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-500 mb-4 border-4 border-blue-200 overflow-hidden">
+                  {student.profilePicture ? (
+                    <img 
+                      src={student.profilePicture} 
+                      alt={`${student.firstName} ${student.lastName}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`
+                  )}
                 </div>
                 <h1 className="text-2xl font-bold text-blue-700 mb-1 text-center md:text-left">
                   {student.firstName} {student.lastName}
@@ -120,6 +130,12 @@ export default function Portfolio() {
                     </Badge>
                   ))}
                 </div>
+                {/* Bio Section */}
+                {student.bio && (
+                  <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                    <p className="text-sm text-gray-700 leading-relaxed">{student.bio}</p>
+                  </div>
+                )}
               </div>
 
               {/* Main Info */}
@@ -296,6 +312,30 @@ export default function Portfolio() {
                 />
               </div>
 
+              {/* Dish Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="dish-select" className="text-sm font-medium">
+                  Featured Dish
+                </Label>
+                <Select value={newPostDish} onValueChange={setNewPostDish}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a dish featured in this post" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beef-wellington">Beef Wellington</SelectItem>
+                    <SelectItem value="coq-au-vin">Coq au Vin</SelectItem>
+                    <SelectItem value="risotto-milanese">Risotto Milanese</SelectItem>
+                    <SelectItem value="bouillabaisse">Bouillabaisse</SelectItem>
+                    <SelectItem value="beef-bourguignon">Beef Bourguignon</SelectItem>
+                    <SelectItem value="ratatouille">Ratatouille</SelectItem>
+                    <SelectItem value="paella">Paella</SelectItem>
+                    <SelectItem value="osso-buco">Osso Buco</SelectItem>
+                    <SelectItem value="cassoulet">Cassoulet</SelectItem>
+                    <SelectItem value="souffle">Soufflé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">
                 <Button
@@ -304,6 +344,7 @@ export default function Portfolio() {
                     setCreatePostOpen(false);
                     setNewPostImage(null);
                     setNewPostCaption('');
+                    setNewPostDish('');
                     setImagePreview(null);
                   }}
                   className="flex-1"
@@ -315,12 +356,13 @@ export default function Portfolio() {
                     if (newPostImage && newPostCaption.trim()) {
                       // Here you would typically upload to your backend
                       // For now, we'll just close the dialog
-                      console.log('Creating post:', { image: newPostImage, caption: newPostCaption });
+                      console.log('Creating post:', { image: newPostImage, caption: newPostCaption, dish: newPostDish });
 
                       // Reset form
                       setCreatePostOpen(false);
                       setNewPostImage(null);
                       setNewPostCaption('');
+                      setNewPostDish('');
                       setImagePreview(null);
 
                       // You could add the new post to the posts array here
@@ -382,6 +424,8 @@ interface Submission extends Record<string, unknown> {
   foodHandlersCard: string;
   servsafeCredentials: string;
   culinaryYears: string;
+  profilePicture?: string;
+  bio?: string;
 }
 
 // Only one dummy student (id=2)
@@ -425,6 +469,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Baking and Pastry", "Culinary"],
     foodHandlersCard: "No",
     servsafeCredentials: "",
-    culinaryYears: "2"
+    culinaryYears: "2",
+    profilePicture: "https://plus.unsplash.com/premium_photo-1687485794296-68f0d6e934bb?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    bio: "Passionate culinary student with 2 years of experience in baking and pastry. Currently working at Yogurtini while pursuing my culinary education. I love experimenting with new recipes and techniques, and I'm excited to grow my skills in the culinary industry."
   }
 ];
