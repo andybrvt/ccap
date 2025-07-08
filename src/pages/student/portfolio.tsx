@@ -18,21 +18,52 @@ export default function Portfolio() {
 
   // Mock posts (replace with real data if available)
   const posts = [
-    { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80", caption: "First day at C-CAP!" },
-    { url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80", caption: "Baking class fun." },
-    { url: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80", caption: "Teamwork in the kitchen." },
-    { url: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=600&q=80", caption: "Trying a new recipe." },
-    { url: "https://images.unsplash.com/photo-1519985176271-adb1088fa94c?auto=format&fit=crop&w=600&q=80", caption: "Plating practice." },
-    { url: "https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=600&q=80", caption: "Pastry perfection." },
-    { url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80", caption: "Culinary competition day." },
-    { url: "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=600&q=80", caption: "Learning from the chef." },
-    { url: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=600&q=80", caption: "Group project success." },
-    { url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80", caption: "Final presentation!" },
+    {
+      url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80",
+      caption: "First day at C-CAP!"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?auto=format&fit=crop&w=600&q=80",
+      caption: "Baking class fun."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1607631568010-a87245c0daf8?auto=format&fit=crop&w=600&q=80",
+      caption: "Teamwork in the kitchen."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=600&q=80",
+      caption: "Trying a new recipe."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80",
+      caption: "Plating practice."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80",
+      caption: "Pastry perfection."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1571805529673-0f56b922b359?auto=format&fit=crop&w=600&q=80",
+      caption: "Culinary competition day."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=600&q=80",
+      caption: "Learning from the chef."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80",
+      caption: "Group project success."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=600&q=80",
+      caption: "Final presentation!"
+    }
   ];
+
 
   // Modal state for post popup
   const [selectedPost, setSelectedPost] = useState<null | { url: string; caption: string }>(null);
-  
+
   // Modal state for create post
   const [createPostOpen, setCreatePostOpen] = useState(false);
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
@@ -126,8 +157,8 @@ export default function Portfolio() {
                     <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">{
                       student.hasResume === "Yes"
                         ? (student.resumeUrl && student.resumeUrl.trim() !== ""
-                            ? <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
-                            : "Not Available")
+                          ? <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
+                          : "Not Available")
                         : "Not Provided"
                     }</span></span>
                     <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">{student.foodHandlersCard}</span></span>
@@ -156,7 +187,7 @@ export default function Portfolio() {
         {/* Instagram-style Posts Grid */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-blue-700">Posts</h2>
-          <Button 
+          <Button
             onClick={() => setCreatePostOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
@@ -207,7 +238,7 @@ export default function Portfolio() {
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold">Create New Post</DialogTitle>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               {/* Image Upload */}
               <div className="space-y-2">
@@ -233,9 +264,9 @@ export default function Portfolio() {
                   <label htmlFor="image-upload" className="cursor-pointer">
                     {imagePreview ? (
                       <div className="space-y-2">
-                        <img 
-                          src={imagePreview} 
-                          alt="Preview" 
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
                           className="mx-auto max-h-48 rounded-lg object-cover"
                         />
                         <p className="text-sm text-gray-600">Click to change image</p>
@@ -285,13 +316,13 @@ export default function Portfolio() {
                       // Here you would typically upload to your backend
                       // For now, we'll just close the dialog
                       console.log('Creating post:', { image: newPostImage, caption: newPostCaption });
-                      
+
                       // Reset form
                       setCreatePostOpen(false);
                       setNewPostImage(null);
                       setNewPostCaption('');
                       setImagePreview(null);
-                      
+
                       // You could add the new post to the posts array here
                       // posts.push({ url: imagePreview, caption: newPostCaption });
                     }
@@ -312,89 +343,88 @@ export default function Portfolio() {
 
 // Example data type based on Google Sheets structure
 interface Submission extends Record<string, unknown> {
-    id: number;
-    submissionId: string;
-    formId: string;
-    submissionDate: string;
-    firstName: string;
-    lastName: string;
-    preferredName: string;
-    email: string;
-    address: string;
-    address2: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    willRelocate: string;
-    relocationStates: string[];
-    dateOfBirth: string;
-    mobileNumber: string;
-    highSchool: string;
-    graduationYear: string;
-    transportation: string;
-    hoursWanted: string;
-    availableTimes: string;
-    availableWeekends: string;
-    hasResume: string;
-    resumeUrl: string;
-    currentJob: string;
-    currentEmployer: string;
-    currentPosition: string;
-    currentHours: string;
-    pastJob: string;
-    pastEmployer: string;
-    pastPosition: string;
-    pastHours: string;
-    readyToWork: string;
-    readyDate: string;
-    interestedOptions: string[];
-    foodHandlersCard: string;
-    servsafeCredentials: string;
-    culinaryYears: string;
+  id: number;
+  submissionId: string;
+  formId: string;
+  submissionDate: string;
+  firstName: string;
+  lastName: string;
+  preferredName: string;
+  email: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  willRelocate: string;
+  relocationStates: string[];
+  dateOfBirth: string;
+  mobileNumber: string;
+  highSchool: string;
+  graduationYear: string;
+  transportation: string;
+  hoursWanted: string;
+  availableTimes: string;
+  availableWeekends: string;
+  hasResume: string;
+  resumeUrl: string;
+  currentJob: string;
+  currentEmployer: string;
+  currentPosition: string;
+  currentHours: string;
+  pastJob: string;
+  pastEmployer: string;
+  pastPosition: string;
+  pastHours: string;
+  readyToWork: string;
+  readyDate: string;
+  interestedOptions: string[];
+  foodHandlersCard: string;
+  servsafeCredentials: string;
+  culinaryYears: string;
+}
+
+// Only one dummy student (id=2)
+const exampleData: Submission[] = [
+  {
+    id: 2,
+    submissionId: "x1ylvJ",
+    formId: "gWroN4",
+    submissionDate: "2024-09-10 19:39:18",
+    firstName: "Madison",
+    lastName: "Yob",
+    preferredName: "",
+    email: "madisonyob13@gmail.com",
+    address: "3728 East Taro lane",
+    address2: "",
+    city: "Phoenix",
+    state: "CA",
+    zipCode: "85050",
+    willRelocate: "No",
+    relocationStates: ["KY", "IA", "ID", "GA", "DE"],
+    dateOfBirth: "2007-03-08",
+    mobileNumber: "15205914355",
+    highSchool: "Paradise Valley High School",
+    graduationYear: "2025",
+    transportation: "I will drive myself",
+    hoursWanted: "30",
+    availableTimes: "Evening (2PM - 6PM)",
+    availableWeekends: "Yes",
+    hasResume: "Yes",
+    resumeUrl: "https://storage.tally.so/private/Morton-Resume.pdf?id=MEDodk&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1FRG9kayIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.k0TkChgdfD7z4_0WZlMWap53E-1bE9q5t6CsKPb5Eh0&signature=ef97b8d0f622c45a7c8aa42937b1c2544dbb759d151deaada05fbd1a7b708b87",
+    currentJob: "Yes",
+    currentEmployer: "Yogurtini",
+    currentPosition: "Employee",
+    currentHours: "20",
+    pastJob: "No",
+    pastEmployer: "",
+    pastPosition: "",
+    pastHours: "",
+    readyToWork: "No",
+    readyDate: "2025-03-08",
+    interestedOptions: ["Baking and Pastry", "Culinary"],
+    foodHandlersCard: "No",
+    servsafeCredentials: "",
+    culinaryYears: "2"
   }
-  
-  // Only one dummy student (id=2)
-  const exampleData: Submission[] = [
-    {
-      id: 2,
-      submissionId: "x1ylvJ",
-      formId: "gWroN4",
-      submissionDate: "2024-09-10 19:39:18",
-      firstName: "Madison",
-      lastName: "Yob",
-      preferredName: "",
-      email: "madisonyob13@gmail.com",
-      address: "3728 East Taro lane",
-      address2: "",
-      city: "Phoenix",
-      state: "CA",
-      zipCode: "85050",
-      willRelocate: "No",
-      relocationStates: ["KY", "IA", "ID", "GA", "DE"],
-      dateOfBirth: "2007-03-08",
-      mobileNumber: "15205914355",
-      highSchool: "Paradise Valley High School",
-      graduationYear: "2025",
-      transportation: "I will drive myself",
-      hoursWanted: "30",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "Yes",
-      hasResume: "Yes",
-      resumeUrl: "https://storage.tally.so/private/Morton-Resume.pdf?id=MEDodk&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1FRG9kayIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.k0TkChgdfD7z4_0WZlMWap53E-1bE9q5t6CsKPb5Eh0&signature=ef97b8d0f622c45a7c8aa42937b1c2544dbb759d151deaada05fbd1a7b708b87",
-      currentJob: "Yes",
-      currentEmployer: "Yogurtini",
-      currentPosition: "Employee",
-      currentHours: "20",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2025-03-08",
-      interestedOptions: ["Baking and Pastry", "Culinary"],
-      foodHandlersCard: "No",
-      servsafeCredentials: "",
-      culinaryYears: "2"
-    }
-  ];
-  
+];

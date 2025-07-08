@@ -12,27 +12,47 @@ export default function Portfolio() {
 
   // Mock posts (replace with real data if available)
   const posts = [
-    { url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80", caption: "First day at C-CAP!" },
-    { url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?auto=format&fit=crop&w=600&q=80", caption: "Baking class fun." },
-    { url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80", caption: "Teamwork in the kitchen." },
-    { url: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=600&q=80", caption: "Trying a new recipe." },
-    { url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80", caption: "Plating practice." },
-    { url: "https://images.unsplash.com/photo-1488992783499-418eb1f62d08?auto=format&fit=crop&w=600&q=80", caption: "Pastry perfection." },
-    { url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80", caption: "Culinary competition day." },
-    { url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80", caption: "Learning from the chef." },
-    { url: "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=600&q=80", caption: "Group project success." },
-    { url: "https://images.unsplash.com/photo-1559715745-e1b33a271c8f?auto=format&fit=crop&w=600&q=80", caption: "Final presentation!" },
-    { url: "https://images.unsplash.com/photo-1466637574441-749b8f19452f?auto=format&fit=crop&w=600&q=80", caption: "Knife skills workshop." },
-    { url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", caption: "Pizza making class." },
-    { url: "https://images.unsplash.com/photo-1528712306091-ed0763094c98?auto=format&fit=crop&w=600&q=80", caption: "Sauce preparation." },
-    { url: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&w=600&q=80", caption: "Fresh ingredients day." },
-    { url: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80", caption: "Dessert plating." },
-    { url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80", caption: "Bread baking session." },
-    { url: "https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?auto=format&fit=crop&w=600&q=80", caption: "Kitchen safety training." },
-    { url: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=600&q=80", caption: "Menu planning workshop." },
-    { url: "https://images.unsplash.com/photo-1551782450-17144efb9c50?auto=format&fit=crop&w=600&q=80", caption: "Food photography lesson." },
-    { url: "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=600&q=80", caption: "Graduation celebration!" },
-];
+    {
+      url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80",
+      caption: "First day at C-CAP!"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?auto=format&fit=crop&w=600&q=80",
+      caption: "Baking class fun."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1607631568010-a87245c0daf8?auto=format&fit=crop&w=600&q=80",
+      caption: "Teamwork in the kitchen."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=600&q=80",
+      caption: "Trying a new recipe."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80",
+      caption: "Plating practice."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80",
+      caption: "Pastry perfection."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1571805529673-0f56b922b359?auto=format&fit=crop&w=600&q=80",
+      caption: "Culinary competition day."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=600&q=80",
+      caption: "Learning from the chef."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80",
+      caption: "Group project success."
+    },
+    {
+      url: "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=600&q=80",
+      caption: "Final presentation!"
+    }
+  ];
 
   // Modal state for post popup
   const [selectedPost, setSelectedPost] = useState<null | { url: string; caption: string }>(null);
