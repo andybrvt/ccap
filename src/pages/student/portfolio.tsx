@@ -130,6 +130,21 @@ export default function Portfolio() {
                     </Badge>
                   ))}
                 </div>
+                {/* Bucket Status */}
+                <div className="flex justify-center md:justify-start mb-2">
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs font-medium ${
+                      student.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                      student.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      student.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                      student.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      'bg-gray-50 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    {student.bucket}
+                  </Badge>
+                </div>
                 {/* Bio Section */}
                 {student.bio && (
                   <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
@@ -197,6 +212,157 @@ export default function Portfolio() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Bucket-based Content Section */}
+        <Card className="mb-8 shadow-lg border-blue-100">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-3 h-3 rounded-full ${
+                student.bucket === 'Pre-Apprentice' ? 'bg-yellow-400' :
+                student.bucket === 'Apprentice' ? 'bg-blue-400' :
+                student.bucket === 'Completed Pre-Apprentice' ? 'bg-green-400' :
+                student.bucket === 'Completed Apprentice' ? 'bg-purple-400' :
+                'bg-gray-400'
+              }`}></div>
+              <h2 className="text-xl font-semibold text-blue-700">Your Program Status</h2>
+            </div>
+            
+            {student.bucket === 'Pre-Apprentice' && (
+              <div className="space-y-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-yellow-800 mb-2">Welcome to C-CAP Pre-Apprentice Program!</h3>
+                  <p className="text-yellow-700 text-sm mb-3">
+                    You're just starting your culinary journey. Here's what you need to know:
+                  </p>
+                  <ul className="text-yellow-700 text-sm space-y-1">
+                    <li>• Complete your basic culinary foundation courses</li>
+                    <li>• Attend mandatory safety and food handling workshops</li>
+                    <li>• Build your portfolio with 5+ culinary projects</li>
+                    <li>• Network with industry professionals</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-800 mb-2">Next Steps</h4>
+                    <p className="text-sm text-gray-600">Complete your food handler certification and attend your first workshop by the end of this month.</p>
+                  </div>
+                  <div className="bg-white border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-800 mb-2">Resources</h4>
+                    <p className="text-sm text-gray-600">Access your pre-apprentice handbook and safety guidelines in your student portal.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {student.bucket === 'Apprentice' && (
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-800 mb-2">C-CAP Apprentice Program</h3>
+                  <p className="text-blue-700 text-sm mb-3">
+                    You're actively building your culinary skills. Here's your current focus:
+                  </p>
+                  <ul className="text-blue-700 text-sm space-y-1">
+                    <li>• Advanced cooking techniques and recipe development</li>
+                    <li>• Kitchen management and leadership skills</li>
+                    <li>• Industry externships and real-world experience</li>
+                    <li>• Professional networking and mentorship</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 mb-2">Current Projects</h4>
+                    <p className="text-sm text-gray-600">Working on advanced plating techniques and menu development for your final portfolio.</p>
+                  </div>
+                  <div className="bg-white border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 mb-2">Mentorship</h4>
+                    <p className="text-sm text-gray-600">You've been paired with Chef Sarah Johnson for weekly mentoring sessions.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {student.bucket === 'Completed Pre-Apprentice' && (
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-green-800 mb-2">Congratulations! Pre-Apprentice Complete</h3>
+                  <p className="text-green-700 text-sm mb-3">
+                    You've successfully completed the foundational phase. Here's what you've achieved:
+                  </p>
+                  <ul className="text-green-700 text-sm space-y-1">
+                    <li>✓ Completed all safety and food handling certifications</li>
+                    <li>✓ Built a strong foundation portfolio with 8+ projects</li>
+                    <li>✓ Established industry connections and references</li>
+                    <li>✓ Ready to advance to the Apprentice program</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-green-200 rounded-lg p-4">
+                    <h4 className="font-medium text-green-800 mb-2">Achievements</h4>
+                    <p className="text-sm text-gray-600">Earned your ServSafe certification and completed 12 culinary projects.</p>
+                  </div>
+                  <div className="bg-white border border-green-200 rounded-lg p-4">
+                    <h4 className="font-medium text-green-800 mb-2">Next Phase</h4>
+                    <p className="text-sm text-gray-600">You're eligible to apply for the Apprentice program starting next semester.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {student.bucket === 'Completed Apprentice' && (
+              <div className="space-y-4">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-purple-800 mb-2">C-CAP Graduate - Apprentice Complete</h3>
+                  <p className="text-purple-700 text-sm mb-3">
+                    You've successfully completed the full C-CAP program! Here's your status:
+                  </p>
+                  <ul className="text-purple-700 text-sm space-y-1">
+                    <li>✓ Completed advanced culinary training and externships</li>
+                    <li>✓ Built a professional portfolio with 15+ projects</li>
+                    <li>✓ Established strong industry connections and references</li>
+                    <li>✓ Ready for professional culinary opportunities</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-purple-200 rounded-lg p-4">
+                    <h4 className="font-medium text-purple-800 mb-2">Career Ready</h4>
+                    <p className="text-sm text-gray-600">You have access to exclusive job placement services and industry networking events.</p>
+                  </div>
+                  <div className="bg-white border border-purple-200 rounded-lg p-4">
+                    <h4 className="font-medium text-purple-800 mb-2">Alumni Benefits</h4>
+                    <p className="text-sm text-gray-600">Access to ongoing professional development and mentorship opportunities.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {student.bucket === 'Not Active' && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-800 mb-2">Account Status: Not Active</h3>
+                  <p className="text-gray-700 text-sm mb-3">
+                    Your C-CAP account is currently inactive. Here's what you need to know:
+                  </p>
+                  <ul className="text-gray-700 text-sm space-y-1">
+                    <li>• Your account has been temporarily suspended</li>
+                    <li>• Contact your program coordinator for reactivation</li>
+                    <li>• Complete any outstanding requirements</li>
+                    <li>• Update your contact information if needed</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-800 mb-2">Contact Support</h4>
+                    <p className="text-sm text-gray-600">Reach out to your program coordinator to discuss reactivation options.</p>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-800 mb-2">Requirements</h4>
+                    <p className="text-sm text-gray-600">Review any outstanding requirements that need to be completed for reactivation.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -424,6 +590,7 @@ interface Submission extends Record<string, unknown> {
   foodHandlersCard: string;
   servsafeCredentials: string;
   culinaryYears: string;
+  bucket: string;
   profilePicture?: string;
   bio?: string;
 }
@@ -470,6 +637,7 @@ const exampleData: Submission[] = [
     foodHandlersCard: "No",
     servsafeCredentials: "",
     culinaryYears: "2",
+    bucket: "Apprentice",
     profilePicture: "https://plus.unsplash.com/premium_photo-1687485794296-68f0d6e934bb?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     bio: "Passionate culinary student with 2 years of experience in baking and pastry. Currently working at Yogurtini while pursuing my culinary education. I love experimenting with new recipes and techniques, and I'm excited to grow my skills in the culinary industry."
   }

@@ -85,6 +85,7 @@ export default function Submissions() {
   const [selectedGraduationYear, setSelectedGraduationYear] = useState<string | null>(null);
   const [selectedStatesOfResidence, setSelectedStatesOfResidence] = useState<string[]>([]);
   const [selectedStatesOfRelocation, setSelectedStatesOfRelocation] = useState<string[]>([]);
+  const [selectedBuckets, setSelectedBuckets] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Dynamic items per page calculation
@@ -127,6 +128,12 @@ export default function Submissions() {
     ).map((state) => ({ value: state, label: state }));
   }, []);
 
+  const uniqueBuckets = useMemo(() => {
+    return Array.from(
+      new Set(exampleData.map((item) => item.bucket).filter(Boolean))
+    ).map((bucket) => ({ value: bucket, label: bucket }));
+  }, []);
+
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
     return exampleData.filter((item) => {
@@ -147,6 +154,10 @@ export default function Submissions() {
       // State of relocation filtering
       const matchesStateOfRelocation = selectedStatesOfRelocation.length === 0 ||
         item.relocationStates.some((state) => selectedStatesOfRelocation.includes(state));
+
+      // Bucket filtering
+      const matchesBucket = selectedBuckets.length === 0 ||
+        (item.bucket && selectedBuckets.includes(item.bucket));
 
       // Status filtering
       let matchesStatus = true;
@@ -174,9 +185,9 @@ export default function Submissions() {
       }
 
       return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
-        matchesStateOfRelocation && matchesStatus;
+        matchesStateOfRelocation && matchesBucket && matchesStatus;
     });
-  }, [searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, statusFilter]);
+  }, [searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, statusFilter]);
 
   // Reset all filters
   const handleResetFilters = () => {
@@ -184,6 +195,7 @@ export default function Submissions() {
     setSelectedGraduationYear(null);
     setSelectedStatesOfResidence([]);
     setSelectedStatesOfRelocation([]);
+    setSelectedBuckets([]);
     setStatusFilter("all");
   };
 
@@ -360,6 +372,28 @@ const columns: Column<Submission>[] = [
     sortable: true,
   },
   {
+    key: 'bucket',
+    header: 'Bucket',
+    minWidth: '120px',
+    render: (item) => (
+      <div className="flex items-center">
+        <Badge 
+          variant="outline" 
+          className={`text-xs font-medium ${
+            item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+            item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+            item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+            item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+            'bg-gray-50 text-gray-700 border-gray-200'
+          }`}
+        >
+          {item.bucket}
+        </Badge>
+      </div>
+    ),
+    sortable: true,
+  },
+  {
     key: 'submissionDate',
     header: 'Submitted',
     minWidth: '120px',
@@ -466,6 +500,20 @@ const columns: Column<Submission>[] = [
                 />
               </div>
 
+              {/* Bucket Filter */}
+              <div className="min-w-[180px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bucket
+                </label>
+                <MultiSelect
+                  options={uniqueBuckets}
+                  onValueChange={setSelectedBuckets}
+                  defaultValue={selectedBuckets}
+                  placeholder="Select Buckets"
+                  maxCount={3}
+                />
+              </div>
+
               {/* Status Filter */}
               <div className="min-w-[150px]">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -510,7 +558,7 @@ const columns: Column<Submission>[] = [
         </div>
 
         {/* Applied Filters Display */}
-        {(selectedGraduationYear || selectedStatesOfResidence.length > 0 || selectedStatesOfRelocation.length > 0 || statusFilter !== "all") && (
+        {(selectedGraduationYear || selectedStatesOfResidence.length > 0 || selectedStatesOfRelocation.length > 0 || selectedBuckets.length > 0 || statusFilter !== "all") && (
           <div className="flex flex-wrap gap-2 mb-4">
             {selectedGraduationYear && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
@@ -536,6 +584,15 @@ const columns: Column<Submission>[] = [
                 <X
                   className="w-3 h-3 cursor-pointer hover:text-purple-600"
                   onClick={() => setSelectedStatesOfRelocation(prev => prev.filter(s => s !== state))}
+                />
+              </Badge>
+            ))}
+            {selectedBuckets.map((bucket) => (
+              <Badge key={bucket} variant="secondary" className="bg-indigo-100 text-indigo-800 flex items-center gap-1">
+                Bucket: {bucket}
+                <X
+                  className="w-3 h-3 cursor-pointer hover:text-indigo-600"
+                  onClick={() => setSelectedBuckets(prev => prev.filter(b => b !== bucket))}
                 />
               </Badge>
             ))}
@@ -614,6 +671,7 @@ interface Submission extends Record<string, unknown> {
   foodHandlersCard: string;
   servsafeCredentials: string;
   culinaryYears: string;
+  bucket: string;
 }
 
 // Example data based on Google Sheets structure
@@ -657,7 +715,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Culinary", "Baking and Pastry"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "1"
+    culinaryYears: "1",
+    bucket: "Pre-Apprentice"
   },
   { 
     id: 2,
@@ -698,7 +757,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Baking and Pastry", "Culinary"],
     foodHandlersCard: "No",
     servsafeCredentials: "",
-    culinaryYears: "2"
+    culinaryYears: "2",
+    bucket: "Apprentice"
   },
   {
     id: 3,
@@ -739,7 +799,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Baking and Pastry"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "0"
+    culinaryYears: "0",
+    bucket: "Completed Pre-Apprentice"
   },
   {
     id: 4,
@@ -780,7 +841,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Culinary"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "2"
+    culinaryYears: "2",
+    bucket: "Completed Apprentice"
   },
   {
     id: 5,
@@ -821,7 +883,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Culinary"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "3"
+    culinaryYears: "3",
+    bucket: "Not Active"
   },
   {
     id: 6,
@@ -862,7 +925,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Culinary"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "3"
+    culinaryYears: "3",
+    bucket: "Completed Apprentice"
   },
   {
     id: 7,
@@ -903,7 +967,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Culinary", "Baking and Pastry"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "3"
+    culinaryYears: "3",
+    bucket: "Pre-Apprentice"
   },
   {
     id: 8,
@@ -944,7 +1009,8 @@ const exampleData: Submission[] = [
     interestedOptions: ["Baking and Pastry"],
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
-    culinaryYears: "3"
+    culinaryYears: "3",
+    bucket: "Apprentice"
   }
 ];
 

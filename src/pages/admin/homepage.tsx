@@ -236,7 +236,7 @@ export default function Homepage() {
                 <p className="text-gray-600">There are no announcements at this time. Check back later for updates.</p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                 {announcements.map((announcement) => (
                   <div key={announcement.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-start">
