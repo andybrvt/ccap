@@ -328,9 +328,9 @@ export default function Homepage() {
       {/* Posts and Announcements */}
       <section className="px-6 py-0 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             {/* Posts Column */}
-            <div>
+            <div className="flex flex-col h-full">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
@@ -346,7 +346,7 @@ export default function Homepage() {
                 </Link> */}
               </div>
 
-              <div className="border border-gray-200 rounded-xl bg-white">
+              <div className="border border-gray-200 rounded-xl bg-white flex-1 flex flex-col h-full p-6">
                 {posts.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -428,7 +428,7 @@ export default function Homepage() {
             </div>
 
             {/* Announcements Column */}
-            <div>
+            <div className="flex flex-col h-full">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
@@ -444,7 +444,7 @@ export default function Homepage() {
                 </Link>
               </div>
 
-              <div className="border border-gray-200 rounded-xl p-6 bg-white">
+              <div className="border border-gray-200 rounded-xl p-6 bg-white flex-1 flex flex-col h-full">
                 {announcements.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

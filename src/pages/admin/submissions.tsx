@@ -15,6 +15,9 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import DataTable, { Column, FilterOption } from '@/components/ui/data-table';
 import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useState as useReactState } from 'react';
+import BulkBucketAssignDialog from './bulkbucketAssign';
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
 function useDynamicItemsPerPage() {
@@ -199,235 +202,309 @@ export default function Submissions() {
     setStatusFilter("all");
   };
 
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<string[]>([]);
+  const [bulkFilters, setBulkFilters] = useState({
+    searchKey: '',
+    graduationYear: null as string | null,
+    statesOfResidence: [] as string[],
+    statesOfRelocation: [] as string[],
+    buckets: [] as string[],
+    statusFilter: 'all',
+  });
+
+  // Filtered data for bulk dialog
+  const bulkFilteredData = useMemo(() => {
+    return exampleData.filter((item) => {
+      // Search filtering
+      const matchesSearch = !bulkFilters.searchKey ||
+        `${item.firstName} ${item.lastName}`.toLowerCase().includes(bulkFilters.searchKey.toLowerCase()) ||
+        item.email.toLowerCase().includes(bulkFilters.searchKey.toLowerCase()) ||
+        item.highSchool.toLowerCase().includes(bulkFilters.searchKey.toLowerCase());
+      const matchesGraduationYear = !bulkFilters.graduationYear ||
+        item.graduationYear === bulkFilters.graduationYear;
+      const matchesStateOfResidence = bulkFilters.statesOfResidence.length === 0 ||
+        bulkFilters.statesOfResidence.includes(item.state);
+      const matchesStateOfRelocation = bulkFilters.statesOfRelocation.length === 0 ||
+        item.relocationStates.some((state) => bulkFilters.statesOfRelocation.includes(state));
+      const matchesBucket = bulkFilters.buckets.length === 0 ||
+        (item.bucket && bulkFilters.buckets.includes(item.bucket));
+      let matchesStatus = true;
+      if (bulkFilters.statusFilter !== 'all') {
+        switch (bulkFilters.statusFilter) {
+          case 'has_resume':
+            matchesStatus = item.hasResume === 'Yes';
+            break;
+          case 'currently_working':
+            matchesStatus = item.currentJob === 'Yes';
+            break;
+          case 'food_handlers':
+            matchesStatus = item.foodHandlersCard === 'Yes';
+            break;
+          case 'servsafe':
+            matchesStatus = item.servsafeCredentials === 'Yes';
+            break;
+          case 'will_relocate':
+            matchesStatus = item.willRelocate === 'Yes';
+            break;
+          case 'ready_to_work':
+            matchesStatus = item.readyToWork === 'Yes';
+            break;
+        }
+      }
+      return matchesSearch && matchesGraduationYear && matchesStateOfResidence && matchesStateOfRelocation && matchesBucket && matchesStatus;
+    })
+    // Only show students with no bucket ("", null, or undefined)
+    .filter((item) => !item.bucket);
+  }, [bulkFilters]);
+
+  const allBulkIds = bulkFilteredData.map((item) => item.submissionId);
+  const allSelected = bulkSelected.length === allBulkIds.length && allBulkIds.length > 0;
+  const toggleSelectAll = () => {
+    setBulkSelected(allSelected ? [] : allBulkIds);
+  };
+  const toggleSelectOne = (id: string) => {
+    setBulkSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
   // Column definitions
-const columns: Column<Submission>[] = [
-  {
-    key: 'name',
-    header: 'Candidate',
-    minWidth: '280px',
-    render: (item) => (
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
-          <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <span className="text-gray-900 font-medium">
-            {item.firstName} {item.lastName}
-            {item.preferredName && (
-              <span className="text-gray-500 ml-1">({item.preferredName})</span>
-            )}
-          </span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Mail className="h-3 w-3 flex-shrink-0" />
-          <span className="truncate">
-            {item.email}
-          </span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Phone className="h-3 w-3 flex-shrink-0" />
-          <span className="truncate">
-            {item.mobileNumber}
-          </span>
-        </div>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'location',
-    header: 'Location',
-    minWidth: '200px',
-    render: (item) => (
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
-          <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <span className="text-gray-700 text-sm">
-            {item.city}, {item.state}
-          </span>
-        </div>
-        {item.willRelocate === "Yes" && item.relocationStates.length > 0 && (
-          <div className="text-xs text-gray-500">
-            Will relocate to: {item.relocationStates.join(", ")}
+  const columns: Column<Submission>[] = [
+    {
+      key: 'name',
+      header: 'Candidate',
+      minWidth: '280px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-900 font-medium">
+              {item.firstName} {item.lastName}
+              {item.preferredName && (
+                <span className="text-gray-500 ml-1">({item.preferredName})</span>
+              )}
+            </span>
           </div>
-        )}
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'education',
-    header: 'Education',
-    minWidth: '180px',
-    render: (item) => (
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
-          <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <span className="text-gray-700 text-sm">
-            {item.highSchool}
-          </span>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Mail className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">
+              {item.email}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Phone className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">
+              {item.mobileNumber}
+            </span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500">
-          Graduates: {item.graduationYear}
+      ),
+      sortable: true,
+    },
+    {
+      key: 'location',
+      header: 'Location',
+      minWidth: '200px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">
+              {item.city}, {item.state}
+            </span>
+          </div>
+          {item.willRelocate === "Yes" && item.relocationStates.length > 0 && (
+            <div className="text-xs text-gray-500">
+              Will relocate to: {item.relocationStates.join(", ")}
+            </div>
+          )}
         </div>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'availability',
-    header: 'Availability',
-    minWidth: '200px',
-    render: (item) => (
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
-          <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <span className="text-gray-700 text-sm">
-            {item.hoursWanted} hrs/week
-          </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'education',
+      header: 'Education',
+      minWidth: '180px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">
+              {item.highSchool}
+            </span>
+          </div>
+          <div className="text-xs text-gray-500">
+            Graduates: {item.graduationYear}
+          </div>
         </div>
-        <div className="text-xs text-gray-500">
-          {item.availableTimes}
+      ),
+      sortable: true,
+    },
+    {
+      key: 'availability',
+      header: 'Availability',
+      minWidth: '200px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">
+              {item.hoursWanted} hrs/week
+            </span>
+          </div>
+          <div className="text-xs text-gray-500">
+            {item.availableTimes}
+          </div>
+          <div className="text-xs text-gray-500">
+            Weekends: {item.availableWeekends}
+          </div>
         </div>
-        <div className="text-xs text-gray-500">
-          Weekends: {item.availableWeekends}
+      ),
+      sortable: true,
+    },
+    {
+      key: 'experience',
+      header: 'Experience',
+      minWidth: '150px',
+      render: (item) => (
+        <div className="space-y-1">
+          {item.currentJob === "Yes" ? (
+            <div className="flex items-center">
+              <Briefcase className="w-4 h-4 text-gray-700 mr-2 flex-shrink-0" />
+              <Badge variant="default" className="bg-blue-100 text-blue-800">
+                Currently Working
+              </Badge>
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <Clock className="w-4 h-4 text-gray-600 mr-2 flex-shrink-0" />
+              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                No Current Job
+              </Badge>
+            </div>
+          )}
+          <div className="text-xs text-gray-500">
+            {item.culinaryYears} years culinary
+          </div>
         </div>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'experience',
-    header: 'Experience',
-    minWidth: '150px',
-    render: (item) => (
-      <div className="space-y-1">
-        {item.currentJob === "Yes" ? (
+      ),
+      sortable: true,
+    },
+    {
+      key: 'credentials',
+      header: 'Credentials',
+      minWidth: '150px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            {item.foodHandlersCard === "Yes" ? (
+              <Utensils className="w-4 h-4 text-green-600" />
+            ) : (
+              <Utensils className="w-4 h-4 text-gray-400" />
+            )}
+            <span className="text-xs text-gray-600">Food Handler</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {item.servsafeCredentials === "Yes" ? (
+              <Shield className="w-4 h-4 text-green-600" />
+            ) : (
+              <Shield className="w-4 h-4 text-gray-400" />
+            )}
+            <span className="text-xs text-gray-600">ServSafe</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {item.hasResume === "Yes" ? (
+              <FileCheck className="w-4 h-4 text-green-600" />
+            ) : (
+              <FileCheck className="w-4 h-4 text-gray-400" />
+            )}
+            <span className="text-xs text-gray-600">Resume</span>
+          </div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'interests',
+      header: 'Interests',
+      minWidth: '150px',
+      render: (item) => (
+        <div className="space-y-1">
+          {item.interestedOptions.map((option, index) => (
+            <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
+              {option}
+            </Badge>
+          ))}
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'bucket',
+      header: 'Bucket',
+      minWidth: '120px',
+      render: (item) => (
+        item.bucket ? (
           <div className="flex items-center">
-            <Briefcase className="w-4 h-4 text-gray-700 mr-2 flex-shrink-0" />
-            <Badge variant="default" className="bg-blue-100 text-blue-800">
-              Currently Working
+            <Badge
+              variant="outline"
+              className={`text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                  item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                    item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                      item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        'bg-gray-50 text-gray-700 border-gray-200'
+                }`}
+            >
+              {item.bucket}
             </Badge>
           </div>
         ) : (
-          <div className="flex items-center">
-            <Clock className="w-4 h-4 text-gray-600 mr-2 flex-shrink-0" />
-            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-              No Current Job
-            </Badge>
-          </div>
-        )}
-        <div className="text-xs text-gray-500">
-          {item.culinaryYears} years culinary
-        </div>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'credentials',
-    header: 'Credentials',
-    minWidth: '150px',
-    render: (item) => (
-      <div className="space-y-1">
+          <AssignBucketButton submission={item} />
+        )
+      ),
+      sortable: true,
+    },
+    {
+      key: 'submissionDate',
+      header: 'Submitted',
+      minWidth: '120px',
+      render: (item) => (
         <div className="flex items-center space-x-2">
-          {item.foodHandlersCard === "Yes" ? (
-            <Utensils className="w-4 h-4 text-green-600" />
-          ) : (
-            <Utensils className="w-4 h-4 text-gray-400" />
-          )}
-          <span className="text-xs text-gray-600">Food Handler</span>
+          <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <span className="text-gray-700 text-sm whitespace-nowrap">
+            {format(new Date(item.submissionDate), "MMM d, yyyy")}
+          </span>
         </div>
-        <div className="flex items-center space-x-2">
-          {item.servsafeCredentials === "Yes" ? (
-            <Shield className="w-4 h-4 text-green-600" />
-          ) : (
-            <Shield className="w-4 h-4 text-gray-400" />
-          )}
-          <span className="text-xs text-gray-600">ServSafe</span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      minWidth: '120px',
+      align: 'right',
+      render: (item) => (
+        <div className="flex items-center justify-end space-x-2">
+          <Button size="sm" className="bg-black text-white hover:bg-gray-800 hover:cursor-pointer" onClick={() => handleViewDetails(item)}>
+            View Details
+          </Button>
         </div>
-        <div className="flex items-center space-x-2">
-          {item.hasResume === "Yes" ? (
-            <FileCheck className="w-4 h-4 text-green-600" />
-          ) : (
-            <FileCheck className="w-4 h-4 text-gray-400" />
-          )}
-          <span className="text-xs text-gray-600">Resume</span>
-        </div>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'interests',
-    header: 'Interests',
-    minWidth: '150px',
-    render: (item) => (
-      <div className="space-y-1">
-        {item.interestedOptions.map((option, index) => (
-          <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
-            {option}
-          </Badge>
-        ))}
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'bucket',
-    header: 'Bucket',
-    minWidth: '120px',
-    render: (item) => (
-      <div className="flex items-center">
-        <Badge 
-          variant="outline" 
-          className={`text-xs font-medium ${
-            item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-            item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-            item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-            item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-            'bg-gray-50 text-gray-700 border-gray-200'
-          }`}
-        >
-          {item.bucket}
-        </Badge>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'submissionDate',
-    header: 'Submitted',
-    minWidth: '120px',
-    render: (item) => (
-      <div className="flex items-center space-x-2">
-        <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
-        <span className="text-gray-700 text-sm whitespace-nowrap">
-          {format(new Date(item.submissionDate), "MMM d, yyyy")}
-        </span>
-      </div>
-    ),
-    sortable: true,
-  },
-  {
-    key: 'actions',
-    header: 'Actions',
-    minWidth: '120px',
-    align: 'right',
-    render: (item) => (
-      <div className="flex items-center justify-end space-x-2">
-        <Button size="sm" className="bg-black text-white hover:bg-gray-800 hover:cursor-pointer" onClick={() => handleViewDetails(item)}>
-          View Details
-        </Button>
-      </div>
-    ),
-  },
-];
+      ),
+    },
+  ];
 
 
   return (
     <Layout>
       <div className="p-6" ref={containerRef}>
-        <h1 className="text-2xl font-bold mb-6">C-CAP Submission Data</h1>
-
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">C-CAP Submission Data</h1>
+          <div className="flex items-center gap-4">
+            <Button variant="default" onClick={() => setBulkDialogOpen(true)}>
+              Bulk Assign Bucket
+            </Button>
+          </div>
+        </div>
         {/* Filter Bar */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
           <div className="p-6">
@@ -542,9 +619,20 @@ const columns: Column<Submission>[] = [
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Reset Button below filters */}
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleResetFilters}
+                  variant="outline"
+                  className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
+                >
+                  Reset All Filters
+                </Button>
+              </div>
             </div>
 
-            {/* Reset Button below filters */}
+            {/* Reset Button below filters
             <div className="flex justify-end">
               <Button
                 onClick={handleResetFilters}
@@ -553,12 +641,12 @@ const columns: Column<Submission>[] = [
               >
                 Reset All Filters
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
 
         {/* Applied Filters Display */}
-        {(selectedGraduationYear || selectedStatesOfResidence.length > 0 || selectedStatesOfRelocation.length > 0 || selectedBuckets.length > 0 || statusFilter !== "all") && (
+        {/* {(selectedGraduationYear || selectedStatesOfResidence.length > 0 || selectedStatesOfRelocation.length > 0 || selectedBuckets.length > 0 || statusFilter !== "all") && (
           <div className="flex flex-wrap gap-2 mb-4">
             {selectedGraduationYear && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
@@ -606,7 +694,7 @@ const columns: Column<Submission>[] = [
               </Badge>
             )}
           </div>
-        )}
+        )} */}
 
         <DataTable<Submission>
           data={filteredData}
@@ -627,6 +715,20 @@ const columns: Column<Submission>[] = [
           }}
         />
       </div>
+      <BulkBucketAssignDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
+        filters={bulkFilters}
+        setFilters={setBulkFilters}
+        selected={bulkSelected}
+        setSelected={setBulkSelected}
+        uniqueGraduationYears={uniqueGraduationYears}
+        uniqueStatesOfResidence={uniqueStatesOfResidence}
+        uniqueStatesOfRelocation={uniqueStatesOfRelocation}
+        uniqueBuckets={uniqueBuckets}
+        filterOptions={filterOptions}
+        filteredData={bulkFilteredData}
+      />
     </Layout>
   );
 }
@@ -672,6 +774,7 @@ interface Submission extends Record<string, unknown> {
   servsafeCredentials: string;
   culinaryYears: string;
   bucket: string;
+  id?: number;
 }
 
 // Example data based on Google Sheets structure
@@ -716,9 +819,10 @@ const exampleData: Submission[] = [
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
     culinaryYears: "1",
-    bucket: "Pre-Apprentice"
+    // bucket: "Pre-Apprentice"
+    bucket: ""
   },
-  { 
+  {
     id: 2,
     submissionId: "x1ylvJ",
     formId: "gWroN4",
@@ -1010,7 +1114,8 @@ const exampleData: Submission[] = [
     foodHandlersCard: "Yes",
     servsafeCredentials: "",
     culinaryYears: "3",
-    bucket: "Apprentice"
+    // bucket: "Apprentice"
+    bucket: ""
   }
 ];
 
@@ -1047,3 +1152,61 @@ const filterOptions: FilterOption[] = [
     icon: <Clock className="w-3 h-3 text-gray-700 mr-2" />,
   },
 ];
+
+function AssignBucketButton({ submission }: { submission: Submission }) {
+  const [open, setOpen] = useReactState(false);
+  const [selectedBucket, setSelectedBucket] = useReactState<string | null>(null);
+  const bucketOptions = [
+    'Pre-Apprentice',
+    'Apprentice',
+    'Completed Pre-Apprentice',
+    'Completed Apprentice',
+    'Not Active',
+  ];
+
+  // This would update the bucket in real app, here just closes dialog
+  const handleAssign = () => {
+    setOpen(false);
+    // Optionally show a toast or update local state
+  };
+
+  return (
+    <>
+      <Button size="sm" variant="outline" className="text-xs" onClick={() => setOpen(true)}>
+        Assign Bucket
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent onInteractOutside={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Assign Bucket</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-gray-700 mb-2">
+              Assign a bucket to <span className="font-semibold">{submission.firstName} {submission.lastName}</span>
+            </div>
+            <Select value={selectedBucket || ''} onValueChange={setSelectedBucket}>
+              <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
+                <SelectValue placeholder="Select Bucket" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-200">
+                {bucketOptions.map((bucket) => (
+                  <SelectItem key={bucket} value={bucket} className="text-gray-900 hover:bg-gray-100">
+                    {bucket}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAssign} disabled={!selectedBucket}>
+              Assign
+            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
