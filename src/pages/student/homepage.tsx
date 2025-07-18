@@ -306,24 +306,17 @@ export default function Homepage() {
     <Layout>
       {/* Dashboard Hero */}
       <section className="px-6 py-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold text-black mb-3">
+        <div className="max-w-7xl w-full mx-auto">
+          <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center">
+            <p className="text-3xl font-bold text-black">
               CCAP Student Dashboard
-            </h1>
-            <h1 className="text-2xl font-medium text-gray-600 mb-3">
+            </p>
+            <p className="text-xl font-medium text-gray-800">
               Welcome back, {user?.full_name}
-            </h1>
-            {/* <p className="text-lg text-gray-600">
-              CCAP Application Management System
-            </p> */}
+            </p>
           </div>
-
-
         </div>
       </section>
-
-
 
       {/* Posts and Announcements */}
       <section className="px-6 py-0 bg-gray-50">
@@ -356,7 +349,7 @@ export default function Homepage() {
                     <p className="text-gray-600">There are no posts at this time. Check back later for updates.</p>
                   </div>
                 ) : (
-                  <div className="max-h-[600px] overflow-y-auto">
+                  <div className="max-h-[600px] overflow-y-auto scrollbar-hide">
                     {posts.map((post) => (
                       <div key={post.id} className="border-b border-gray-100 last:border-b-0">
                         <div
@@ -380,10 +373,10 @@ export default function Homepage() {
                                   <Badge
                                     variant="outline"
                                     className={`text-xs ${post.user.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                        post.user.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                          post.user.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                                            post.user.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                              'bg-gray-50 text-gray-700 border-gray-200'
+                                      post.user.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                        post.user.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                                          post.user.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                            'bg-gray-50 text-gray-700 border-gray-200'
                                       }`}
                                   >
                                     {post.user.bucket}
@@ -402,8 +395,15 @@ export default function Homepage() {
                           {/* Post Content */}
                           <div className="mb-3">
                             <p className="text-gray-900 mb-3">{post.content}</p>
+
+                            {post.dish && (
+                              <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700 mb-3">
+                                Featured: {post.dish}
+                              </Badge>
+                            )}
+
                             {post.image && (
-                              <div className="rounded-lg overflow-hidden mb-3">
+                              <div className="rounded-lg overflow-hidden">
                                 <img
                                   src={post.image}
                                   alt="Post"
@@ -411,11 +411,7 @@ export default function Homepage() {
                                 />
                               </div>
                             )}
-                            {post.dish && (
-                              <Badge variant="outline" className="text-xs bg-gray-50 text-gray-700 border-gray-200">
-                                Featured: {post.dish}
-                              </Badge>
-                            )}
+
                           </div>
 
 
@@ -454,7 +450,7 @@ export default function Homepage() {
                     <p className="text-gray-600">There are no announcements at this time. Check back later for updates.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
                     {announcements.map((announcement) => (
                       <div key={announcement.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <div className="flex items-start">
@@ -566,10 +562,10 @@ export default function Homepage() {
                       <Badge
                         variant="outline"
                         className={`text-xs ${selectedPost.user.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                            selectedPost.user.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              selectedPost.user.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                                selectedPost.user.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                  'bg-gray-50 text-gray-700 border-gray-200'
+                          selectedPost.user.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            selectedPost.user.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                              selectedPost.user.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                'bg-gray-50 text-gray-700 border-gray-200'
                           }`}
                       >
                         {selectedPost.user.bucket}
@@ -585,19 +581,19 @@ export default function Homepage() {
               {/* Post Content */}
               <div className="mb-4">
                 <p className="text-gray-900 text-base mb-4 leading-relaxed">{selectedPost.content}</p>
+                {selectedPost.dish && (
+                  <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700 mb-4">
+                    Featured: {selectedPost.dish}
+                  </Badge>
+                )}
                 {selectedPost.image && (
-                  <div className="rounded-lg overflow-hidden mb-4">
+                  <div className="rounded-lg overflow-hidden mb-3">
                     <img
                       src={selectedPost.image}
                       alt="Post"
                       className="w-full h-64 object-cover"
                     />
                   </div>
-                )}
-                {selectedPost.dish && (
-                  <Badge variant="outline" className="text-sm bg-gray-50 text-gray-700 border-gray-200">
-                    Featured: {selectedPost.dish}
-                  </Badge>
                 )}
               </div>
 

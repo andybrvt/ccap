@@ -41,7 +41,7 @@ function useDynamicItemsPerPage() {
       const viewportHeight = window.innerHeight;
 
       // Reserve space for other elements (filters, pagination, margins)
-      const reservedSpace = 400; // Adjust this value based on your layout
+      const reservedSpace = 300; // Adjust this value based on your layout
       const availableHeight = viewportHeight - containerTop - reservedSpace;
 
       // Get the height of a single table row (including header)
@@ -254,8 +254,8 @@ export default function Submissions() {
       }
       return matchesSearch && matchesGraduationYear && matchesStateOfResidence && matchesStateOfRelocation && matchesBucket && matchesStatus;
     })
-    // Only show students with no bucket ("", null, or undefined)
-    .filter((item) => !item.bucket);
+      // Only show students with no bucket ("", null, or undefined)
+      .filter((item) => !item.bucket);
   }, [bulkFilters]);
 
   const allBulkIds = bulkFilteredData.map((item) => item.submissionId);
@@ -341,6 +341,31 @@ export default function Submissions() {
       sortable: true,
     },
     {
+      key: 'programStages',
+      header: 'Program Stages',
+      minWidth: '120px',
+      render: (item) => (
+        item.bucket ? (
+          <div className="flex items-center">
+            <Badge
+              variant="outline"
+              className={`text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                  item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                    item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      'bg-gray-50 text-gray-700 border-gray-200'
+                }`}
+            >
+              {item.bucket}
+            </Badge>
+          </div>
+        ) : (
+          <AssignBucketButton submission={item} />
+        )
+      ),
+      sortable: true,
+    },
+    {
       key: 'availability',
       header: 'Availability',
       minWidth: '200px',
@@ -353,6 +378,7 @@ export default function Submissions() {
             </span>
           </div>
           <div className="text-xs text-gray-500">
+            {/* <div className="text-xs max-w-[150px] break-words whitespace-pre-line text-gray-500 "> */}
             {item.availableTimes}
           </div>
           <div className="text-xs text-gray-500">
@@ -440,31 +466,6 @@ export default function Submissions() {
       sortable: true,
     },
     {
-      key: 'bucket',
-      header: 'Bucket',
-      minWidth: '120px',
-      render: (item) => (
-        item.bucket ? (
-          <div className="flex items-center">
-            <Badge
-              variant="outline"
-              className={`text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                  item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                    item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                      item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                        'bg-gray-50 text-gray-700 border-gray-200'
-                }`}
-            >
-              {item.bucket}
-            </Badge>
-          </div>
-        ) : (
-          <AssignBucketButton submission={item} />
-        )
-      ),
-      sortable: true,
-    },
-    {
       key: 'submissionDate',
       header: 'Submitted',
       minWidth: '120px',
@@ -496,152 +497,148 @@ export default function Submissions() {
 
   return (
     <Layout>
-      <div className="p-6" ref={containerRef}>
-        <div className="flex justify-between items-center mb-6">
+      <div className="py-4 px-6" ref={containerRef}>
+        <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">C-CAP Submission Data</h1>
-          <div className="flex items-center gap-4">
-            <Button variant="default" onClick={() => setBulkDialogOpen(true)}>
-              Bulk Assign Bucket
-            </Button>
-          </div>
         </div>
-        {/* Filter Bar */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
-          <div className="p-6">
-            {/* Filters in one line */}
-            <div className="flex flex-wrap items-end gap-4 mb-4">
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search Candidates
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search by name, email, or school"
-                    value={searchKey}
-                    onChange={(e) => setSearchKey(e.target.value)}
-                    className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
+
+        <div className="flex flex-col gap-2 pb-4">
+          {/* Filter Bar */}
+          <div className="bg-white rounded-lg pl-0 p-2 w-full">
+            <div className="">
+              {/* Filters in one line */}
+              <div className="flex flex-wrap items-end gap-4">
+                {/* Graduation Year Filter */}
+                <div className="min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Graduation Year
+                  </label>
+                  <Select value={selectedGraduationYear || "all"} onValueChange={(value) => setSelectedGraduationYear(value === "all" ? null : value)}>
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                      <GraduationCap className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="All Years" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
+                        All Years
+                      </SelectItem>
+                      {uniqueGraduationYears.map((year) => (
+                        <SelectItem key={year.value} value={year.value} className="text-gray-900 hover:bg-gray-100">
+                          {year.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* State of Residence Filter */}
+                <div className="min-w-[180px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    State of Residence
+                  </label>
+                  <MultiSelect
+                    options={uniqueStatesOfResidence}
+                    onValueChange={setSelectedStatesOfResidence}
+                    defaultValue={selectedStatesOfResidence}
+                    placeholder="Select State of Residence"
+                    maxCount={3}
                   />
                 </div>
-              </div>
 
-              {/* Graduation Year Filter */}
-              <div className="min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Graduation Year
-                </label>
-                <Select value={selectedGraduationYear || "all"} onValueChange={(value) => setSelectedGraduationYear(value === "all" ? null : value)}>
-                  <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-                    <GraduationCap className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="All Years" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
-                      All Years
-                    </SelectItem>
-                    {uniqueGraduationYears.map((year) => (
-                      <SelectItem key={year.value} value={year.value} className="text-gray-900 hover:bg-gray-100">
-                        {year.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* State of Relocation Filter */}
+                <div className="min-w-[180px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    State of Relocation
+                  </label>
+                  <MultiSelect
+                    options={uniqueStatesOfRelocation}
+                    onValueChange={setSelectedStatesOfRelocation}
+                    defaultValue={selectedStatesOfRelocation}
+                    placeholder="Select State of Relocation"
+                    maxCount={3}
+                  />
+                </div>
 
-              {/* State of Residence Filter */}
-              <div className="min-w-[180px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State of Residence
-                </label>
-                <MultiSelect
-                  options={uniqueStatesOfResidence}
-                  onValueChange={setSelectedStatesOfResidence}
-                  defaultValue={selectedStatesOfResidence}
-                  placeholder="Select State of Residence"
-                  maxCount={3}
-                />
-              </div>
+                {/* Bucket Filter */}
+                <div className="min-w-[180px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Program Stages
+                  </label>
+                  <MultiSelect
+                    options={uniqueBuckets}
+                    onValueChange={setSelectedBuckets}
+                    defaultValue={selectedBuckets}
+                    placeholder="Select Buckets"
+                    maxCount={3}
+                  />
+                </div>
 
-              {/* State of Relocation Filter */}
-              <div className="min-w-[180px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State of Relocation
-                </label>
-                <MultiSelect
-                  options={uniqueStatesOfRelocation}
-                  onValueChange={setSelectedStatesOfRelocation}
-                  defaultValue={selectedStatesOfRelocation}
-                  placeholder="Select State of Relocation"
-                  maxCount={3}
-                />
-              </div>
-
-              {/* Bucket Filter */}
-              <div className="min-w-[180px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bucket
-                </label>
-                <MultiSelect
-                  options={uniqueBuckets}
-                  onValueChange={setSelectedBuckets}
-                  defaultValue={selectedBuckets}
-                  placeholder="Select Buckets"
-                  maxCount={3}
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div className="min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status Filter
-                </label>
-                <Select value={statusFilter} onValueChange={handleFilterChange}>
-                  <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
-                        All
-                      </div>
-                    </SelectItem>
-                    {filterOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">
+                {/* Status Filter */}
+                <div className="min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status Filter
+                  </label>
+                  <Select value={statusFilter} onValueChange={handleFilterChange}>
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
                         <div className="flex items-center">
-                          {option.icon}
-                          {option.label}
+                          <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
+                          All
                         </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                      {filterOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">
+                          <div className="flex items-center">
+                            {option.icon}
+                            {option.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Reset Button below filters */}
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleResetFilters}
-                  variant="outline"
-                  className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
-                >
-                  Reset All Filters
-                </Button>
+                {/* Reset Button below filters */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleResetFilters}
+                    variant="outline"
+                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
+                  >
+                    Reset All Filters
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex md:flex-row flex-col md:items-end md:justify-between gap-4">
+
+            {/* Search */}
+            <div className="flex-1 min-w-[200px] max-w-[400px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search Candidates
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search by name, email, or school"
+                  value={searchKey}
+                  onChange={(e) => setSearchKey(e.target.value)}
+                  className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
+                />
               </div>
             </div>
 
-            {/* Reset Button below filters
-            <div className="flex justify-end">
-              <Button
-                onClick={handleResetFilters}
-                variant="outline"
-                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
-              >
-                Reset All Filters
+            <div className="flex items-center gap-4">
+              <Button variant="default" onClick={() => setBulkDialogOpen(true)}>
+                Assign Program Stages
               </Button>
-            </div> */}
+            </div>
           </div>
         </div>
 
@@ -1172,21 +1169,21 @@ function AssignBucketButton({ submission }: { submission: Submission }) {
 
   return (
     <>
-      <Button size="sm" variant="outline" className="text-xs" onClick={() => setOpen(true)}>
-        Assign Bucket
+      <Button size="sm" variant="outline" className="text-xs border-gray-200 border-2" onClick={() => setOpen(true)}>
+        Assign Program Stage
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent onInteractOutside={e => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Assign Bucket</DialogTitle>
+            <DialogTitle>Assign Program Stage</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-sm text-gray-700 mb-2">
-              Assign a bucket to <span className="font-semibold">{submission.firstName} {submission.lastName}</span>
+              Assign a program stage to <span className="font-semibold">{submission.firstName} {submission.lastName}</span>
             </div>
             <Select value={selectedBucket || ''} onValueChange={setSelectedBucket}>
               <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-                <SelectValue placeholder="Select Bucket" />
+                <SelectValue placeholder="Select Program Stage" />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-200">
                 {bucketOptions.map((bucket) => (

@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MultiSelect } from '@/components/ui/multi-select';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -10,7 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { GraduationCap, Filter } from 'lucide-react';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { User, Mail, Phone, MapPin, GraduationCap, Briefcase, Clock as ClockIcon, Search, Filter } from 'lucide-react';
+import DataTable, { Column } from '@/components/ui/data-table';
 
 // Import Submission type from submissions page or define here if needed
 interface Submission {
@@ -54,6 +55,7 @@ interface Submission {
   culinaryYears: string;
   bucket: string;
   id?: number;
+  [key: string]: unknown; // <-- Add index signature for DataTable compatibility
 }
 
 interface BulkAssignFilters {
@@ -99,6 +101,7 @@ export default function BulkBucketAssignDialog({
   filterOptions,
   filteredData,
 }: BulkAssignProps) {
+  // Selection logic
   const allBulkIds = filteredData.map((item) => item.submissionId);
   const allSelected = selected.length === allBulkIds.length && allBulkIds.length > 0;
   const toggleSelectAll = () => {
@@ -122,120 +125,254 @@ export default function BulkBucketAssignDialog({
     });
   };
 
+  // Columns for DataTable
+  const columns: Column<Submission>[] = [
+    {
+      key: 'select',
+      header: '', // Use empty string for header
+      render: (item) => (
+        <input
+          type="checkbox"
+          checked={selected.includes(item.submissionId)}
+          onChange={() => toggleSelectOne(item.submissionId)}
+          aria-label={`Select ${item.firstName} ${item.lastName}`}
+        />
+      ),
+      minWidth: '40px',
+      align: 'center',
+    },
+    {
+      key: 'name',
+      header: 'Candidate',
+      minWidth: '220px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-900 font-medium">
+              {item.firstName} {item.lastName}
+              {item.preferredName && (
+                <span className="text-gray-500 ml-1">({item.preferredName})</span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Mail className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{item.email}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Phone className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{item.mobileNumber}</span>
+          </div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'location',
+      header: 'Location',
+      minWidth: '160px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">
+              {item.city}, {item.state}
+            </span>
+          </div>
+          {item.willRelocate === "Yes" && item.relocationStates.length > 0 && (
+            <div className="text-xs text-gray-500">
+              Will relocate to: {item.relocationStates.join(", ")}
+            </div>
+          )}
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'education',
+      header: 'Education',
+      minWidth: '140px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">{item.highSchool}</span>
+          </div>
+          <div className="text-xs text-gray-500">Graduates: {item.graduationYear}</div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'experience',
+      header: 'Experience',
+      minWidth: '120px',
+      render: (item) => (
+        <div className="space-y-1">
+          {item.currentJob === "Yes" ? (
+            <div className="flex items-center">
+              <Briefcase className="w-4 h-4 text-gray-700 mr-2 flex-shrink-0" />
+              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Currently Working</span>
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <ClockIcon className="w-4 h-4 text-gray-600 mr-2 flex-shrink-0" />
+              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">No Current Job</span>
+            </div>
+          )}
+          <div className="text-xs text-gray-500">{item.culinaryYears} years culinary</div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'availability',
+      header: 'Availability',
+      minWidth: '140px',
+      render: (item) => (
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">{item.hoursWanted} hrs/week</span>
+          </div>
+          <div className="text-xs text-gray-500">{item.availableTimes}</div>
+          <div className="text-xs text-gray-500">Weekends: {item.availableWeekends}</div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      minWidth: '100px',
+      align: 'right',
+      render: (item) => null, // No per-row action, only bulk assign
+    },
+  ];
+
+  // Filtered data for DataTable (apply filters like in submissions page)
+  const tableData = useMemo(() => filteredData, [filteredData]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onInteractOutside={e => e.preventDefault()} className="w-full" style={{ maxWidth: '1000px' }}>
+      <DialogContent onInteractOutside={e => e.preventDefault()} className="w-full" style={{ maxWidth: '1100px' }}>
         <DialogHeader>
           <DialogTitle>Bulk Assign Bucket</DialogTitle>
         </DialogHeader>
-        <div className="flex justify-end mb-2">
-          <Button variant="outline" onClick={handleResetFilters} className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6">
-            Reset All Filters
-          </Button>
-        </div>
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          <div>
+        {/* Filters and Search Bar */}
+        <div className="flex flex-col gap-2 pb-4">
+          <div className="bg-white rounded-lg pl-0 p-2">
+            <div className="flex flex-wrap items-end gap-4">
+              {/* Graduation Year Filter */}
+              <div className="min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Graduation Year</label>
+                <Select value={filters.graduationYear || 'all'} onValueChange={value => setFilters((f) => ({ ...f, graduationYear: value === 'all' ? null : value }))}>
+                  <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Years" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All Years</SelectItem>
+                    {uniqueGraduationYears.map((year) => (
+                      <SelectItem key={year.value} value={year.value} className="text-gray-900 hover:bg-gray-100">{year.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* State of Residence Filter */}
+              <div className="min-w-[180px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">State of Residence</label>
+                <MultiSelect
+                  options={uniqueStatesOfResidence}
+                  onValueChange={v => setFilters((f) => ({ ...f, statesOfResidence: v }))}
+                  defaultValue={filters.statesOfResidence}
+                  placeholder="Select State of Residence"
+                  maxCount={3}
+                />
+              </div>
+              {/* State of Relocation Filter */}
+              <div className="min-w-[180px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">State of Relocation</label>
+                <MultiSelect
+                  options={uniqueStatesOfRelocation}
+                  onValueChange={v => setFilters((f) => ({ ...f, statesOfRelocation: v }))}
+                  defaultValue={filters.statesOfRelocation}
+                  placeholder="Select State of Relocation"
+                  maxCount={3}
+                />
+              </div>
+              {/* Bucket Filter */}
+              <div className="min-w-[180px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bucket</label>
+                <MultiSelect
+                  options={uniqueBuckets}
+                  onValueChange={v => setFilters((f) => ({ ...f, buckets: v }))}
+                  defaultValue={filters.buckets}
+                  placeholder="Select Buckets"
+                  maxCount={3}
+                />
+              </div>
+              {/* Status Filter */}
+              <div className="min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+                <Select value={filters.statusFilter} onValueChange={value => setFilters((f) => ({ ...f, statusFilter: value }))}>
+                  <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
+                    {filterOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Reset Button */}
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleResetFilters}
+                  variant="outline"
+                  className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
+                >
+                  Reset All Filters
+                </Button>
+              </div>
+            </div>
+          </div>
+          {/* Search Bar */}
+          <div className="flex-1 min-w-[200px] max-w-[400px]">
             <label className="block text-sm font-medium text-gray-700 mb-2">Search Candidates</label>
-            <Input
-              placeholder="Search by name, email, or school"
-              value={filters.searchKey}
-              onChange={e => setFilters((f) => ({ ...f, searchKey: e.target.value }))}
-              className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Graduation Year</label>
-            <Select value={filters.graduationYear || 'all'} onValueChange={value => setFilters((f) => ({ ...f, graduationYear: value === 'all' ? null : value }))}>
-              <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-                <GraduationCap className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="All Years" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
-                <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All Years</SelectItem>
-                {uniqueGraduationYears.map((year) => (
-                  <SelectItem key={year.value} value={year.value} className="text-gray-900 hover:bg-gray-100">{year.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">State of Residence</label>
-            <MultiSelect
-              options={uniqueStatesOfResidence}
-              onValueChange={v => setFilters((f) => ({ ...f, statesOfResidence: v }))}
-              defaultValue={filters.statesOfResidence}
-              placeholder="Select State of Residence"
-              maxCount={3}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">State of Relocation</label>
-            <MultiSelect
-              options={uniqueStatesOfRelocation}
-              onValueChange={v => setFilters((f) => ({ ...f, statesOfRelocation: v }))}
-              defaultValue={filters.statesOfRelocation}
-              placeholder="Select State of Relocation"
-              maxCount={3}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Bucket</label>
-            <MultiSelect
-              options={uniqueBuckets}
-              onValueChange={v => setFilters((f) => ({ ...f, buckets: v }))}
-              defaultValue={filters.buckets}
-              placeholder="Select Buckets"
-              maxCount={3}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
-            <Select value={filters.statusFilter} onValueChange={value => setFilters((f) => ({ ...f, statusFilter: value }))}>
-              <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
-                <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
-                {filterOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">{option.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search by name, email, or school"
+                value={filters.searchKey}
+                onChange={e => setFilters((f) => ({ ...f, searchKey: e.target.value }))}
+                className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
+              />
+            </div>
           </div>
         </div>
-        {/* List of students with checkboxes */}
-        <div className="border rounded-md max-h-72 overflow-y-auto mb-4">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredData.map((item) => (
-                <tr key={item.submissionId}>
-                  <td className="px-4 py-2">
-                    <input type="checkbox" checked={selected.includes(item.submissionId)} onChange={() => toggleSelectOne(item.submissionId)} />
-                  </td>
-                  <td className="px-4 py-2">{item.firstName} {item.lastName}</td>
-                  <td className="px-4 py-2">{item.email}</td>
-                  <td className="px-4 py-2">{item.mobileNumber}</td>
-                </tr>
-              ))}
-              {filteredData.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center text-gray-400 py-4">No students found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* DataTable with selection checkboxes */}
+        <div className="mt-2">
+          <DataTable<Submission>
+            data={tableData}
+            columns={columns}
+            searchPlaceholder=""
+            searchKeys={[]}
+            filterOptions={[]}
+            itemsPerPage={8}
+            sortable={true}
+            defaultSortKey="name"
+            defaultSortOrder="asc"
+            emptyState={{
+              icon: <span className="text-gray-400">No students found</span>,
+              title: "No students found",
+              description: "Try adjusting your search or filter criteria",
+            }}
+          />
         </div>
         <DialogFooter>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full justify-between">
@@ -252,15 +389,15 @@ export default function BulkBucketAssignDialog({
               </SelectContent>
             </Select>
             <div className="flex gap-4">
-            <Button
-              disabled={selected.length === 0 || !assignBucket}
-              // onClick={...}
-            >
-              Assign Bucket
-            </Button>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+              <Button
+                disabled={selected.length === 0 || !assignBucket}
+                // onClick={...}
+              >
+                Assign Bucket
+              </Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
         </DialogFooter>

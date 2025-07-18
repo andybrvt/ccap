@@ -20,7 +20,7 @@ import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface Column<T> {
   key: string;
-  header: string;
+  header: string | React.ReactNode;
   render?: (item: T) => React.ReactNode;
   sortable?: boolean;
   minWidth?: string;
@@ -161,7 +161,7 @@ export default function Table<T extends Record<string, unknown>>({
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {/* Filter Bar */}
       {/* {(searchKeys.length > 0 || filterOptions) && (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -210,14 +210,14 @@ export default function Table<T extends Record<string, unknown>>({
       )} */}
 
       {/* Results count */}
-      <div className="text-sm text-gray-600">
+      {/* <div className="text-sm text-gray-600">
         Showing {paginatedData.length} of {filteredData.length} items
         {filteredData.length !== data.length && (
           <span className="ml-1">
             (filtered from {data.length} total)
           </span>
         )}
-      </div>
+      </div> */}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -282,7 +282,75 @@ export default function Table<T extends Record<string, unknown>>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 shadow-sm px-6 py-4">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4 sm:px-6">
+          {/* Mobile Layout */}
+          <div className="flex flex-col space-y-4 sm:hidden">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-900 font-medium">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="text-xs text-gray-600">
+                {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const showPages = 3;
+                  let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                  const endPage = Math.min(totalPages, startPage + showPages - 1);
+                  
+                  if (endPage - startPage + 1 < showPages) {
+                    startPage = Math.max(1, endPage - showPages + 1);
+                  }
+                  
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <Button
+                        key={i}
+                        variant={currentPage === i ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCurrentPage(i)}
+                        className={
+                          currentPage === i
+                            ? "bg-black hover:bg-gray-800 text-white border-black min-w-[32px] h-8 shadow-sm"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent min-w-[32px] h-8 transition-all duration-200"
+                        }
+                      >
+                        {i}
+                      </Button>
+                    );
+                  }
+                  return pages;
+                })()}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-900 font-medium">
               Page {currentPage} of {totalPages}
@@ -346,6 +414,7 @@ export default function Table<T extends Record<string, unknown>>({
               Next
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
+            </div>
           </div>
         </div>
       )}

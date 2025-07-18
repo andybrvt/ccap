@@ -135,13 +135,13 @@ export default function Homepage() {
     <Layout>
       {/* Dashboard Hero */}
       <section className="px-6 py-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold text-black mb-3">
-              Welcome back, {user?.full_name}
-            </h1>
-            <p className="text-lg text-gray-600">
+        <div className="max-w-7xl w-full mx-auto">
+          <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center mb-6">
+            <p className="text-3xl font-bold text-black">
               CCAP Application Management System
+            </p> 
+            <p className="text-xl font-medium text-gray-800">
+              Welcome back, {user?.full_name}
             </p>
           </div>
 
@@ -206,10 +206,8 @@ export default function Homepage() {
         </div>
       </section>
 
-  
-
       {/* Announcements */}
-      <section className="px-6 py-8 bg-gray-50">
+      <section className="px-6 py-0 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
