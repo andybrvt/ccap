@@ -311,7 +311,7 @@ export default function BulkBucketAssignPage() {
     {
       key: 'select',
       header: (
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full px-1">
           <Checkbox
             checked={allSelected}
             onCheckedChange={toggleSelectAll}
@@ -328,7 +328,7 @@ export default function BulkBucketAssignPage() {
           />
         </div>
       ),
-      minWidth: '40px',
+      minWidth: '50px',
       align: 'center',
     },
     {
@@ -430,7 +430,7 @@ export default function BulkBucketAssignPage() {
     <Layout>
       <div className="py-4 px-6" ref={containerRef}>
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Bulk Assign Program Stage</h1>
+          <h1 className="text-2xl font-bold">Program Status Assignment</h1>
         </div>
         {/* Filters and Search Bar */}
         <div className="flex flex-col gap-2 pb-4">
@@ -506,7 +506,7 @@ export default function BulkBucketAssignPage() {
                 <Button
                   onClick={handleResetFilters}
                   variant="outline"
-                  className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
+                  className="border-gray-300 h-10 bg-white text-gray-700 hover:bg-gray-50 px-6"
                 >
                   Reset All Filters
                 </Button>
@@ -532,6 +532,8 @@ export default function BulkBucketAssignPage() {
         <div className="flex flex-wrap gap-4">
           {/* DataTable with selection checkboxes */}
           <div className="flex-1 min-w-0">
+          <p className="text-gray-800 text-sm font-medium mb-2 block lg:hidden">Select Candidates
+          to assign a program status</p>
             <DataTable<Submission>
               data={filteredData}
               columns={columns}
@@ -551,138 +553,230 @@ export default function BulkBucketAssignPage() {
           </div>
 
           {/* Action Panel - Desktop and Tablet */}
-          {selected.length > 0 && (
-            <div className="h-full bg-black hidden lg:block w-80 border border-gray-700 rounded-lg p-6 shadow-sm">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-white">Submit Assigning Program Stage</h3>
-              </div>
-
-              <div className="space-y-4">
-                {/* Selected count */}
-                <div className="text-sm text-gray-300">
-                  {selected.length} candidate{selected.length !== 1 ? 's' : ''} selected
-                </div>
-
-                {/* Selected candidates list */}
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCandidates.map((candidate) => (
-                      <div key={candidate.submissionId} className="flex items-center space-x-1 px-2 py-1 bg-gray-800 rounded text-xs border border-gray-600">
-                        <User className="h-3 w-3 text-gray-300 flex-shrink-0" />
-                        <span className="font-medium whitespace-nowrap text-gray-200">
-                          {candidate.firstName} {candidate.lastName}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bucket selection */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-200">
-                    Select Program Stage
-                  </label>
-                  <Select value={assignBucket || ''} onValueChange={setAssignBucket}>
-                    <SelectTrigger className="w-full bg-gray-800 border-gray-600 text-gray-200 placeholder:text-gray-400">
-                      <SelectValue placeholder="Choose a program stage" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
-                      {uniqueBuckets.map((bucket) => (
-                        <SelectItem key={bucket.value} value={bucket.value} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
-                          {bucket.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Buttons */}
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleBulkAssign}
-                    disabled={!assignBucket}
-                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400"
-                  >
-                    Assign to {selected.length} Candidate{selected.length !== 1 ? 's' : ''}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelected([])}
-                    className="w-full bg-black text-white hover:bg-gray-800 hover:text-white"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+          <div className="h-full bg-black hidden lg:block w-80 border border-gray-700 rounded-lg p-6 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-white">Assign Program Status</h3>
             </div>
-          )}
+
+            <div className="space-y-4">
+              {selected.length > 0 ? (
+                <>
+                  {/* Selected count */}
+                  <div className="text-sm text-gray-300">
+                    {selected.length} candidate{selected.length !== 1 ? 's' : ''} selected
+                  </div>
+
+                  {/* Selected candidates list */}
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCandidates.map((candidate) => (
+                        <div key={candidate.submissionId} className="flex items-center space-x-1 px-2 py-1 bg-gray-800 rounded text-xs border border-gray-600">
+                          <User className="h-3 w-3 text-gray-300 flex-shrink-0" />
+                          <span className="font-medium whitespace-nowrap text-gray-200">
+                            {candidate.firstName} {candidate.lastName}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bucket selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-200">
+                      Select Program Status
+                    </label>
+                    <Select value={assignBucket || ''} onValueChange={setAssignBucket}>
+                      <SelectTrigger className="w-full bg-gray-900 border-blue-500 text-white placeholder:text-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
+                        <SelectValue placeholder="Choose a program status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-blue-500">
+                        {uniqueBuckets.map((bucket) => (
+                          <SelectItem key={bucket.value} value={bucket.value} className="text-white hover:bg-blue-600 focus:bg-blue-600 focus:text-white">
+                            {bucket.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handleBulkAssign}
+                      disabled={!assignBucket}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
+                    >
+                      Assign to {selected.length} Candidate{selected.length !== 1 ? 's' : ''}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelected([])}
+                      className="w-full bg-transparent text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white hover:border-gray-500"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* No selection state */}
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-2">
+                      <User className="h-12 w-12 mx-auto mb-3" />
+                    </div>
+                    <p className="text-gray-300 text-sm font-medium mb-2">
+                      Select Candidates
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      to assign a program status
+                    </p>
+                  </div>
+
+                  {/* Bucket selection (disabled) */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-200">
+                      Select Program Status
+                    </label>
+                    <Select value={assignBucket || ''} onValueChange={setAssignBucket} disabled>
+                      <SelectTrigger className="w-full bg-gray-800 border-gray-600 text-gray-400 cursor-not-allowed">
+                        <SelectValue placeholder="Choose a program status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600">
+                        {uniqueBuckets.map((bucket) => (
+                          <SelectItem key={bucket.value} value={bucket.value} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
+                            {bucket.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Disabled button */}
+                  <div className="space-y-2">
+                    <Button
+                      disabled
+                      className="w-full bg-gray-600 text-gray-400 cursor-not-allowed"
+                    >
+                      Assign Program Status
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
           {/* Mobile Action Panel - Below table */}
-          {selected.length > 0 && (
-            <div className="lg:hidden w-full bg-black border border-gray-700 rounded-lg p-4 shadow-sm">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-white">Submit Assigning Program Stage</h3>
-              </div>
-
-              <div className="space-y-4">
-                {/* Selected count */}
-                <div className="text-sm text-gray-300">
-                  {selected.length} candidate{selected.length !== 1 ? 's' : ''} selected
-                </div>
-
-                {/* Selected candidates list */}
-                <div className="max-h-32 overflow-y-auto">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCandidates.map((candidate) => (
-                      <div key={candidate.submissionId} className="flex items-center space-x-1 px-2 py-1 bg-gray-800 rounded text-xs border border-gray-600">
-                        <User className="h-3 w-3 text-gray-300 flex-shrink-0" />
-                        <span className="font-medium whitespace-nowrap text-gray-200">
-                          {candidate.firstName} {candidate.lastName}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bucket selection */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-200">
-                    Select Program Stage
-                  </label>
-                  <Select value={assignBucket || ''} onValueChange={setAssignBucket}>
-                    <SelectTrigger className="w-full bg-gray-800 border-gray-600 text-gray-200 placeholder:text-gray-400">
-                      <SelectValue placeholder="Choose a program stage" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
-                      {uniqueBuckets.map((bucket) => (
-                        <SelectItem key={bucket.value} value={bucket.value} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
-                          {bucket.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Buttons */}
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleBulkAssign}
-                    disabled={!assignBucket}
-                    className="w-full bg-white text-black hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400"
-                  >
-                    Assign to {selected.length} Candidate{selected.length !== 1 ? 's' : ''}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelected([])}
-                    className="w-full bg-black text-white hover:bg-gray-800 hover:text-white"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+          <div className="lg:hidden w-full bg-black border border-gray-700 rounded-lg p-4 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-white">Assign Program Status</h3>
             </div>
-          )}
+
+            <div className="space-y-4">
+              {selected.length > 0 ? (
+                <>
+                  {/* Selected count */}
+                  <div className="text-sm text-gray-300">
+                    {selected.length} candidate{selected.length !== 1 ? 's' : ''} selected
+                  </div>
+
+                  {/* Selected candidates list */}
+                  <div className="max-h-32 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCandidates.map((candidate) => (
+                        <div key={candidate.submissionId} className="flex items-center space-x-1 px-2 py-1 bg-gray-800 rounded text-xs border border-gray-600">
+                          <User className="h-3 w-3 text-gray-300 flex-shrink-0" />
+                          <span className="font-medium whitespace-nowrap text-gray-200">
+                            {candidate.firstName} {candidate.lastName}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bucket selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-200">
+                      Select Program Status
+                    </label>
+                    <Select value={assignBucket || ''} onValueChange={setAssignBucket}>
+                      <SelectTrigger className="w-full bg-gray-900 border-blue-500 text-white placeholder:text-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
+                        <SelectValue placeholder="Choose a program status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-blue-500">
+                        {uniqueBuckets.map((bucket) => (
+                          <SelectItem key={bucket.value} value={bucket.value} className="text-white hover:bg-blue-600 focus:bg-blue-600 focus:text-white">
+                            {bucket.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handleBulkAssign}
+                      disabled={!assignBucket}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
+                    >
+                      Assign to {selected.length} Candidate{selected.length !== 1 ? 's' : ''}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelected([])}
+                      className="w-full bg-transparent text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white hover:border-gray-500"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* No selection state */}
+                  <div className="text-center py-4">
+                    <div className="text-gray-400 mb-2">
+                      <User className="h-8 w-8 mx-auto mb-2" />
+                    </div>
+                    <p className="text-gray-300 text-sm font-medium mb-1">
+                      Select Candidates
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      to assign a program status
+                    </p>
+                  </div>
+
+                  {/* Bucket selection (disabled) */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-200">
+                      Select Program Status
+                    </label>
+                    <Select value={assignBucket || ''} onValueChange={setAssignBucket} disabled>
+                      <SelectTrigger className="w-full bg-gray-800 border-gray-600 text-gray-400 cursor-not-allowed">
+                        <SelectValue placeholder="Choose a program status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600">
+                        {uniqueBuckets.map((bucket) => (
+                          <SelectItem key={bucket.value} value={bucket.value} className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700">
+                            {bucket.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Disabled button */}
+                  <div className="space-y-2">
+                    <Button
+                      disabled
+                      className="w-full bg-gray-600 text-gray-400 cursor-not-allowed"
+                    >
+                      Assign Program Status
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </Layout>

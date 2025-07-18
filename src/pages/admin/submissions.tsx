@@ -17,7 +17,7 @@ import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useState as useReactState } from 'react';
-import BulkBucketAssignDialog from './bulkbucketAssign';
+
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
 function useDynamicItemsPerPage() {
@@ -504,10 +504,10 @@ export default function Submissions() {
 
         <div className="flex flex-col gap-2 pb-4">
           {/* Filter Bar */}
-          <div className="bg-white rounded-lg pl-0 p-2 w-full">
-            <div className="">
-              {/* Filters in one line */}
-              <div className="flex flex-wrap items-end gap-4">
+          <div className="bg-white rounded-lg p-4 w-full">
+            <div className="w-full">
+              {/* Filters with responsive flex layout */}
+              <div className="flex flex-wrap items-end  gap-4">
                 {/* Graduation Year Filter */}
                 <div className="min-w-[150px]">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -568,7 +568,7 @@ export default function Submissions() {
                     options={uniqueBuckets}
                     onValueChange={setSelectedBuckets}
                     defaultValue={selectedBuckets}
-                    placeholder="Select Buckets"
+                    placeholder="Select Program Stages"
                     maxCount={3}
                   />
                 </div>
@@ -602,12 +602,12 @@ export default function Submissions() {
                   </Select>
                 </div>
 
-                {/* Reset Button below filters */}
-                <div className="flex justify-end">
+                {/* Reset Button */}
+                <div className="flex items-end">
                   <Button
                     onClick={handleResetFilters}
                     variant="outline"
-                    className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-6"
+                    className="border-gray-300 h-10 bg-white text-gray-700 hover:bg-gray-50 px-6"
                   >
                     Reset All Filters
                   </Button>
@@ -635,7 +635,7 @@ export default function Submissions() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Button variant="default" onClick={() => setBulkDialogOpen(true)}>
+              <Button variant="default" onClick={() => setLocation(`/admin/assign-program-status`)}>
                 Assign Program Stages
               </Button>
             </div>
@@ -712,20 +712,6 @@ export default function Submissions() {
           }}
         />
       </div>
-      <BulkBucketAssignDialog
-        open={bulkDialogOpen}
-        onOpenChange={setBulkDialogOpen}
-        filters={bulkFilters}
-        setFilters={setBulkFilters}
-        selected={bulkSelected}
-        setSelected={setBulkSelected}
-        uniqueGraduationYears={uniqueGraduationYears}
-        uniqueStatesOfResidence={uniqueStatesOfResidence}
-        uniqueStatesOfRelocation={uniqueStatesOfRelocation}
-        uniqueBuckets={uniqueBuckets}
-        filterOptions={filterOptions}
-        filteredData={bulkFilteredData}
-      />
     </Layout>
   );
 }
