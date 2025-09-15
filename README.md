@@ -1,69 +1,65 @@
-# React + TypeScript + Vite
- 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# CCAP Frontend - Quick Start
 
-Currently, two official plugins are available:
+Vite + React + TypeScript + Tailwind v4 (shadcn/ui). Minimal steps to run locally on macOS.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Requirements
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+> If you already have Node **20.x** (or **22.x**) working, skip to **Project setup**.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## 1) Homebrew (skip if `brew -v` works)
+```bash
+brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# After install on Apple Silicon, add brew to your shell and reload:
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 2) Node 20 (via Homebrew)
+```bash
+brew install node@20
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# node@20 is keg-only; put it on your PATH:
+echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+exec zsh -l
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Verify
+node -v   # v20.x
+npm -v
 ```
+
+## 3) Project setup
+```bash
+git clone <REPO_URL> ccap-fe
+cd ccap-fe
+npm install
+```
+
+## 4) Run
+```bash
+npm run dev
+```
+Open the printed URL (usually http://localhost:5173).
+
+## 5) Build & Preview
+```bash
+npm run build
+npm run preview
+```
+
+## 6) Env (if your app calls a backend)
+Create `.env.local` in the project root, then restart dev:
+```bash
+# example—adjust to your API
+VITE_API_URL=http://localhost:3000
+```
+
+## Quick fixes
+- **Port in use:** `npm run dev -- --port=5175`
+- **npm not found / wrong node:** re-run the PATH export above.
+- **Missing modules:** `rm -rf node_modules package-lock.json && npm install`
