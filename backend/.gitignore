@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Local files
+login.txt
+
 # Python
 __pycache__/
 *.py[cod]

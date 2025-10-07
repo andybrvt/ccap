@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 # Base schema
 class UserBase(BaseModel):
@@ -19,7 +20,7 @@ class UserLogin(BaseModel):
 
 # Schema for user response (no password!)
 class UserResponse(UserBase):
-    id: int
+    id: UUID
     role: str
     is_active: bool
     created_at: datetime
@@ -33,5 +34,5 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    user_id: Optional[int] = None
+    user_id: Optional[UUID] = None
 
