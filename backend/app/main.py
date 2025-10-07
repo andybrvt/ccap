@@ -1,11 +1,18 @@
-from fastapi import FastAPI
-from dotenv import load_dotenv
 import os
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+from app.core.routers import setup_routers
+import logging
 
 # Load environment variables
 load_dotenv()
 
-from app.routes import router
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 
 app = FastAPI(
     title=os.getenv("PROJECT_NAME", "CCAP"),
@@ -13,8 +20,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Include routes
-app.include_router(router)
+# Configure CORS for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",  # Local development (Vite)
+        "http://localhost:3000",  # Alternative local port
+        # Add your Vercel domain once deployed:
+        # "https://your-app.vercel.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Setup all API routes
+setup_routers(app)
 
 
 # # Start backend
