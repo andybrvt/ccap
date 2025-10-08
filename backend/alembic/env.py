@@ -12,7 +12,14 @@ load_dotenv()
 
 # Import your models and database
 from app.core.database import Base
-from app.models.user import User  # Import all your models here
+from app.models.user import User
+from app.models.student_profile import StudentProfile
+from app.models.post import Post
+from app.models.comment import Comment
+from app.models.like import Like
+from app.models.announcement import Announcement
+from app.models.certification import Certification
+from app.models.program_status import ProgramStatus
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
