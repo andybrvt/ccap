@@ -8,7 +8,7 @@ def setup_routers(app: FastAPI):
     # Authentication routes
     app.include_router(
         auth.router,
-        prefix="/api",
+        prefix="/api/auth",
         tags=["Authentication"]
     )
     
