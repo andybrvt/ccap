@@ -1,8 +1,8 @@
 // API Endpoints
 export const API_ENDPOINTS = {
-  // Auth endpoints
-  AUTH_LOGIN: 'auth/login',
-  AUTH_ME: 'auth/me',
+  // Auth endpoints (done)
+  AUTH_LOGIN: '/auth/login',
+  AUTH_ME: '/auth/me',
 
   // Calendar
   CALENDAR_EVENTS: '/calendar/events',

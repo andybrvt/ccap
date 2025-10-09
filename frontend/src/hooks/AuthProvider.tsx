@@ -4,7 +4,7 @@ import {
   useEffect,
 } from "react";
 import { useLocation, Redirect } from "wouter";
-import { authApi } from "@/lib/apiService";
+import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
 import { AuthContext, type User, type UserRole } from "./useAuth";
 import type { ReactNode } from "react";
@@ -43,102 +43,45 @@ export function AuthProvider({
     }
   }, []);
 
-  // --- Real API code (commented out) ---
-  // const validateToken = async () => {
-  //   try {
-  //     const response = await authApi.get(API_ENDPOINTS.AUTH_ME);
-  //     if (response.data) {
-  //       setUser(response.data);
-  //     }
-  //   } catch (error) {
-  //     logout();
-  //   }
-  // };
-
-  // --- Dummy logic ---
   const validateToken = async () => {
-    // Simulate token validation by restoring dummy user if token exists
-    const storedUser = localStorage.getItem("auth_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
+    try {
+      const response = await api.get(API_ENDPOINTS.AUTH_ME);
+      if (response.data) {
+        setUser(response.data);
+      }
+    } catch (error) {
       logout();
     }
   };
 
-  // --- Real API code (commented out) ---
-  // const login = async (email: string, password: string): Promise<boolean> => {
-  //   if (!email || !password) {
-  //     return false;
-  //   }
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await authApi.post(API_ENDPOINTS.AUTH_LOGIN, {
-  //       email: email,
-  //       password: password,
-  //       platform_id: 2,
-  //     });
-  //     if (response.data && response.data.authToken) {
-  //       // Store the auth token
-  //       localStorage.setItem("authToken", response.data.authToken);
-  //       // Get user data from auth/me endpoint
-  //       const userResponse = await authApi.get(API_ENDPOINTS.AUTH_ME);
-  //       if (userResponse.data) {
-  //         setUser(userResponse.data);
-  //         localStorage.setItem("auth_user", JSON.stringify(userResponse.data));
-  //         return true;
-  //       }
-  //     }
-  //     return false;
-  //   } catch (error) {
-  //     console.error("Login error:", error);
-  //     return false;
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // --- Dummy logic with role-based authentication ---
+  // Real API login
   const login = async (email: string, password: string): Promise<boolean> => {
     if (!email || !password) {
       return false;
     }
     setIsLoading(true);
     try {
-      // Dummy credentials for different user types
-      const adminEmail = "admin@test.com";
-      const adminPassword = "admin123";
-      const studentEmail = "student@test.com";
-      const studentPassword = "student123";
+      const response = await api.post(API_ENDPOINTS.AUTH_LOGIN, {
+        email: email,
+        password: password,
+      });
 
-      let dummyUser: User | null = null;
+      if (response.data && response.data.access_token) {
+        // Store the auth token
+        localStorage.setItem("authToken", response.data.access_token);
 
-      if (email === adminEmail && password === adminPassword) {
-        dummyUser = {
-          id: 1,
-          email: adminEmail,
-          full_name: "Admin User",
-          username: "admin_user",
-          role: "admin",
-        };
-      } else if (email === studentEmail && password === studentPassword) {
-        dummyUser = {
-          id: 2,
-          email: studentEmail,
-          full_name: "Student User",
-          username: "student_user",
-          role: "student",
-        };
+        // Get user data from auth/me endpoint
+        const userResponse = await api.get(API_ENDPOINTS.AUTH_ME);
+        if (userResponse.data) {
+          setUser(userResponse.data);
+          localStorage.setItem("auth_user", JSON.stringify(userResponse.data));
+          return true;
+        }
       }
-
-      if (dummyUser) {
-        setUser(dummyUser);
-        localStorage.setItem("auth_user", JSON.stringify(dummyUser));
-        localStorage.setItem("authToken", "dummy-token");
-        return true;
-      } else {
-        return false;
-      }
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +101,7 @@ export function AuthProvider({
     useEffect(() => {
       // Don't redirect while loading
       if (isLoading) return;
-      
+
       // If not authenticated, redirect to login
       if (!user) {
         setLocation('/login');
