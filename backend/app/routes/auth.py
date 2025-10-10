@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.user import User
+from app.models.student_profile import StudentProfile
 from app.schemas.user import UserCreate, UserResponse, Token, UserLogin
 from app.deps.auth import get_current_active_user, require_admin
 
@@ -41,6 +42,54 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     )
     
     db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return new_user
+
+@router.post("/register/student", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def register_student(user_data: UserCreate, db: Session = Depends(get_db)):
+    """
+    Public student registration endpoint
+    Creates a student account with an empty profile
+    """
+    # Check if email already exists
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Check if username already exists
+    existing_username = db.query(User).filter(User.username == user_data.username).first()
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+    
+    # Force role to be student
+    hashed_password = get_password_hash(user_data.password)
+    new_user = User(
+        email=user_data.email,
+        username=user_data.username,
+        hashed_password=hashed_password,
+        role="student"  # Force student role
+    )
+    
+    db.add(new_user)
+    db.flush()  # Get the user ID without committing
+    
+    # Create empty student profile
+    student_profile = StudentProfile(
+        user_id=new_user.id,
+        first_name="",
+        last_name="",
+        email=user_data.email  # Store email for linking
+    )
+    
+    db.add(student_profile)
     db.commit()
     db.refresh(new_user)
     
