@@ -77,3 +77,45 @@ class StudentRepository:
     def delete_student(self, student_id: UUID) -> bool:
         """Delete a student (cascade will delete profile)"""
         return self.user_repo.delete(student_id)
+    
+    def update_profile_picture(self, user_id: UUID, picture_url: str) -> bool:
+        """Update profile picture URL"""
+        try:
+            profile = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+            if profile:
+                profile.profile_picture_url = picture_url
+                self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"Error updating profile picture: {e}")
+            self.db.rollback()
+            return False
+    
+    def update_resume_url(self, user_id: UUID, resume_url: str) -> bool:
+        """Update resume URL (S3 key)"""
+        try:
+            profile = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+            if profile:
+                profile.resume_url = resume_url
+                self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"Error updating resume URL: {e}")
+            self.db.rollback()
+            return False
+    
+    def update_food_handlers_url(self, user_id: UUID, credential_url: str) -> bool:
+        """Update food handlers card URL (S3 key)"""
+        try:
+            profile = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+            if profile:
+                profile.food_handlers_card_url = credential_url
+                self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"Error updating credential URL: {e}")
+            self.db.rollback()
+            return False

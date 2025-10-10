@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -10,6 +10,7 @@ from app.repositories.student import StudentRepository
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
 from app.models.student_profile import StudentProfile
+from app.utils.s3 import S3Service
 
 router = APIRouter()
 
@@ -177,3 +178,207 @@ def delete_student(
         )
     
     return None
+
+
+# File Upload Endpoints
+
+@router.post("/profile/picture")
+async def upload_profile_picture(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Upload profile picture (public)"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can upload profile pictures"
+        )
+    
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be an image"
+        )
+    
+    try:
+        # Upload to S3
+        public_url = await S3Service.upload_profile_picture(file, str(current_user.id))
+        
+        # Update profile in database
+        student_repo = StudentRepository(db)
+        success = student_repo.update_profile_picture(current_user.id, public_url)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile picture"
+            )
+        
+        return {"url": public_url, "message": "Profile picture uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload profile picture: {str(e)}"
+        )
+
+
+@router.post("/profile/resume")
+async def upload_resume(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Upload resume (private)"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can upload resumes"
+        )
+    
+    # Validate file type
+    allowed_types = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if not file.content_type or file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a PDF or Word document"
+        )
+    
+    try:
+        # Upload to S3 private folder
+        s3_key = await S3Service.upload_private_document(file, str(current_user.id), "resumes")
+        
+        # Update profile in database
+        student_repo = StudentRepository(db)
+        success = student_repo.update_resume_url(current_user.id, s3_key)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update resume"
+            )
+        
+        return {"message": "Resume uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload resume: {str(e)}"
+        )
+
+
+@router.post("/profile/credential")
+async def upload_credential(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Upload credential (food handlers card, etc.) - private"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can upload credentials"
+        )
+    
+    # Validate file type
+    allowed_types = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/png', 
+        'image/jpg'
+    ]
+    if not file.content_type or file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a PDF or image (JPEG/PNG)"
+        )
+    
+    try:
+        # Upload to S3 private folder
+        s3_key = await S3Service.upload_private_document(file, str(current_user.id), "credentials")
+        
+        # Update profile in database
+        student_repo = StudentRepository(db)
+        success = student_repo.update_food_handlers_url(current_user.id, s3_key)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update credential"
+            )
+        
+        return {"message": "Credential uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload credential: {str(e)}"
+        )
+
+
+@router.get("/profile/resume")
+async def get_resume_url(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get signed URL for resume download"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can access resumes"
+        )
+    
+    student_repo = StudentRepository(db)
+    profile = student_repo.get_profile_by_user_id(current_user.id)
+    
+    if not profile or not profile.resume_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No resume found"
+        )
+    
+    # Generate signed URL (expires in 1 hour)
+    signed_url = S3Service.generate_signed_url(profile.resume_url)
+    
+    if not signed_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate download link"
+        )
+    
+    return {"download_url": signed_url}
+
+
+@router.get("/profile/credential")
+async def get_credential_url(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get signed URL for credential download"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can access credentials"
+        )
+    
+    student_repo = StudentRepository(db)
+    profile = student_repo.get_profile_by_user_id(current_user.id)
+    
+    if not profile or not profile.food_handlers_card_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No credential found"
+        )
+    
+    # Generate signed URL (expires in 1 hour)
+    signed_url = S3Service.generate_signed_url(profile.food_handlers_card_url)
+    
+    if not signed_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate download link"
+        )
+    
+    return {"download_url": signed_url}
