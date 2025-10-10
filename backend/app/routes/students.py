@@ -83,51 +83,6 @@ def create_student(
             detail=f"Failed to create student: {str(e)}"
         )
 
-@router.put("/{student_id}/profile", response_model=StudentProfileResponse)
-def update_student_profile(
-    student_id: UUID,
-    profile_data: StudentProfileUpdate,
-    db: Session = Depends(get_db),
-    admin_user: User = Depends(require_admin)
-):
-    """Update a student's profile - Admin only"""
-    student_repo = StudentRepository(db)
-    
-    # Check if student exists
-    student = student_repo.get_student_by_id(student_id)
-    if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Student not found"
-        )
-    
-    updated_profile = student_repo.update_student_profile(student_id, profile_data)
-    if not updated_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Student profile not found"
-        )
-    
-    return updated_profile
-
-@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_student(
-    student_id: UUID,
-    db: Session = Depends(get_db),
-    admin_user: User = Depends(require_admin)
-):
-    """Delete a student - Admin only"""
-    student_repo = StudentRepository(db)
-    
-    success = student_repo.delete_student(student_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Student not found"
-        )
-    
-    return None
-
 @router.get("/me/profile", response_model=StudentProfileResponse)
 def get_my_profile(
     db: Session = Depends(get_db),
@@ -177,3 +132,48 @@ def update_my_profile(
         )
     
     return updated_profile
+
+@router.put("/{student_id}/profile", response_model=StudentProfileResponse)
+def update_student_profile(
+    student_id: UUID,
+    profile_data: StudentProfileUpdate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin)
+):
+    """Update a student's profile - Admin only"""
+    student_repo = StudentRepository(db)
+    
+    # Check if student exists
+    student = student_repo.get_student_by_id(student_id, admin_user)
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found"
+        )
+    
+    updated_profile = student_repo.update_student_profile(student_id, profile_data)
+    if not updated_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student profile not found"
+        )
+    
+    return updated_profile
+
+@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_student(
+    student_id: UUID,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin)
+):
+    """Delete a student - Admin only"""
+    student_repo = StudentRepository(db)
+    
+    success = student_repo.delete_student(student_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found"
+        )
+    
+    return None
