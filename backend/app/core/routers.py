@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth
+from app.routes import auth, students
 
 def setup_routers(app: FastAPI):
     """
@@ -12,16 +12,10 @@ def setup_routers(app: FastAPI):
         tags=["Authentication"]
     )
     
-    # Add more routers here as you build them:
-    # app.include_router(
-    #     users.router,
-    #     prefix="/api",
-    #     tags=["Users"]
-    # )
-    
-    # app.include_router(
-    #     portfolios.router,
-    #     prefix="/api",
-    #     tags=["Portfolios"]
-    # )
+    # Student management routes
+    app.include_router(
+        students.router,
+        prefix="/api/students",
+        tags=["Students"]
+    )
 
