@@ -3,6 +3,11 @@ export const API_ENDPOINTS = {
   // Auth endpoints (done)
   AUTH_LOGIN: '/auth/login',
   AUTH_ME: '/auth/me',
+  AUTH_REGISTER_STUDENT: '/auth/register/student',
+
+  // Student endpoints
+  STUDENT_GET_PROFILE: '/students/me/profile',    // GET full profile
+  STUDENT_UPDATE_PROFILE: '/students/me/profile', // PUT update profile
 
   // Calendar
   CALENDAR_EVENTS: '/calendar/events',

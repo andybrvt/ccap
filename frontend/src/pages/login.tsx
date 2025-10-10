@@ -41,19 +41,19 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginData) => {
     const success = await login(data.email, data.password);
-    
+
     if (success) {
       // Get the user role to determine redirect path
       const storedUser = localStorage.getItem("auth_user");
       if (storedUser) {
         const userData = JSON.parse(storedUser);
         const redirectPath = userData.role === "admin" ? "/admin" : "/student";
-        
+
         toast.success('Login Successful', {
           description: `Welcome back! Redirecting to ${userData.role} dashboard...`,
           duration: 5000,
         });
-        
+
         setTimeout(() => {
           setLocation(redirectPath);
         }, 100);
@@ -83,7 +83,7 @@ export default function LoginPage() {
               </p>
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-6 px-8 pb-8">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2">
@@ -155,8 +155,18 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="text-center">
+            <div className="text-center space-y-4">
               <p className="text-sm text-gray-400">
+                Don't have an account?{" "}
+                <button
+                  onClick={() => setLocation("/register-student")}
+                  className="text-white hover:underline font-medium"
+                >
+                  Create one here
+                </button>
+              </p>
+
+              <p className="text-xs text-gray-400">
                 By signing in, you agree to our{" "}
                 <a href="#" className="text-white hover:underline font-medium">
                   Terms of Service

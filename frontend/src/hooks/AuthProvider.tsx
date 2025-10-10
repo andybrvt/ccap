@@ -94,9 +94,62 @@ export function AuthProvider({
     setLocation("/login");
   };
 
+  // Helper function to check if student profile is complete
+  const isProfileComplete = (user: User): boolean => {
+    if (user.role !== 'student') return true; // Admins don't need profile completion
+
+    // Check if student_profile exists and has required fields
+    const profile = user.student_profile;
+    if (!profile) return false;
+
+    // Check ALL required fields from the form (matching validation in editPortfolio.tsx)
+    // Students must complete these before accessing the platform
+    const checkField = (field: any) => field && String(field).trim().length > 0;
+    const checkArray = (arr: any[]) => arr && arr.length > 0;
+
+    return !!(
+      // Personal Information
+      checkField(profile.first_name) &&
+      checkField(profile.last_name) &&
+      checkField(profile.email) &&
+      checkField(profile.date_of_birth) &&
+      checkField(profile.phone) &&
+
+      // Address Information
+      checkField(profile.address) &&
+      checkField(profile.city) &&
+      checkField(profile.state) &&
+      checkField(profile.zip_code) &&
+
+      // Education Information
+      checkField(profile.high_school) &&
+      checkField(profile.graduation_year) &&
+
+      // Work Preferences
+      checkField(profile.transportation) &&
+      checkArray(profile.availability) &&
+      checkField(profile.weekend_availability) &&
+
+      // Employment Status
+      checkField(profile.currently_employed) &&
+      checkField(profile.previous_employment) &&
+
+      // Documents & Credentials
+      checkField(profile.has_resume) &&
+      checkField(profile.ready_to_work) &&
+      checkArray(profile.interests) &&
+      checkField(profile.has_food_handlers_card) &&
+      checkField(profile.has_servsafe)
+    );
+  };
+
   // Protected Route component that handles authentication and role-based access
-  const ProtectedRoute = ({ children, requiredRole }: { children: ReactNode; requiredRole?: UserRole }) => {
-    const [, setLocation] = useLocation();
+  const ProtectedRoute = ({ children, requiredRole, skipProfileCheck }: {
+    children: ReactNode;
+    requiredRole?: UserRole;
+    skipProfileCheck?: boolean; // Allow skipping profile check for editPortfolio page
+  }) => {
+    const [location, setLocation] = useLocation();
 
     useEffect(() => {
       // Don't redirect while loading
@@ -116,8 +169,17 @@ export function AuthProvider({
         } else {
           setLocation('/student');
         }
+        return;
       }
-    }, [requiredRole, setLocation]);
+
+      // Check if student profile is complete (only for students, not on editPortfolio page)
+      if (user.role === 'student' && !skipProfileCheck && !isProfileComplete(user)) {
+        // Only redirect if not already on editPortfolio
+        if (location !== '/student/editPortfolio') {
+          setLocation('/student/editPortfolio');
+        }
+      }
+    }, [requiredRole, setLocation, location, skipProfileCheck]);
 
     // Show loading spinner while auth is initializing
     if (isLoading) {

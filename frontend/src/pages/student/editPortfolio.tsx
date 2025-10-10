@@ -2,6 +2,8 @@ import Layout from '@/components/layout/StudentLayout';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import { api } from "@/lib/apiService";
+import { API_ENDPOINTS } from "@/lib/endpoints";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,58 +164,139 @@ const exampleData = [
 export default function EditPortfolio() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const student = exampleData.find((u) => u.id === user?.id);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [fullProfile, setFullProfile] = useState<any>(null);
 
-  // Initialize form data from existing student data
+  // Fetch full profile on component mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user || user.role !== 'student') return;
+
+      try {
+        setIsLoadingProfile(true);
+        const response = await api.get(API_ENDPOINTS.STUDENT_GET_PROFILE);
+        if (response.data) {
+          setFullProfile(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        // Profile might not exist yet (new user), that's okay
+        setFullProfile(null);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  // Initialize form data (empty initially, will be populated by useEffect)
   const [formData, setFormData] = useState<PortfolioFormData>({
-    submissionId: student?.submissionId || "",
-    respondentId: student?.formId || "",
-    submittedAt: student?.submissionDate || "",
-    firstName: student?.firstName || "",
-    lastName: student?.lastName || "",
-    preferredName: student?.preferredName || "",
-    emailAddress: student?.email || "",
-    mailingAddress: student?.address || "",
-    addressLine2: student?.address2 || "",
-    city: student?.city || "",
-    state: student?.state || "",
-    zipCode: student?.zipCode || "",
-    willingToRelocate: student?.willRelocate || "No",
-    relocationStates: student?.relocationStates || [],
-    dateOfBirth: student?.dateOfBirth || "",
-    mobilePhoneNumber: student?.mobileNumber || "",
-    culinarySchool: student?.highSchool || "",
-    yearOfGraduation: parseInt(student?.graduationYear || "2025"),
-    transportation: student?.transportation || "Own Car",
-    hoursPerWeek: parseInt(student?.hoursWanted || "30"),
-    availability: student?.availableTimes ? [student.availableTimes] : [],
-    weekendAvailability: student?.availableWeekends || "No",
-    currentlyEmployed: student?.currentJob || "No",
-    currentWorkplace: student?.currentEmployer || "",
-    currentPosition: student?.currentPosition || "",
-    currentHoursPerWeek: student?.currentHours ? parseInt(student.currentHours) : null,
-    previousEmployment: student?.pastJob || "No",
-    previousWorkplace: student?.pastEmployer || "",
-    previousPosition: student?.pastPosition || "",
-    previousHoursPerWeek: student?.pastHours ? parseInt(student.pastHours) : null,
-    hasResume: student?.hasResume || "No",
+    submissionId: "",
+    respondentId: "",
+    submittedAt: "",
+    firstName: "",
+    lastName: "",
+    preferredName: "",
+    emailAddress: user?.email || "",
+    mailingAddress: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    willingToRelocate: "",
+    relocationStates: [],
+    dateOfBirth: "",
+    mobilePhoneNumber: "",
+    culinarySchool: "",
+    yearOfGraduation: 0,
+    transportation: "",
+    hoursPerWeek: 0,
+    availability: [],
+    weekendAvailability: "",
+    currentlyEmployed: "",
+    currentWorkplace: "",
+    currentPosition: "",
+    currentHoursPerWeek: null,
+    previousEmployment: "",
+    previousWorkplace: "",
+    previousPosition: "",
+    previousHoursPerWeek: null,
+    hasResume: "",
     resumeUpload: null,
-    existingResumeUrl: student?.resumeUrl || "",
-    readyToWork: student?.readyToWork || "Yes",
-    availableDate: student?.readyDate || "",
-    interests: student?.interestedOptions || [],
-    hasFoodHandlersCard: student?.foodHandlersCard || "No",
+    existingResumeUrl: "",
+    readyToWork: "",
+    availableDate: "",
+    interests: [],
+    hasFoodHandlersCard: "",
     foodHandlersCardUpload: null,
     existingFoodHandlersUrl: "",
-    hasServSafe: student?.servsafeCredentials || "No",
-    culinaryClassYears: parseInt(student?.culinaryYears || "0"),
-    preferredName2: student?.preferredName || "",
+    hasServSafe: "",
+    culinaryClassYears: 0,
+    preferredName2: "",
     profilePicture: null,
-    existingProfilePicture: student?.profilePicture || "",
-    bio: student?.bio || ""
+    existingProfilePicture: "",
+    bio: ""
   });
 
+  // Update form data when full profile loads
+  useEffect(() => {
+    if (fullProfile) {
+      console.log('Loading profile data:', fullProfile); // Debug
+      console.log('State from backend:', fullProfile.transportation); // Debug
+
+      setFormData({
+        submissionId: "",
+        respondentId: "",
+        submittedAt: "",
+        firstName: fullProfile.first_name || "",
+        lastName: fullProfile.last_name || "",
+        preferredName: fullProfile.preferred_name || "",
+        emailAddress: fullProfile.email || user?.email || "",
+        mailingAddress: fullProfile.address || "",
+        addressLine2: fullProfile.address_line2 || "",
+        city: fullProfile.city || "",
+        state: fullProfile.state || "",
+        zipCode: fullProfile.zip_code || "",
+        willingToRelocate: fullProfile.willing_to_relocate || "",
+        relocationStates: fullProfile.relocation_states || [],
+        dateOfBirth: fullProfile.date_of_birth || "",
+        mobilePhoneNumber: fullProfile.phone || "",
+        culinarySchool: fullProfile.high_school || "",
+        yearOfGraduation: fullProfile.graduation_year ? parseInt(fullProfile.graduation_year) : 0,
+        transportation: fullProfile.transportation || "",
+        hoursPerWeek: fullProfile.hours_per_week || 0,
+        availability: fullProfile.availability || [],
+        weekendAvailability: fullProfile.weekend_availability || "",
+        currentlyEmployed: fullProfile.currently_employed || "",
+        currentWorkplace: fullProfile.current_employer || "",
+        currentPosition: fullProfile.current_position || "",
+        currentHoursPerWeek: fullProfile.current_hours_per_week || null,
+        previousEmployment: fullProfile.previous_employment || "",
+        previousWorkplace: fullProfile.previous_employer || "",
+        previousPosition: fullProfile.previous_position || "",
+        previousHoursPerWeek: fullProfile.previous_hours_per_week || null,
+        hasResume: fullProfile.has_resume || "",
+        resumeUpload: null,
+        existingResumeUrl: fullProfile.resume_url || "",
+        readyToWork: fullProfile.ready_to_work || "",
+        availableDate: fullProfile.available_date || "",
+        interests: fullProfile.interests || [],
+        hasFoodHandlersCard: fullProfile.has_food_handlers_card || "",
+        foodHandlersCardUpload: null,
+        existingFoodHandlersUrl: fullProfile.food_handlers_card_url || "",
+        hasServSafe: fullProfile.has_servsafe || "",
+        culinaryClassYears: fullProfile.culinary_class_years || 0,
+        preferredName2: fullProfile.preferred_name || "",
+        profilePicture: null,
+        existingProfilePicture: fullProfile.profile_picture_url || "",
+        bio: fullProfile.bio || ""
+      });
+    }
+  }, [fullProfile, user]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   // Handle form field changes
   const handleInputChange = (field: keyof PortfolioFormData, value: string | number | string[] | null) => {
@@ -303,10 +386,94 @@ export default function EditPortfolio() {
     return errors;
   };
 
-  // Handle form submission
+  // Save draft without validation (allows partial saves)
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+
+    try {
+      // Map frontend camelCase to backend snake_case
+      const profileData = {
+        first_name: formData.firstName || null,
+        last_name: formData.lastName || null,
+        preferred_name: formData.preferredName || null,
+        email: formData.emailAddress || null,
+        phone: formData.mobilePhoneNumber || null,
+        bio: formData.bio || null,
+        profile_picture_url: formData.existingProfilePicture || null,
+        date_of_birth: formData.dateOfBirth || null,
+
+        // Address
+        address: formData.mailingAddress || null,
+        address_line2: formData.addressLine2 || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        zip_code: formData.zipCode || null,
+
+        // Relocation
+        willing_to_relocate: formData.willingToRelocate || null,
+        relocation_states: formData.relocationStates.length > 0 ? formData.relocationStates : null,
+
+        // Education
+        high_school: formData.culinarySchool || null,
+        graduation_year: formData.yearOfGraduation ? formData.yearOfGraduation.toString() : null,
+        culinary_class_years: formData.culinaryClassYears || null,
+
+        // Work Experience
+        currently_employed: formData.currentlyEmployed || null,
+        current_employer: formData.currentWorkplace || null,
+        current_position: formData.currentPosition || null,
+        current_hours_per_week: formData.currentHoursPerWeek,
+
+        previous_employment: formData.previousEmployment || null,
+        previous_employer: formData.previousWorkplace || null,
+        previous_position: formData.previousPosition || null,
+        previous_hours_per_week: formData.previousHoursPerWeek,
+
+        // Availability & Work Preferences
+        transportation: formData.transportation || null,
+        hours_per_week: formData.hoursPerWeek || null,
+        availability: formData.availability.length > 0 ? formData.availability : null,
+        weekend_availability: formData.weekendAvailability || null,
+        ready_to_work: formData.readyToWork || null,
+        available_date: formData.availableDate || null,
+
+        // Documents
+        has_resume: formData.hasResume || null,
+        resume_url: formData.existingResumeUrl || null,
+        has_food_handlers_card: formData.hasFoodHandlersCard || null,
+        food_handlers_card_url: formData.existingFoodHandlersUrl || null,
+        has_servsafe: formData.hasServSafe || null,
+
+        // Interests
+        interests: formData.interests.length > 0 ? formData.interests : null,
+      };
+
+      console.log('Saving draft - profileData:', profileData); // Debug
+      console.log('State being saved:', profileData.state); // Debug
+
+      // Save to backend
+      await api.put(API_ENDPOINTS.STUDENT_UPDATE_PROFILE, profileData);
+
+      toast.success("Draft saved!", {
+        description: "Your progress has been saved. You can continue later.",
+        duration: 3000,
+      });
+    } catch (error: any) {
+      console.error("Failed to save draft:", error);
+      const errorMessage = error.response?.data?.detail || "Failed to save draft. Please try again.";
+      toast.error("Save Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  // Handle form submission (validates + saves + marks complete)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const errors = validateForm();
     if (errors.length > 0) {
       errors.forEach(error => toast.error(error));
@@ -314,36 +481,110 @@ export default function EditPortfolio() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // Here you would typically send the data to your backend
-      console.log('Submitting form data:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Portfolio updated successfully!",
-        {
-          description: "Your portfolio has been updated successfully.",
-          duration: 5000,
+      // Map frontend camelCase to backend snake_case
+      const profileData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        preferred_name: formData.preferredName || null,
+        email: formData.emailAddress,
+        phone: formData.mobilePhoneNumber,
+        bio: formData.bio || null,
+        profile_picture_url: formData.existingProfilePicture || null,
+        date_of_birth: formData.dateOfBirth,
+
+        // Address
+        address: formData.mailingAddress,
+        address_line2: formData.addressLine2 || null,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zipCode,
+
+        // Relocation
+        willing_to_relocate: formData.willingToRelocate,
+        relocation_states: formData.relocationStates,
+
+        // Education
+        high_school: formData.culinarySchool,
+        graduation_year: formData.yearOfGraduation.toString(),
+        culinary_class_years: formData.culinaryClassYears,
+
+        // Work Experience
+        currently_employed: formData.currentlyEmployed,
+        current_employer: formData.currentWorkplace || null,
+        current_position: formData.currentPosition || null,
+        current_hours_per_week: formData.currentHoursPerWeek,
+
+        previous_employment: formData.previousEmployment,
+        previous_employer: formData.previousWorkplace || null,
+        previous_position: formData.previousPosition || null,
+        previous_hours_per_week: formData.previousHoursPerWeek,
+
+        // Availability & Work Preferences
+        transportation: formData.transportation,
+        hours_per_week: formData.hoursPerWeek,
+        availability: formData.availability,
+        weekend_availability: formData.weekendAvailability,
+        ready_to_work: formData.readyToWork,
+        available_date: formData.availableDate || null,
+
+        // Documents
+        has_resume: formData.hasResume,
+        resume_url: formData.existingResumeUrl || null,
+        has_food_handlers_card: formData.hasFoodHandlersCard,
+        food_handlers_card_url: formData.existingFoodHandlersUrl || null,
+        has_servsafe: formData.hasServSafe,
+
+        // Interests
+        interests: formData.interests,
+      };
+
+      // Save to backend
+      const response = await api.put(API_ENDPOINTS.STUDENT_UPDATE_PROFILE, profileData);
+
+      if (response.data) {
+        // Refresh user data to get updated profile
+        const userResponse = await api.get(API_ENDPOINTS.AUTH_ME);
+        if (userResponse.data) {
+          // Update user in localStorage and context
+          localStorage.setItem("auth_user", JSON.stringify(userResponse.data));
+          window.location.reload(); // Reload to update auth context
         }
-      );
-      setLocation('/student/portfolio');
-    } catch (error) {
-      toast.error("Failed to update portfolio. Please try again.");
+
+        toast.success("Profile saved successfully!",
+          {
+            description: "Your profile has been updated and you can now access the platform.",
+            duration: 5000,
+          }
+        );
+
+        // Redirect to homepage after successful save
+        setTimeout(() => {
+          setLocation('/student');
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error("Failed to update profile:", error);
+      const errorMessage = error.response?.data?.detail || "Failed to update profile. Please try again.";
+      toast.error("Save Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!student) {
+  // Redirect if not a student (shouldn't happen due to ProtectedRoute, but safety check)
+  if (!user || user.role !== 'student') {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <Card className="max-w-md w-full mx-4">
             <CardContent className="p-6">
-              <h1 className="text-2xl font-bold mb-2">User Not Found</h1>
-              <p className="text-gray-600">No user found for this portfolio ID.</p>
+              <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+              <p className="text-gray-600">Only students can access this page.</p>
             </CardContent>
           </Card>
         </div>
@@ -351,14 +592,47 @@ export default function EditPortfolio() {
     );
   }
 
+  // Show loading while fetching profile
+  if (isLoadingProfile) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Check if this is first-time onboarding (reactive - checks current formData state)
+  // If they haven't filled first/last name, they're in onboarding mode
+  const isOnboarding = !formData.firstName?.trim() || !formData.lastName?.trim();
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto p-6">
+        {/* Onboarding Banner */}
+        {isOnboarding && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h2 className="text-lg font-semibold text-blue-900 mb-1">Welcome to C-CAP! 👋</h2>
+            <p className="text-sm text-blue-700">
+              Please complete all required fields (*) to access the platform and connect with opportunities.
+              <br />
+              <span className="font-medium mt-1 inline-block">You must fill out this form before exploring the platform.</span>
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Edit Portfolio</h1>
-            <p className="text-gray-600">Update your information and preferences</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isOnboarding ? 'Complete Your Profile' : 'Edit Portfolio'}
+            </h1>
+            <p className="text-gray-600">
+              {isOnboarding
+                ? 'Tell us about yourself to get started'
+                : 'Update your information and preferences'}
+            </p>
           </div>
         </div>
 
@@ -373,7 +647,7 @@ export default function EditPortfolio() {
                 {/* Profile Picture Upload */}
                 <div className="space-y-4">
                   <Label htmlFor="profilePicture">Profile Picture</Label>
-                  
+
                   <div className="flex flex-col items-center space-y-4">
                     {/* Hidden file input */}
                     <input
@@ -383,7 +657,7 @@ export default function EditPortfolio() {
                       className="hidden"
                       onChange={(e) => handleFileUpload('profilePicture', e.target.files?.[0] || null)}
                     />
-                    
+
                     {/* Profile Picture Display */}
                     <div className="relative group">
                       <div className="w-32 h-32 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center border-4 border-gray-200 shadow-lg">
@@ -406,7 +680,7 @@ export default function EditPortfolio() {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Overlay with upload/change button */}
                       <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <label htmlFor="profilePicture" className="cursor-pointer">
@@ -441,7 +715,7 @@ export default function EditPortfolio() {
                           </Button>
                         </>
                       )}
-                      
+
                       {formData.existingProfilePicture && !formData.profilePicture && (
                         <Button
                           type="button"
@@ -453,7 +727,7 @@ export default function EditPortfolio() {
                           Remove Current Picture
                         </Button>
                       )}
-                      
+
                       {!formData.profilePicture && !formData.existingProfilePicture && (
                         <p className="text-xs text-gray-500 text-center">
                           Click the upload button above to add a profile picture
@@ -583,7 +857,11 @@ export default function EditPortfolio() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">State *</Label>
-                  <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
+                  <Select
+                    key={formData.state || 'no-state'}
+                    value={formData.state}
+                    onValueChange={(value) => handleInputChange('state', value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
@@ -661,8 +939,8 @@ export default function EditPortfolio() {
                     type="number"
                     min="1950"
                     max="2030"
-                    value={formData.yearOfGraduation}
-                    onChange={(e) => handleInputChange('yearOfGraduation', parseInt(e.target.value))}
+                    value={formData.yearOfGraduation || ""}
+                    onChange={(e) => handleInputChange('yearOfGraduation', e.target.value ? parseInt(e.target.value) : 0)}
                     required
                   />
                 </div>
@@ -673,8 +951,8 @@ export default function EditPortfolio() {
                     type="number"
                     min="0"
                     max="10"
-                    value={formData.culinaryClassYears}
-                    onChange={(e) => handleInputChange('culinaryClassYears', parseInt(e.target.value))}
+                    value={formData.culinaryClassYears || ""}
+                    onChange={(e) => handleInputChange('culinaryClassYears', e.target.value ? parseInt(e.target.value) : 0)}
                     required
                   />
                 </div>
@@ -691,7 +969,11 @@ export default function EditPortfolio() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="transportation">How will you get to work? *</Label>
-                  <Select value={formData.transportation} onValueChange={(value) => handleInputChange('transportation', value)}>
+                  <Select
+                    key={formData.transportation || 'no-transport'}
+                    value={formData.transportation}
+                    onValueChange={(value) => handleInputChange('transportation', value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select transportation" />
                     </SelectTrigger>
@@ -711,8 +993,8 @@ export default function EditPortfolio() {
                     type="number"
                     min="10"
                     max="60"
-                    value={formData.hoursPerWeek}
-                    onChange={(e) => handleInputChange('hoursPerWeek', parseInt(e.target.value))}
+                    value={formData.hoursPerWeek || ""}
+                    onChange={(e) => handleInputChange('hoursPerWeek', e.target.value ? parseInt(e.target.value) : 0)}
                     required
                   />
                 </div>
@@ -725,7 +1007,7 @@ export default function EditPortfolio() {
                       <Checkbox
                         id={`availability-${option}`}
                         checked={formData.availability.includes(option)}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleMultiSelectChange('availability', option, checked as boolean)
                         }
                       />
@@ -801,7 +1083,7 @@ export default function EditPortfolio() {
                       min="1"
                       max="80"
                       value={formData.currentHoursPerWeek || ""}
-                      onChange={(e) => handleInputChange('currentHoursPerWeek', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('currentHoursPerWeek', e.target.value ? parseInt(e.target.value) : null)}
                       required
                     />
                   </div>
@@ -857,7 +1139,7 @@ export default function EditPortfolio() {
                       min="1"
                       max="80"
                       value={formData.previousHoursPerWeek || ""}
-                      onChange={(e) => handleInputChange('previousHoursPerWeek', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('previousHoursPerWeek', e.target.value ? parseInt(e.target.value) : null)}
                       required
                     />
                   </div>
@@ -888,7 +1170,7 @@ export default function EditPortfolio() {
               {formData.hasResume === "Yes" && (
                 <div className="space-y-2">
                   <Label htmlFor="resumeUpload">Resume *</Label>
-                  
+
                   {/* Show existing resume if available */}
                   {formData.existingResumeUrl && !formData.resumeUpload && (
                     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -943,7 +1225,7 @@ export default function EditPortfolio() {
                       </label>
                     </div>
                   )}
-                  
+
                   {/* Show uploaded file preview */}
                   {formData.resumeUpload && (
                     <div className="flex items-center gap-2 mt-2">
@@ -980,7 +1262,7 @@ export default function EditPortfolio() {
               {formData.hasFoodHandlersCard === "Yes" && (
                 <div className="space-y-2">
                   <Label htmlFor="foodHandlersCardUpload">Food Handlers Card *</Label>
-                  
+
                   {/* Show existing food handlers card if available */}
                   {formData.existingFoodHandlersUrl && !formData.foodHandlersCardUpload && (
                     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -1035,7 +1317,7 @@ export default function EditPortfolio() {
                       </label>
                     </div>
                   )}
-                  
+
                   {/* Show uploaded file preview */}
                   {formData.foodHandlersCardUpload && (
                     <div className="flex items-center gap-2 mt-2">
@@ -1124,7 +1406,7 @@ export default function EditPortfolio() {
                       <Checkbox
                         id={`interest-${option}`}
                         checked={formData.interests.includes(option)}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleMultiSelectChange('interests', option, checked as boolean)
                         }
                       />
@@ -1138,27 +1420,52 @@ export default function EditPortfolio() {
 
           {/* Form Actions */}
           <div className="flex gap-4 justify-end">
+            {!isOnboarding && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation('/student/portfolio')}
+              >
+                Cancel
+              </Button>
+            )}
+
+            {/* Save Draft Button - No validation */}
             <Button
               type="button"
               variant="outline"
-              onClick={() => setLocation('/student/portfolio')}
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft || isSubmitting}
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
             >
-              Cancel
+              {isSavingDraft ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Saving Draft...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Draft
+                </>
+              )}
             </Button>
+
+            {/* Submit Button - With validation */}
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSavingDraft}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
+                  Submitting...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  {isOnboarding ? 'Complete Profile' : 'Save Changes'}
                 </>
               )}
             </Button>

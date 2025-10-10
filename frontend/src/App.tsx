@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner"
 
 import AdminHomepage from "@/pages/admin/homepage";
 import Login from "@/pages/login";
+import RegisterStudent from "@/pages/register-student";
 import NotFound from "@/pages/not-found";
 import AdminAnnouncements from "@/pages/admin/anouncements";
 import AdminSubmissions from "@/pages/admin/submissions";
@@ -34,8 +35,9 @@ function AppRoutes() {
 
   return (
     <Switch>
-      {/* Login route - always accessible */}
+      {/* Public routes - always accessible */}
       <Route path="/login" component={Login} />
+      <Route path="/register-student" component={RegisterStudent} />
 
       {/* Admin routes - require admin role */}
       <Route path="/admin">
@@ -86,7 +88,7 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
       <Route path="/student/editPortfolio">
-        <ProtectedRoute requiredRole="student">
+        <ProtectedRoute requiredRole="student" skipProfileCheck={true}>
           <StudentEditPortfolio />
         </ProtectedRoute>
       </Route>

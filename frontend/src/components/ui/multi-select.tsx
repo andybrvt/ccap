@@ -56,7 +56,7 @@ const multiSelectVariants = cva(
  */
 interface MultiSelectProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof multiSelectVariants> {
+  VariantProps<typeof multiSelectVariants> {
   /**
    * An array of option objects to be displayed in the multi-select component.
    * Each option object has a label, value, and an optional icon.
@@ -244,14 +244,13 @@ export const MultiSelect = React.forwardRef<
                           <IconComponent className="h-4 w-4 mr-2" />
                         )}
                         {option?.label}
-                        <button
-                          type="button"
-                          className="ml-2 h-4 w-4 hover:opacity-75 focus:outline-none"
+                        <span
+                          className="ml-2 h-4 w-4 hover:opacity-75 focus:outline-none cursor-pointer"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => handleBadgeRemove(e, value)}
                         >
                           <XCircle className="h-4 w-4" />
-                        </button>
+                        </span>
                       </Badge>
                     );
                   })}
@@ -265,26 +264,24 @@ export const MultiSelect = React.forwardRef<
                       style={{ animationDuration: `${animation}s` }}
                     >
                       {`+ ${selectedValues.length - maxCount} more`}
-                      <button
-                        type="button"
-                        className="ml-2 h-4 w-4 hover:opacity-75 focus:outline-none"
+                      <span
+                        className="ml-2 h-4 w-4 hover:opacity-75 focus:outline-none cursor-pointer"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={handleClearExtra}
                       >
                         <XCircle className="h-4 w-4" />
-                      </button>
+                      </span>
                     </Badge>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    className="h-4 mx-2 text-muted-foreground hover:opacity-75 focus:outline-none"
+                  <span
+                    className="h-4 mx-2 text-muted-foreground hover:opacity-75 focus:outline-none cursor-pointer"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={handleClearAll}
                   >
                     <XIcon className="h-4 w-4" />
-                  </button>
+                  </span>
                   <Separator
                     orientation="vertical"
                     className="flex min-h-6 h-full"
