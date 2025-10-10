@@ -122,8 +122,10 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_info(current_user: User = Depends(get_current_active_user)):
-    """Get current user information"""
+def get_current_user_info(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    """Get current user information with full profile data"""
+    # Refresh the user to include the student profile relationship
+    db.refresh(current_user)
     return current_user
 
 @router.post("/admin/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

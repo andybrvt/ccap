@@ -464,3 +464,237 @@ async def get_servsafe_url(
         )
     
     return {"download_url": signed_url}
+
+
+# Delete Endpoints
+
+@router.delete("/profile/picture")
+async def delete_profile_picture(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete own profile picture (students only)"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can delete their own profile pictures"
+        )
+    
+    try:
+        student_repo = StudentRepository(db)
+        # Students can only delete their own profile picture
+        success = student_repo.update_profile_picture(current_user.id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete profile picture"
+            )
+        
+        return {"message": "Profile picture deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete profile picture: {str(e)}"
+        )
+
+
+@router.delete("/profile/resume")
+async def delete_resume(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete resume"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can delete resumes"
+        )
+    
+    try:
+        student_repo = StudentRepository(db)
+        success = student_repo.update_resume_url(current_user.id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete resume"
+            )
+        
+        return {"message": "Resume deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete resume: {str(e)}"
+        )
+
+
+@router.delete("/profile/credential")
+async def delete_credential(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete food handlers card"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can delete credentials"
+        )
+    
+    try:
+        student_repo = StudentRepository(db)
+        success = student_repo.update_food_handlers_url(current_user.id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete credential"
+            )
+        
+        return {"message": "Credential deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete credential: {str(e)}"
+        )
+
+
+@router.delete("/profile/servsafe")
+async def delete_servsafe(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete own ServSafe certificate (students only)"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can delete their own ServSafe certificates"
+        )
+    
+    try:
+        student_repo = StudentRepository(db)
+        # Students can only delete their own certificate
+        success = student_repo.update_servsafe_url(current_user.id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete ServSafe certificate"
+            )
+        
+        return {"message": "ServSafe certificate deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete ServSafe certificate: {str(e)}"
+        )
+
+
+# Admin Endpoints - Manage any student's files
+
+@router.delete("/{student_id}/profile/picture")
+async def admin_delete_profile_picture(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Delete a student's profile picture - Admin only"""
+    try:
+        student_repo = StudentRepository(db)
+        success = student_repo.update_profile_picture(student_id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Student not found or failed to delete profile picture"
+            )
+        
+        return {"message": "Profile picture deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete profile picture: {str(e)}"
+        )
+
+
+@router.delete("/{student_id}/profile/resume")
+async def admin_delete_resume(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Delete a student's resume - Admin only"""
+    try:
+        student_repo = StudentRepository(db)
+        success = student_repo.update_resume_url(student_id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Student not found or failed to delete resume"
+            )
+        
+        return {"message": "Resume deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete resume: {str(e)}"
+        )
+
+
+@router.delete("/{student_id}/profile/credential")
+async def admin_delete_credential(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Delete a student's food handlers card - Admin only"""
+    try:
+        student_repo = StudentRepository(db)
+        success = student_repo.update_food_handlers_url(student_id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Student not found or failed to delete credential"
+            )
+        
+        return {"message": "Credential deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete credential: {str(e)}"
+        )
+
+
+@router.delete("/{student_id}/profile/servsafe")
+async def admin_delete_servsafe(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Delete a student's ServSafe certificate - Admin only"""
+    try:
+        student_repo = StudentRepository(db)
+        success = student_repo.update_servsafe_url(student_id, None)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Student not found or failed to delete ServSafe certificate"
+            )
+        
+        return {"message": "ServSafe certificate deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete ServSafe certificate: {str(e)}"
+        )
