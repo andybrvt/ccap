@@ -59,9 +59,10 @@ class StudentProfile(Base):
     # Documents
     has_resume = Column(String, nullable=True)  # "Yes", "No"
     resume_url = Column(String, nullable=True)
-    has_food_handlers_card = Column(String, nullable=True)  # "Yes", "No"
+    has_food_handlers_card = Column(String, nullable=True)  # "Yes", "No", "In Progress"
     food_handlers_card_url = Column(String, nullable=True)
-    has_servsafe = Column(String, nullable=True)  # "Yes", "No"
+    has_servsafe = Column(String, nullable=True)  # "Yes", "No", "Expired", "In Progress"
+    servsafe_certificate_url = Column(String, nullable=True)
     
     # Interests/Tags (THE IMPORTANT PART!)
     interests = Column(ARRAY(String), nullable=True)  # Array of culinary interests

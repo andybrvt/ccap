@@ -78,6 +78,10 @@ class StudentRepository:
         """Delete a student (cascade will delete profile)"""
         return self.user_repo.delete(student_id)
     
+    def get_profile_by_user_id(self, user_id: UUID) -> Optional[StudentProfile]:
+        """Get student profile by user ID"""
+        return self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+    
     def update_profile_picture(self, user_id: UUID, picture_url: str) -> bool:
         """Update profile picture URL"""
         try:
@@ -117,5 +121,19 @@ class StudentRepository:
             return False
         except Exception as e:
             print(f"Error updating credential URL: {e}")
+            self.db.rollback()
+            return False
+    
+    def update_servsafe_url(self, user_id: UUID, servsafe_url: str) -> bool:
+        """Update ServSafe certificate URL (S3 key)"""
+        try:
+            profile = self.db.query(StudentProfile).filter(StudentProfile.user_id == user_id).first()
+            if profile:
+                profile.servsafe_certificate_url = servsafe_url
+                self.db.commit()
+                return True
+            return False
+        except Exception as e:
+            print(f"Error updating ServSafe certificate URL: {e}")
             self.db.rollback()
             return False

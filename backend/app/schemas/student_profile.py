@@ -55,6 +55,7 @@ class StudentProfileBase(BaseModel):
     has_food_handlers_card: Optional[str] = None
     food_handlers_card_url: Optional[str] = None
     has_servsafe: Optional[str] = None
+    servsafe_certificate_url: Optional[str] = None
     
     # Interests/Tags
     interests: Optional[List[str]] = None
@@ -118,6 +119,7 @@ class StudentProfileUpdate(BaseModel):
     has_food_handlers_card: Optional[str] = None
     food_handlers_card_url: Optional[str] = None
     has_servsafe: Optional[str] = None
+    servsafe_certificate_url: Optional[str] = None
     
     # Interests/Tags
     interests: Optional[List[str]] = None

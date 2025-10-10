@@ -382,3 +382,85 @@ async def get_credential_url(
         )
     
     return {"download_url": signed_url}
+
+
+@router.post("/profile/servsafe")
+async def upload_servsafe(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Upload ServSafe certificate (private)"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can upload ServSafe certificates"
+        )
+    
+    # Validate file type
+    allowed_types = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/png', 
+        'image/jpg'
+    ]
+    if not file.content_type or file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a PDF or image (JPEG/PNG)"
+        )
+    
+    try:
+        # Upload to S3 private folder
+        s3_key = await S3Service.upload_private_document(file, str(current_user.id), "servsafe")
+        
+        # Update profile in database
+        student_repo = StudentRepository(db)
+        success = student_repo.update_servsafe_url(current_user.id, s3_key)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update ServSafe certificate"
+            )
+        
+        return {"message": "ServSafe certificate uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload ServSafe certificate: {str(e)}"
+        )
+
+
+@router.get("/profile/servsafe")
+async def get_servsafe_url(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get signed URL for ServSafe certificate download"""
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can access ServSafe certificates"
+        )
+    
+    student_repo = StudentRepository(db)
+    profile = student_repo.get_profile_by_user_id(current_user.id)
+    
+    if not profile or not profile.servsafe_certificate_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No ServSafe certificate found"
+        )
+    
+    # Generate signed URL (expires in 1 hour)
+    signed_url = S3Service.generate_signed_url(profile.servsafe_certificate_url)
+    
+    if not signed_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate download link"
+        )
+    
+    return {"download_url": signed_url}
