@@ -3,6 +3,16 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+# Minimal student profile for auth/me (only what's needed everywhere)
+class StudentProfileMinimal(BaseModel):
+    id: UUID
+    first_name: str
+    last_name: str
+    email: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 # Base schema
 class UserBase(BaseModel):
     email: EmailStr
@@ -24,6 +34,7 @@ class UserResponse(UserBase):
     role: str
     is_active: bool
     created_at: datetime
+    student_profile: Optional[StudentProfileMinimal] = None  # Minimal profile for auth/me
     
     class Config:
         from_attributes = True
@@ -35,4 +46,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[UUID] = None
-

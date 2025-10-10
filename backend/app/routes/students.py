@@ -4,11 +4,12 @@ from typing import List
 from uuid import UUID
 
 from app.core.database import get_db
-from app.deps.auth import require_admin
+from app.deps.auth import require_admin, get_current_active_user
 from app.models.user import User
 from app.repositories.student import StudentRepository
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
+from app.models.student_profile import StudentProfile
 
 router = APIRouter()
 
@@ -126,3 +127,53 @@ def delete_student(
         )
     
     return None
+
+@router.get("/me/profile", response_model=StudentProfileResponse)
+def get_my_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get current student's full profile"""
+    # Only students can access their profile via this endpoint
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can access this endpoint"
+        )
+    
+    # Get the student's full profile
+    profile = db.query(StudentProfile).filter(StudentProfile.user_id == current_user.id).first()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student profile not found"
+        )
+    
+    return profile
+
+@router.put("/me/profile", response_model=StudentProfileResponse)
+def update_my_profile(
+    profile_data: StudentProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update current student's own profile"""
+    # Only students can update their profile via this endpoint
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can access this endpoint"
+        )
+    
+    student_repo = StudentRepository(db)
+    
+    # Update the student's own profile
+    updated_profile = student_repo.update_student_profile(current_user.id, profile_data)
+    if not updated_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student profile not found"
+        )
+    
+    return updated_profile
