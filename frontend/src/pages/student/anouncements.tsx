@@ -1,20 +1,15 @@
-import React, { useState } from 'react';
-import { Link } from "wouter";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Megaphone,
   Search,
-  ArrowLeft,
-  Filter,
   Calendar,
   Clock,
   AlertTriangle,
   Info,
   CheckCircle,
-  Plus,
-  Smile,
   Bell,
   Star,
   Users,
@@ -25,148 +20,28 @@ import {
   Globe,
   Mail,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 import Layout from "@/components/layout/StudentLayout";
+import { api } from "@/lib/apiService";
+import { API_ENDPOINTS } from "@/lib/endpoints";
+import { toast } from "sonner";
 
-// Extended dummy announcements data
-const allAnnouncements = [
-  {
-    id: 1,
-    title: "New CCAP Application Portal Launch",
-    description: "We're excited to announce the launch of our new CCAP application portal with enhanced features and improved user experience. This new portal includes better navigation, faster processing times, and improved mobile responsiveness.",
-    date: "2 hours ago",
-    priority: "high",
-    icon: "megaphone",
-    category: "feature"
-  },
-  {
-    id: 2,
-    title: "System Maintenance Scheduled",
-    description: "Scheduled maintenance will occur on Sunday, January 15th from 2:00 AM to 6:00 AM EST. Some features may be temporarily unavailable during this time. We apologize for any inconvenience.",
-    date: "1 day ago",
-    priority: "medium",
-    icon: "alert",
-    category: "maintenance"
-  },
-  {
-    id: 3,
-    title: "Updated Application Guidelines",
-    description: "Please review the updated application guidelines for the 2024-2025 academic year. New requirements have been added and some existing ones have been modified to better serve our students.",
-    date: "3 days ago",
-    priority: "low",
-    icon: "📋",
-    category: "policy"
-  },
-  {
-    id: 4,
-    title: "Holiday Office Hours",
-    description: "Our office will be closed for the upcoming holidays. Applications submitted during this period will be processed when we return. Please plan accordingly.",
-    date: "1 week ago",
-    priority: "medium",
-    icon: "calendar",
-    category: "hours"
-  },
-  {
-    id: 5,
-    title: "New Staff Member Welcome",
-    description: "Please join us in welcoming our new team member who will be handling application processing. They bring extensive experience in student services.",
-    date: "1 week ago",
-    priority: "low",
-    icon: "👋",
-    category: "team"
-  },
-  {
-    id: 6,
-    title: "Emergency Contact Update Required",
-    description: "All students must update their emergency contact information by the end of this month. This is a mandatory requirement for continued enrollment.",
-    date: "2 weeks ago",
-    priority: "high",
-    icon: "alert",
-    category: "urgent"
-  },
-  {
-    id: 7,
-    title: "Scholarship Application Deadline",
-    description: "The deadline for spring semester scholarship applications is approaching. Don't miss out on this opportunity to reduce your educational costs.",
-    date: "2 weeks ago",
-    priority: "medium",
-    icon: "gift",
-    category: "scholarship"
-  },
-  {
-    id: 8,
-    title: "Campus Safety Reminder",
-    description: "As we approach the winter months, please remember to follow campus safety protocols. Report any suspicious activity immediately.",
-    date: "3 weeks ago",
-    priority: "low",
-    icon: "shield",
-    category: "safety"
-  },
-  {
-    id: 9,
-    title: "New Email Notification System",
-    description: "We've implemented a new email notification system to keep you updated on your application status. You'll now receive timely updates via email.",
-    date: "4 days ago",
-    priority: "medium",
-    icon: "mail",
-    category: "feature"
-  },
-  {
-    id: 10,
-    title: "Student Portal Feedback Request",
-    description: "We value your feedback! Please take a moment to share your thoughts about the student portal experience. Your input helps us improve our services.",
-    date: "1 week ago",
-    priority: "low",
-    icon: "message",
-    category: "general"
-  },
-  {
-    id: 11,
-    title: "International Student Orientation",
-    description: "Welcome to our international students! Join us for a comprehensive orientation session to help you navigate campus life and academic requirements.",
-    date: "5 days ago",
-    priority: "high",
-    icon: "globe",
-    category: "team"
-  },
-  {
-    id: 12,
-    title: "Academic Excellence Awards",
-    description: "Congratulations to all students who have achieved academic excellence! Award ceremonies will be held next month to recognize your outstanding achievements.",
-    date: "2 weeks ago",
-    priority: "medium",
-    icon: "star",
-    category: "general"
-  }
-];
-
-const ICON_OPTIONS = [
-  { label: 'Megaphone', value: 'megaphone', icon: <Megaphone className="h-5 w-5" /> },
-  { label: 'Bell', value: 'bell', icon: <Bell className="h-5 w-5" /> },
-  { label: 'Alert', value: 'alert', icon: <AlertTriangle className="h-5 w-5" /> },
-  { label: 'Calendar', value: 'calendar', icon: <Calendar className="h-5 w-5" /> },
-  { label: 'Clock', value: 'clock', icon: <Clock className="h-5 w-5" /> },
-  { label: 'Info', value: 'info', icon: <Info className="h-5 w-5" /> },
-  { label: 'Check', value: 'check', icon: <CheckCircle className="h-5 w-5" /> },
-  { label: 'Star', value: 'star', icon: <Star className="h-5 w-5" /> },
-  { label: 'Users', value: 'users', icon: <Users className="h-5 w-5" /> },
-  { label: 'Shield', value: 'shield', icon: <Shield className="h-5 w-5" /> },
-  { label: 'Book', value: 'book', icon: <BookOpen className="h-5 w-5" /> },
-  { label: 'Heart', value: 'heart', icon: <Heart className="h-5 w-5" /> },
-  { label: 'Gift', value: 'gift', icon: <Gift className="h-5 w-5" /> },
-  { label: 'Globe', value: 'globe', icon: <Globe className="h-5 w-5" /> },
-  { label: 'Mail', value: 'mail', icon: <Mail className="h-5 w-5" /> },
-  { label: 'Message', value: 'message', icon: <MessageCircle className="h-5 w-5" /> },
-  // Custom emoji
-  { label: 'Party', value: '🎉', icon: <span className="text-lg">🎉</span> },
-  { label: 'Wrench', value: '🔧', icon: <span className="text-lg">🔧</span> },
-  { label: 'Clipboard', value: '📋', icon: <span className="text-lg">📋</span> },
-  { label: 'Office', value: '🏢', icon: <span className="text-lg">🏢</span> },
-  { label: 'Wave', value: '👋', icon: <span className="text-lg">👋</span> },
-  { label: 'Warning', value: '⚠️', icon: <span className="text-lg">⚠️</span> },
-  { label: 'Money', value: '💰', icon: <span className="text-lg">💰</span> },
-  { label: 'Shield Emoji', value: '🛡️', icon: <span className="text-lg">🛡️</span> },
-];
+// Types
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  priority: string;
+  category: string;
+  icon: string;
+  target_audience: string;
+  target_bucket?: string | null;
+  target_city?: string | null;
+  target_state?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+}
 
 const lucideIconMap: Record<string, React.ReactNode> = {
   megaphone: <Megaphone className="h-5 w-5 text-white" />,
@@ -194,161 +69,199 @@ function renderAnnouncementIcon(icon: string): React.ReactNode {
   return <span className="text-lg">{icon}</span>;
 }
 
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) {
+    return diffMins <= 1 ? 'Just now' : `${diffMins} minutes ago`;
+  } else if (diffHours < 24) {
+    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+  } else if (diffDays < 7) {
+    return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
 export default function Announcements() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPriority, setSelectedPriority] = useState('all');
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch announcements (backend automatically filters for students)
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(API_ENDPOINTS.ANNOUNCEMENTS_GET_ALL);
+        setAnnouncements(response.data);
+      } catch (error: any) {
+        console.error('Error fetching announcements:', error);
+        toast.error(error.response?.data?.detail || 'Failed to fetch announcements');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, []);
 
   // Filter announcements based on search term and priority
-  const filteredAnnouncements = allAnnouncements.filter(announcement => {
+  const filteredAnnouncements = announcements.filter(announcement => {
     const matchesSearch = announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         announcement.description.toLowerCase().includes(searchTerm.toLowerCase());
+      announcement.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = selectedPriority === 'all' || announcement.priority === selectedPriority;
     return matchesSearch && matchesPriority;
   });
 
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'medium':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'low':
-        return <Info className="h-4 w-4 text-blue-500" />;
-      default:
-        return <Info className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   return (
     <Layout>
       <div className="flex flex-col max-h-[calc(100vh-6rem)]">
-      {/* Header */}
-      <section className="px-6 py-8 bg-white border-b border-gray-200 shrink-0">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <Megaphone className="h-4 w-4 text-white" />
+        {/* Header */}
+        <section className="px-6 py-8 bg-white border-b border-gray-200 shrink-0">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                  <Megaphone className="h-4 w-4 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold text-black">Announcements</h1>
               </div>
-              <h1 className="text-3xl font-bold text-black">Announcements</h1>
             </div>
-          </div>
 
-          {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search announcements..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={selectedPriority === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('all')}
-              >
-                All
-              </Button>
-              <Button
-                variant={selectedPriority === 'high' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('high')}
-                className="border-red-200 text-red-700 hover:bg-red-50"
-              >
-                High Priority
-              </Button>
-              <Button
-                variant={selectedPriority === 'medium' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('medium')}
-                className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-              >
-                Medium Priority
-              </Button>
-              <Button
-                variant={selectedPriority === 'low' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('low')}
-                className="border-blue-200 text-blue-700 hover:bg-blue-50"
-              >
-                Low Priority
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Announcements List */}
-      <section className="flex-1 min-h-0 overflow-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          {filteredAnnouncements.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Megaphone className="h-8 w-8 text-gray-400" />
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search announcements..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements Found</h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm || selectedPriority !== 'all' 
-                  ? "Try adjusting your search or filter criteria."
-                  : "There are no announcements at this time. Check back later for updates."
-                }
-              </p>
-              {(searchTerm || selectedPriority !== 'all') && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedPriority('all');
-                  }}
+              <div className="flex gap-2">
+                <Button
+                  variant={selectedPriority === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('all')}
                 >
-                  Clear Filters
+                  All
                 </Button>
-              )}
+                <Button
+                  variant={selectedPriority === 'high' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('high')}
+                  className="border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  High Priority
+                </Button>
+                <Button
+                  variant={selectedPriority === 'medium' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('medium')}
+                  className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
+                >
+                  Medium Priority
+                </Button>
+                <Button
+                  variant={selectedPriority === 'low' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('low')}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                >
+                  Low Priority
+                </Button>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredAnnouncements.map((announcement) => (
-                <div key={announcement.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
+          </div>
+        </section>
+
+        {/* Announcements List */}
+        <section className="flex-1 min-h-0 overflow-auto px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : filteredAnnouncements.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Megaphone className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements Found</h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm || selectedPriority !== 'all'
+                    ? "Try adjusting your search or filter criteria."
+                    : "There are no announcements for you at this time. Check back later for updates."
+                  }
+                </p>
+                {(searchTerm || selectedPriority !== 'all') && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedPriority('all');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredAnnouncements.map((announcement) => (
+                  <div key={announcement.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
                         {renderAnnouncementIcon(announcement.icon)}
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-semibold text-black">
-                            {announcement.title}
-                          </h3>
-                          {getPriorityIcon(announcement.priority)}
-                        </div>
+                        <h3 className="text-xl font-semibold text-black mb-2">
+                          {announcement.title}
+                        </h3>
                         <p className="text-gray-600 mb-3 leading-relaxed">
-                          {announcement.description}
+                          {announcement.content}
                         </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {announcement.date}
-                          </div>
-                          <Badge 
-                            variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'} 
-                            className="text-xs"
+                        <p className="text-sm text-gray-500 mb-3">
+                          {formatDate(announcement.created_at)}
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge
+                            variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'}
+                            className="text-xs capitalize"
                           >
-                            {announcement.priority === 'high' ? 'Important' : announcement.priority === 'medium' ? 'Notice' : 'Info'}
+                            {announcement.priority}
                           </Badge>
+                          <Badge variant="outline" className="text-xs capitalize bg-gray-50">
+                            {announcement.category}
+                          </Badge>
+                          {announcement.target_audience !== 'all' && (
+                            <Badge variant="outline" className="text-xs">
+                              {announcement.target_audience === 'bucket'
+                                ? `📦 ${announcement.target_bucket}`
+                                : `📍 ${announcement.target_state}`
+                              }
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </Layout>
   );

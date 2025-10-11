@@ -9,6 +9,10 @@ export const API_ENDPOINTS = {
   STUDENT_GET_PROFILE: '/students/me/profile',    // GET full profile
   STUDENT_UPDATE_PROFILE: '/students/me/profile', // PUT update profile
 
+  // Admin student management endpoints
+  ADMIN_GET_ALL_STUDENTS: '/students/',          // GET all students (admin only)
+  ADMIN_GET_STUDENT: '/students/',               // GET single student by ID (admin only)
+
   // Student file uploads
   STUDENT_UPLOAD_PROFILE_PICTURE: '/students/profile/picture', // POST upload profile picture
   STUDENT_UPLOAD_RESUME: '/students/profile/resume',          // POST upload resume
@@ -40,4 +44,11 @@ export const API_ENDPOINTS = {
 
   // RESTAURANT DETAILS
   RESTAURANT_DETAILS: '/restaurant/search',
+
+  // Announcement endpoints
+  ANNOUNCEMENTS_GET_ALL: '/announcements/',              // GET all announcements (filtered by role)
+  ANNOUNCEMENTS_GET_BY_ID: '/announcements/',            // GET single announcement by ID
+  ANNOUNCEMENTS_CREATE: '/announcements/',               // POST create announcement (admin only)
+  ANNOUNCEMENTS_UPDATE: '/announcements/',               // PUT update announcement (admin only)
+  ANNOUNCEMENTS_DELETE: '/announcements/',               // DELETE announcement (admin only)
 };

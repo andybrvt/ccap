@@ -17,6 +17,9 @@ import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useState as useReactState } from 'react';
+import { api } from '@/lib/apiService';
+import { API_ENDPOINTS } from '@/lib/endpoints';
+import { toast } from 'sonner';
 
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
@@ -81,6 +84,10 @@ function useDynamicItemsPerPage() {
 }
 
 export default function Submissions() {
+  // State for data
+  const [data, setData] = useState<Submission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // State for search
   const [searchKey, setSearchKey] = useState("");
 
@@ -90,10 +97,80 @@ export default function Submissions() {
   const [selectedStatesOfRelocation, setSelectedStatesOfRelocation] = useState<string[]>([]);
   const [selectedBuckets, setSelectedBuckets] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [onboardingFilter, setOnboardingFilter] = useState("all"); // New: onboarding status filter
 
   // Dynamic items per page calculation
   const { itemsPerPage, containerRef } = useDynamicItemsPerPage();
   const [, setLocation] = useLocation();
+
+  // Fetch all students on mount
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS);
+
+        if (response.data) {
+          // Transform backend data to match frontend Submission interface
+          const transformedData: Submission[] = response.data.map((student: any) => {
+            const profile = student.student_profile || {};
+            return {
+              id: student.id,
+              submissionId: student.id,
+              formId: student.id,
+              submissionDate: profile.created_at || student.created_at,
+              firstName: profile.first_name || "",
+              lastName: profile.last_name || "",
+              preferredName: profile.preferred_name || "",
+              email: student.email || profile.email || "",
+              address: profile.address || "",
+              address2: profile.address_line2 || "",
+              city: profile.city || "",
+              state: profile.state || "",
+              zipCode: profile.zip_code || "",
+              willRelocate: profile.willing_to_relocate || "",
+              relocationStates: profile.relocation_states || [],
+              dateOfBirth: profile.date_of_birth || "",
+              mobileNumber: profile.phone || "",
+              highSchool: profile.high_school || "",
+              graduationYear: profile.graduation_year || "",
+              transportation: profile.transportation || "",
+              hoursWanted: profile.hours_per_week?.toString() || "0",
+              availableTimes: profile.availability?.join(", ") || "",
+              availableWeekends: profile.weekend_availability || "",
+              hasResume: profile.has_resume || "",
+              resumeUrl: profile.resume_url || "",
+              currentJob: profile.currently_employed || "",
+              currentEmployer: profile.current_employer || "",
+              currentPosition: profile.current_position || "",
+              currentHours: profile.current_hours_per_week?.toString() || "",
+              pastJob: profile.previous_employment || "",
+              pastEmployer: profile.previous_employer || "",
+              pastPosition: profile.previous_position || "",
+              pastHours: profile.previous_hours_per_week?.toString() || "",
+              readyToWork: profile.ready_to_work || "",
+              readyDate: profile.available_date || "",
+              interestedOptions: profile.interests || [],
+              foodHandlersCard: profile.has_food_handlers_card || "",
+              servsafeCredentials: profile.has_servsafe || "",
+              culinaryYears: profile.culinary_class_years?.toString() || "0",
+              bucket: profile.current_bucket || "",
+              onboardingStep: profile.onboarding_step || 0,
+            };
+          });
+
+          setData(transformedData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch students:', error);
+        toast.error('Failed to load student data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   const handleRowClick = (item: Submission) => {
     console.log('Clicked on:', item);
@@ -108,38 +185,104 @@ export default function Submissions() {
     console.log('Filter changed to:', value);
   };
 
+  // Refresh student data after updates
+  const refreshStudents = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS);
+
+      if (response.data) {
+        const transformedData: Submission[] = response.data.map((student: any) => {
+          const profile = student.student_profile || {};
+          return {
+            id: student.id,
+            submissionId: student.id,
+            formId: student.id,
+            submissionDate: profile.created_at || student.created_at,
+            firstName: profile.first_name || "",
+            lastName: profile.last_name || "",
+            preferredName: profile.preferred_name || "",
+            email: student.email || profile.email || "",
+            address: profile.address || "",
+            address2: profile.address_line2 || "",
+            city: profile.city || "",
+            state: profile.state || "",
+            zipCode: profile.zip_code || "",
+            willRelocate: profile.willing_to_relocate || "",
+            relocationStates: profile.relocation_states || [],
+            dateOfBirth: profile.date_of_birth || "",
+            mobileNumber: profile.phone || "",
+            highSchool: profile.high_school || "",
+            graduationYear: profile.graduation_year || "",
+            transportation: profile.transportation || "",
+            hoursWanted: profile.hours_per_week?.toString() || "0",
+            availableTimes: profile.availability?.join(", ") || "",
+            availableWeekends: profile.weekend_availability || "",
+            hasResume: profile.has_resume || "",
+            resumeUrl: profile.resume_url || "",
+            currentJob: profile.currently_employed || "",
+            currentEmployer: profile.current_employer || "",
+            currentPosition: profile.current_position || "",
+            currentHours: profile.current_hours_per_week?.toString() || "",
+            pastJob: profile.previous_employment || "",
+            pastEmployer: profile.previous_employer || "",
+            pastPosition: profile.previous_position || "",
+            pastHours: profile.previous_hours_per_week?.toString() || "",
+            readyToWork: profile.ready_to_work || "",
+            readyDate: profile.available_date || "",
+            interestedOptions: profile.interests || [],
+            foodHandlersCard: profile.has_food_handlers_card || "",
+            servsafeCredentials: profile.has_servsafe || "",
+            culinaryYears: profile.culinary_class_years?.toString() || "0",
+            bucket: profile.current_bucket || "",
+            onboardingStep: profile.onboarding_step || 0,
+          };
+        });
+
+        setData(transformedData);
+      }
+    } catch (error) {
+      console.error('Failed to refresh students:', error);
+      toast.error('Failed to refresh student data');
+    }
+  };
+
   // Get unique values for dropdowns
   const uniqueGraduationYears = useMemo(() => {
     return Array.from(
       new Set(
-        exampleData
+        data
           .map((item) => item.graduationYear)
           .filter((year) => year !== undefined && year !== "")
       )
     ).map((year) => ({ value: year, label: year }));
-  }, []);
+  }, [data]);
 
   const uniqueStatesOfResidence = useMemo(() => {
     return Array.from(
-      new Set(exampleData.map((item) => item.state))
+      new Set(data.map((item) => item.state).filter(Boolean))
     ).map((state) => ({ value: state, label: state }));
-  }, []);
+  }, [data]);
 
   const uniqueStatesOfRelocation = useMemo(() => {
     return Array.from(
-      new Set(exampleData.flatMap((item) => item.relocationStates))
+      new Set(data.flatMap((item) => item.relocationStates))
     ).map((state) => ({ value: state, label: state }));
-  }, []);
+  }, [data]);
 
   const uniqueBuckets = useMemo(() => {
-    return Array.from(
-      new Set(exampleData.map((item) => item.bucket).filter(Boolean))
-    ).map((bucket) => ({ value: bucket, label: bucket }));
+    // Hardcoded program stages for consistency
+    return [
+      { value: 'Pre-Apprentice', label: 'Pre-Apprentice' },
+      { value: 'Apprentice', label: 'Apprentice' },
+      { value: 'Completed Pre-Apprentice', label: 'Completed Pre-Apprentice' },
+      { value: 'Completed Apprentice', label: 'Completed Apprentice' },
+      { value: 'Not Active', label: 'Not Active' },
+    ];
   }, []);
 
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
-    return exampleData.filter((item) => {
+    return data.filter((item) => {
       // Search filtering
       const matchesSearch = !searchKey ||
         `${item.firstName} ${item.lastName}`.toLowerCase().includes(searchKey.toLowerCase()) ||
@@ -187,10 +330,20 @@ export default function Submissions() {
         }
       }
 
+      // Onboarding status filtering
+      let matchesOnboarding = true;
+      if (onboardingFilter !== "all") {
+        if (onboardingFilter === "complete") {
+          matchesOnboarding = item.onboardingStep === 0;
+        } else if (onboardingFilter === "incomplete") {
+          matchesOnboarding = item.onboardingStep > 0;
+        }
+      }
+
       return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
-        matchesStateOfRelocation && matchesBucket && matchesStatus;
+        matchesStateOfRelocation && matchesBucket && matchesStatus && matchesOnboarding;
     });
-  }, [searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, statusFilter]);
+  }, [data, searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, statusFilter, onboardingFilter]);
 
   // Reset all filters
   const handleResetFilters = () => {
@@ -200,6 +353,7 @@ export default function Submissions() {
     setSelectedStatesOfRelocation([]);
     setSelectedBuckets([]);
     setStatusFilter("all");
+    setOnboardingFilter("all");
   };
 
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -215,7 +369,7 @@ export default function Submissions() {
 
   // Filtered data for bulk dialog
   const bulkFilteredData = useMemo(() => {
-    return exampleData.filter((item) => {
+    return data.filter((item) => {
       // Search filtering
       const matchesSearch = !bulkFilters.searchKey ||
         `${item.firstName} ${item.lastName}`.toLowerCase().includes(bulkFilters.searchKey.toLowerCase()) ||
@@ -342,25 +496,17 @@ export default function Submissions() {
     },
     {
       key: 'programStages',
-      header: 'Program Stages',
-      minWidth: '120px',
+      header: 'Program Stage',
+      minWidth: '180px',
       render: (item) => (
-        item.bucket ? (
-          <div className="flex items-center">
-            <Badge
-              variant="outline"
-              className={`text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                  item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                    item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                      'bg-gray-50 text-gray-700 border-gray-200'
-                }`}
-            >
-              {item.bucket}
-            </Badge>
-          </div>
+        item.onboardingStep === 0 ? (
+          <AssignBucketButton
+            submission={item}
+            onUpdate={refreshStudents}
+            currentBucket={item.bucket}
+          />
         ) : (
-          <AssignBucketButton submission={item} />
+          <span className="text-xs text-gray-400">Pending onboarding</span>
         )
       ),
       sortable: true,
@@ -495,11 +641,24 @@ export default function Submissions() {
   ];
 
 
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading student data...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="py-4 px-6" ref={containerRef}>
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">C-CAP Submission Data</h1>
+          <h1 className="text-2xl font-bold">C-CAP Student Management</h1>
         </div>
 
         <div className="flex flex-col gap-2 pb-4">
@@ -598,6 +757,24 @@ export default function Submissions() {
                           </div>
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Onboarding Status Filter */}
+                <div className="min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Onboarding Status
+                  </label>
+                  <Select value={onboardingFilter} onValueChange={setOnboardingFilter}>
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
+                      <SelectItem value="complete" className="text-gray-900 hover:bg-gray-100">Complete</SelectItem>
+                      <SelectItem value="incomplete" className="text-gray-900 hover:bg-gray-100">Incomplete</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -716,7 +893,7 @@ export default function Submissions() {
   );
 }
 
-// Example data type based on Google Sheets structure
+// Student data interface
 interface Submission extends Record<string, unknown> {
   submissionId: string;
   formId: string;
@@ -757,350 +934,10 @@ interface Submission extends Record<string, unknown> {
   servsafeCredentials: string;
   culinaryYears: string;
   bucket: string;
-  id?: number;
+  onboardingStep: number; // 0 = complete, 1-6 = in progress
+  id?: string;
 }
 
-// Example data based on Google Sheets structure
-const exampleData: Submission[] = [
-  {
-    id: 1,
-    submissionId: "JxDW8d",
-    formId: "6r5BRY",
-    submissionDate: "2024-09-10 19:38:29",
-    firstName: "Taelyn",
-    lastName: "Morton",
-    preferredName: "",
-    email: "goldannmorton@gmail.com",
-    address: "14043 N 57th Way",
-    address2: "",
-    city: "Scottsdale",
-    state: "AZ",
-    zipCode: "85254",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2008-10-01",
-    mobileNumber: "16028317803",
-    highSchool: "Paradise Valley Highschool",
-    graduationYear: "2026",
-    transportation: "I will drive myself",
-    hoursWanted: "25",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "Yes",
-    hasResume: "No",
-    resumeUrl: "",
-    currentJob: "No",
-    currentEmployer: "",
-    currentPosition: "",
-    currentHours: "",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "Yes",
-    readyDate: "",
-    interestedOptions: ["Culinary", "Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "1",
-    // bucket: "Pre-Apprentice"
-    bucket: ""
-  },
-  {
-    id: 2,
-    submissionId: "x1ylvJ",
-    formId: "gWroN4",
-    submissionDate: "2024-09-10 19:39:18",
-    firstName: "Madison",
-    lastName: "Yob",
-    preferredName: "",
-    email: "madisonyob13@gmail.com",
-    address: "3728 East Taro lane",
-    address2: "",
-    city: "Phoenix",
-    state: "CA",
-    zipCode: "85050",
-    willRelocate: "No",
-    relocationStates: ["KY", "IA", "ID", "GA", "DE"],
-    dateOfBirth: "2007-03-08",
-    mobileNumber: "15205914355",
-    highSchool: "Paradise Valley High School",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "30",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "https://storage.tally.so/private/Morton-Resume.pdf?id=MEDodk&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1FRG9kayIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.k0TkChgdfD7z4_0WZlMWap53E-1bE9q5t6CsKPb5Eh0&signature=ef97b8d0f622c45a7c8aa42937b1c2544dbb759d151deaada05fbd1a7b708b87",
-    currentJob: "Yes",
-    currentEmployer: "Yogurtini",
-    currentPosition: "Employee",
-    currentHours: "20",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-03-08",
-    interestedOptions: ["Baking and Pastry", "Culinary"],
-    foodHandlersCard: "No",
-    servsafeCredentials: "",
-    culinaryYears: "2",
-    bucket: "Apprentice"
-  },
-  {
-    id: 3,
-    submissionId: "ZKYZev",
-    formId: "yeka0x",
-    submissionDate: "2024-09-10 19:39:32",
-    firstName: "Elyse",
-    lastName: "Chavez",
-    preferredName: "",
-    email: "elysemaria07@gmail.com",
-    address: "4722 East Bell Rd, Apt. 2143",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2007-05-01",
-    mobileNumber: "16027626552",
-    highSchool: "PVHS",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "25",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "",
-    currentJob: "Yes",
-    currentEmployer: "QuikTrip",
-    currentPosition: "Clerk",
-    currentHours: "30",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2024-12-01",
-    interestedOptions: ["Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "0",
-    bucket: "Completed Pre-Apprentice"
-  },
-  {
-    id: 4,
-    submissionId: "r1LkgL",
-    formId: "K8yj88",
-    submissionDate: "2024-09-10 19:39:56",
-    firstName: "Aiden",
-    lastName: "Hancharik",
-    preferredName: "",
-    email: "wynterhancharik@gmail.com",
-    address: "9415 N 32nd st",
-    address2: "",
-    city: "phoenix",
-    state: "AZ",
-    zipCode: "85028",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2006-09-25",
-    mobileNumber: "16028829770",
-    highSchool: "paradise valley high school",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "34",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "No",
-    hasResume: "No",
-    resumeUrl: "",
-    currentJob: "No",
-    currentEmployer: "",
-    currentPosition: "",
-    currentHours: "",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-12-25",
-    interestedOptions: ["Culinary"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "2",
-    bucket: "Completed Apprentice"
-  },
-  {
-    id: 5,
-    submissionId: "r1Lkgp",
-    formId: "zWv6WR",
-    submissionDate: "2024-09-10 19:40:00",
-    firstName: "Ibrahim",
-    lastName: "Haddad",
-    preferredName: "",
-    email: "ibrahimhaddad07@gmail.com",
-    address: "3826 west fallen leaf lane",
-    address2: "",
-    city: "Glendale",
-    state: "AZ",
-    zipCode: "85310",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2023-12-07",
-    mobileNumber: "14802400020",
-    highSchool: "3",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "16",
-    availableTimes: "Morning (6AM - 10AM), Afternoon (10AM - 2PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "",
-    currentJob: "Yes",
-    currentEmployer: "Slim chicken",
-    currentPosition: "Qb1",
-    currentHours: "10",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2024-12-27",
-    interestedOptions: ["Culinary"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: "Not Active"
-  },
-  {
-    id: 6,
-    submissionId: "agEakW",
-    formId: "O8yN8R",
-    submissionDate: "2024-09-10 19:40:01",
-    firstName: "Russell",
-    lastName: "Johnson",
-    preferredName: "",
-    email: "russellpj55@gmail.com",
-    address: "3056 E Siesta Lane",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2007-04-21",
-    mobileNumber: "16023612341",
-    highSchool: "Paradise valley high school",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "40",
-    availableTimes: "Evening (2PM - 6PM), Afternoon (10AM - 2PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "https://storage.tally.so/private/RUSSELL-JOHNSON-RESUME-2.docx?id=kN9MOe&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImtOOU1PZSIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.6LBqo8Y_BQ8mG-7MPpVbxRW-nVkk1I48I_rk2JktHUU&signature=a4866eeacacb23e1b02678c0c5bc3633b1fd93d8002620bc58af51dbdabd4cb2",
-    currentJob: "Yes",
-    currentEmployer: "The Mighty Axe",
-    currentPosition: "Axepert",
-    currentHours: "40",
-    pastJob: "Yes",
-    pastEmployer: "Tj maxx",
-    pastPosition: "Employee",
-    pastHours: "30",
-    readyToWork: "No",
-    readyDate: "2025-04-21",
-    interestedOptions: ["Culinary"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: "Completed Apprentice"
-  },
-  {
-    id: 7,
-    submissionId: "RaYVgv",
-    formId: "745k1Z",
-    submissionDate: "2024-09-10 19:40:06",
-    firstName: "Amaree",
-    lastName: "Vega",
-    preferredName: "",
-    email: "amareevega@gmail.com",
-    address: "E Hartford ave 3529",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2007-08-06",
-    mobileNumber: "16023125383",
-    highSchool: "Paradise Valley High School",
-    graduationYear: "2025",
-    transportation: "I will be dropped off",
-    hoursWanted: "18",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "No",
-    hasResume: "No",
-    resumeUrl: "",
-    currentJob: "No",
-    currentEmployer: "",
-    currentPosition: "",
-    currentHours: "",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-08-06",
-    interestedOptions: ["Culinary", "Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: "Pre-Apprentice"
-  },
-  {
-    id: 8,
-    submissionId: "LNY6yz",
-    formId: "D0yGAR",
-    submissionDate: "2024-09-10 19:40:13",
-    firstName: "Aisha",
-    lastName: "Preciado",
-    preferredName: "",
-    email: "ishapc222@gmail.con",
-    address: "2950 E Greenway Rd",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2008-02-02",
-    mobileNumber: "14808098395",
-    highSchool: "Paradise Valley High School",
-    graduationYear: "2026",
-    transportation: "I will be dropped off",
-    hoursWanted: "23",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "No",
-    hasResume: "Yes",
-    resumeUrl: "",
-    currentJob: "Yes",
-    currentEmployer: "Target",
-    currentPosition: "Style",
-    currentHours: "19",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-01-25",
-    interestedOptions: ["Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    // bucket: "Apprentice"
-    bucket: ""
-  }
-];
 
 // Filter options
 const filterOptions: FilterOption[] = [
@@ -1136,9 +973,10 @@ const filterOptions: FilterOption[] = [
   },
 ];
 
-function AssignBucketButton({ submission }: { submission: Submission }) {
+function AssignBucketButton({ submission, onUpdate, currentBucket }: { submission: Submission; onUpdate: () => void; currentBucket?: string }) {
   const [open, setOpen] = useReactState(false);
-  const [selectedBucket, setSelectedBucket] = useReactState<string | null>(null);
+  const [selectedBucket, setSelectedBucket] = useReactState<string | null>(currentBucket || null);
+  const [isAssigning, setIsAssigning] = useReactState(false);
   const bucketOptions = [
     'Pre-Apprentice',
     'Apprentice',
@@ -1147,25 +985,71 @@ function AssignBucketButton({ submission }: { submission: Submission }) {
     'Not Active',
   ];
 
-  // This would update the bucket in real app, here just closes dialog
-  const handleAssign = () => {
-    setOpen(false);
-    // Optionally show a toast or update local state
+  // Update selected bucket when dialog opens
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+      setSelectedBucket(currentBucket || null);
+    }
+    setOpen(isOpen);
+  };
+
+  const handleAssign = async () => {
+    if (!selectedBucket) return;
+
+    setIsAssigning(true);
+    try {
+      // Update the student's bucket/program status
+      await api.put(`${API_ENDPOINTS.ADMIN_GET_STUDENT}${submission.id}/profile`, {
+        current_bucket: selectedBucket,
+      });
+
+      const action = currentBucket ? 'Updated' : 'Assigned';
+      toast.success(`${action} ${submission.firstName} ${submission.lastName} to ${selectedBucket}`);
+      setOpen(false);
+      onUpdate(); // Refresh the student list
+    } catch (error) {
+      console.error('Failed to assign bucket:', error);
+      toast.error('Failed to update program stage');
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   return (
     <>
-      <Button size="sm" variant="outline" className="text-xs border-gray-200 border-2" onClick={() => setOpen(true)}>
-        Assign Program Stage
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      {currentBucket ? (
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className={`text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${currentBucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+              currentBucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                currentBucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                  currentBucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                    'bg-gray-50 text-gray-700 border-gray-200'
+              }`}
+            onClick={() => setOpen(true)}
+          >
+            {currentBucket}
+          </Badge>
+        </div>
+      ) : (
+        <Button size="sm" variant="outline" className="text-xs border-gray-200 border-2" onClick={() => setOpen(true)}>
+          Assign Program Stage
+        </Button>
+      )}
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent onInteractOutside={e => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Assign Program Stage</DialogTitle>
+            <DialogTitle>{currentBucket ? 'Change' : 'Assign'} Program Stage</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-sm text-gray-700 mb-2">
-              Assign a program stage to <span className="font-semibold">{submission.firstName} {submission.lastName}</span>
+              {currentBucket ? 'Change' : 'Assign'} program stage for <span className="font-semibold">{submission.firstName} {submission.lastName}</span>
+              {currentBucket && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Current: <span className="font-semibold">{currentBucket}</span>
+                </div>
+              )}
             </div>
             <Select value={selectedBucket || ''} onValueChange={setSelectedBucket}>
               <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
@@ -1181,10 +1065,10 @@ function AssignBucketButton({ submission }: { submission: Submission }) {
             </Select>
           </div>
           <DialogFooter>
-            <Button onClick={handleAssign} disabled={!selectedBucket}>
-              Assign
+            <Button onClick={handleAssign} disabled={!selectedBucket || isAssigning || selectedBucket === currentBucket}>
+              {isAssigning ? 'Saving...' : currentBucket ? 'Update' : 'Assign'}
             </Button>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isAssigning}>
               Cancel
             </Button>
           </DialogFooter>

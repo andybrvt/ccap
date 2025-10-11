@@ -1,25 +1,26 @@
-import React, { useState } from 'react';
-import { Link } from "wouter";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Navigation } from "@/components/layout/AdminNavigation";
+import { toast } from "sonner";
+import Layout from "@/components/layout/AdminLayout";
+import { api } from "@/lib/apiService";
+import { API_ENDPOINTS } from "@/lib/endpoints";
 import {
   Megaphone,
   Search,
-  ArrowLeft,
-  Filter,
   Calendar,
   Clock,
   AlertTriangle,
   Info,
   CheckCircle,
   Plus,
-  Smile,
   Bell,
   Star,
   Users,
@@ -30,120 +31,28 @@ import {
   Globe,
   Mail,
   MessageCircle,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Loader2,
 } from "lucide-react";
-import Layout from "@/components/layout/AdminLayout";
 
-// Extended dummy announcements data
-const allAnnouncements = [
-  {
-    id: 1,
-    title: "New CCAP Application Portal Launch",
-    description: "We're excited to announce the launch of our new CCAP application portal with enhanced features and improved user experience. This new portal includes better navigation, faster processing times, and improved mobile responsiveness.",
-    date: "2 hours ago",
-    priority: "high",
-    icon: "megaphone",
-    category: "feature"
-  },
-  {
-    id: 2,
-    title: "System Maintenance Scheduled",
-    description: "Scheduled maintenance will occur on Sunday, January 15th from 2:00 AM to 6:00 AM EST. Some features may be temporarily unavailable during this time. We apologize for any inconvenience.",
-    date: "1 day ago",
-    priority: "medium",
-    icon: "alert",
-    category: "maintenance"
-  },
-  {
-    id: 3,
-    title: "Updated Application Guidelines",
-    description: "Please review the updated application guidelines for the 2024-2025 academic year. New requirements have been added and some existing ones have been modified to better serve our students.",
-    date: "3 days ago",
-    priority: "low",
-    icon: "📋",
-    category: "policy"
-  },
-  {
-    id: 4,
-    title: "Holiday Office Hours",
-    description: "Our office will be closed for the upcoming holidays. Applications submitted during this period will be processed when we return. Please plan accordingly.",
-    date: "1 week ago",
-    priority: "medium",
-    icon: "calendar",
-    category: "hours"
-  },
-  {
-    id: 5,
-    title: "New Staff Member Welcome",
-    description: "Please join us in welcoming our new team member who will be handling application processing. They bring extensive experience in student services.",
-    date: "1 week ago",
-    priority: "low",
-    icon: "👋",
-    category: "team"
-  },
-  {
-    id: 6,
-    title: "Emergency Contact Update Required",
-    description: "All students must update their emergency contact information by the end of this month. This is a mandatory requirement for continued enrollment.",
-    date: "2 weeks ago",
-    priority: "high",
-    icon: "alert",
-    category: "urgent"
-  },
-  {
-    id: 7,
-    title: "Scholarship Application Deadline",
-    description: "The deadline for spring semester scholarship applications is approaching. Don't miss out on this opportunity to reduce your educational costs.",
-    date: "2 weeks ago",
-    priority: "medium",
-    icon: "gift",
-    category: "scholarship"
-  },
-  {
-    id: 8,
-    title: "Campus Safety Reminder",
-    description: "As we approach the winter months, please remember to follow campus safety protocols. Report any suspicious activity immediately.",
-    date: "3 weeks ago",
-    priority: "low",
-    icon: "shield",
-    category: "safety"
-  },
-  {
-    id: 9,
-    title: "New Email Notification System",
-    description: "We've implemented a new email notification system to keep you updated on your application status. You'll now receive timely updates via email.",
-    date: "4 days ago",
-    priority: "medium",
-    icon: "mail",
-    category: "feature"
-  },
-  {
-    id: 10,
-    title: "Student Portal Feedback Request",
-    description: "We value your feedback! Please take a moment to share your thoughts about the student portal experience. Your input helps us improve our services.",
-    date: "1 week ago",
-    priority: "low",
-    icon: "message",
-    category: "general"
-  },
-  {
-    id: 11,
-    title: "International Student Orientation",
-    description: "Welcome to our international students! Join us for a comprehensive orientation session to help you navigate campus life and academic requirements.",
-    date: "5 days ago",
-    priority: "high",
-    icon: "globe",
-    category: "team"
-  },
-  {
-    id: 12,
-    title: "Academic Excellence Awards",
-    description: "Congratulations to all students who have achieved academic excellence! Award ceremonies will be held next month to recognize your outstanding achievements.",
-    date: "2 weeks ago",
-    priority: "medium",
-    icon: "star",
-    category: "general"
-  }
-];
+// Types
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  priority: string;
+  category: string;
+  icon: string;
+  target_audience: string;
+  target_bucket?: string | null;
+  target_city?: string | null;
+  target_state?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  created_by?: string | null;
+}
 
 const ICON_OPTIONS = [
   { label: 'Megaphone', value: 'megaphone', icon: <Megaphone className="h-5 w-5" /> },
@@ -192,6 +101,22 @@ const lucideIconMap: Record<string, React.ReactNode> = {
   message: <MessageCircle className="h-5 w-5 text-white" />,
 };
 
+const US_STATES = [
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+];
+
+const BUCKETS = [
+  "Pre-Apprentice",
+  "Apprentice",
+  "Completed Pre-Apprentice",
+  "Completed Apprentice",
+  "Not Active"
+];
+
 function renderAnnouncementIcon(icon: string): React.ReactNode {
   if (icon in lucideIconMap) {
     return lucideIconMap[icon];
@@ -199,22 +124,77 @@ function renderAnnouncementIcon(icon: string): React.ReactNode {
   return <span className="text-lg">{icon}</span>;
 }
 
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) {
+    return diffMins <= 1 ? 'Just now' : `${diffMins} minutes ago`;
+  } else if (diffHours < 24) {
+    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+  } else if (diffDays < 7) {
+    return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
 export default function Announcements() {
+  // State
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPriority, setSelectedPriority] = useState('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newAnnouncement, setNewAnnouncement] = useState({
+
+  // Dialog states
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form state
+  const [announcementForm, setAnnouncementForm] = useState({
     title: '',
-    description: '',
+    content: '',
     priority: 'medium',
     category: 'general',
-    icon: '📢'
+    icon: 'megaphone',
+    target_audience: 'all',
+    target_bucket: '',
+    target_city: '',
+    target_state: '',
   });
 
-  // Filter announcements based on search term and priority
-  const filteredAnnouncements = allAnnouncements.filter(announcement => {
+  // Fetch announcements
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(API_ENDPOINTS.ANNOUNCEMENTS_GET_ALL);
+      setAnnouncements(response.data);
+    } catch (error: any) {
+      console.error('Error fetching announcements:', error);
+      toast.error(error.response?.data?.detail || 'Failed to fetch announcements');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  // Filter announcements
+  const filteredAnnouncements = announcements.filter(announcement => {
     const matchesSearch = announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         announcement.description.toLowerCase().includes(searchTerm.toLowerCase());
+      announcement.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = selectedPriority === 'all' || announcement.priority === selectedPriority;
     return matchesSearch && matchesPriority;
   });
@@ -232,269 +212,526 @@ export default function Announcements() {
     }
   };
 
-  const handleCreateAnnouncement = () => {
-    const announcementData = {
-      id: Date.now(), // Simple ID generation
-      ...newAnnouncement,
-      date: 'Just now'
-    };
-    
-    console.log('New Announcement Data:', JSON.stringify(announcementData, null, 2));
-    
-    // Reset form
-    setNewAnnouncement({
+  // Reset form
+  const resetForm = () => {
+    setAnnouncementForm({
       title: '',
-      description: '',
+      content: '',
       priority: 'medium',
       category: 'general',
-      icon: '📢'
+      icon: 'megaphone',
+      target_audience: 'all',
+      target_bucket: '',
+      target_city: '',
+      target_state: '',
     });
-    
-    setIsDialogOpen(false);
+  };
+
+  // Create announcement
+  const handleCreateAnnouncement = async () => {
+    try {
+      setSubmitting(true);
+
+      // Prepare payload
+      const payload: any = {
+        title: announcementForm.title,
+        content: announcementForm.content,
+        priority: announcementForm.priority,
+        category: announcementForm.category,
+        icon: announcementForm.icon,
+        target_audience: announcementForm.target_audience,
+      };
+
+      // Add conditional fields
+      if (announcementForm.target_audience === 'bucket') {
+        payload.target_bucket = announcementForm.target_bucket;
+      } else if (announcementForm.target_audience === 'location') {
+        payload.target_state = announcementForm.target_state;
+      }
+
+      await api.post(API_ENDPOINTS.ANNOUNCEMENTS_CREATE, payload);
+      toast.success('Announcement created successfully!');
+
+      // Refresh list and reset
+      fetchAnnouncements();
+      resetForm();
+      setIsCreateDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error creating announcement:', error);
+      toast.error(error.response?.data?.detail || 'Failed to create announcement');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Edit announcement
+  const handleEditClick = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setAnnouncementForm({
+      title: announcement.title,
+      content: announcement.content,
+      priority: announcement.priority,
+      category: announcement.category,
+      icon: announcement.icon,
+      target_audience: announcement.target_audience,
+      target_bucket: announcement.target_bucket || '',
+      target_city: announcement.target_city || '',
+      target_state: announcement.target_state || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateAnnouncement = async () => {
+    if (!selectedAnnouncement) return;
+
+    try {
+      setSubmitting(true);
+
+      // Prepare payload
+      const payload: any = {
+        title: announcementForm.title,
+        content: announcementForm.content,
+        priority: announcementForm.priority,
+        category: announcementForm.category,
+        icon: announcementForm.icon,
+        target_audience: announcementForm.target_audience,
+      };
+
+      // Add conditional fields
+      if (announcementForm.target_audience === 'bucket') {
+        payload.target_bucket = announcementForm.target_bucket;
+        payload.target_state = null;
+      } else if (announcementForm.target_audience === 'location') {
+        payload.target_state = announcementForm.target_state;
+        payload.target_bucket = null;
+      } else {
+        payload.target_bucket = null;
+        payload.target_state = null;
+      }
+
+      await api.put(`${API_ENDPOINTS.ANNOUNCEMENTS_UPDATE}${selectedAnnouncement.id}`, payload);
+      toast.success('Announcement updated successfully!');
+
+      // Refresh list and reset
+      fetchAnnouncements();
+      resetForm();
+      setIsEditDialogOpen(false);
+      setSelectedAnnouncement(null);
+    } catch (error: any) {
+      console.error('Error updating announcement:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update announcement');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Delete announcement
+  const handleDeleteClick = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteAnnouncement = async () => {
+    if (!selectedAnnouncement) return;
+
+    try {
+      await api.delete(`${API_ENDPOINTS.ANNOUNCEMENTS_DELETE}${selectedAnnouncement.id}`);
+      toast.success('Announcement deleted successfully!');
+
+      // Refresh list and reset
+      fetchAnnouncements();
+      setIsDeleteDialogOpen(false);
+      setSelectedAnnouncement(null);
+    } catch (error: any) {
+      console.error('Error deleting announcement:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete announcement');
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setNewAnnouncement(prev => ({
+    setAnnouncementForm(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const isFormValid = newAnnouncement.title.trim() && newAnnouncement.description.trim();
+  const isFormValid = announcementForm.title.trim() && announcementForm.content.trim() &&
+    (announcementForm.target_audience === 'all' ||
+      (announcementForm.target_audience === 'bucket' && announcementForm.target_bucket) ||
+      (announcementForm.target_audience === 'location' && announcementForm.target_state));
+
+  // Render announcement form fields
+  const renderAnnouncementForm = () => (
+    <div className="grid gap-4 py-4">
+      <div className="grid gap-2">
+        <Label htmlFor="title">Title *</Label>
+        <Input
+          id="title"
+          placeholder="Enter announcement title"
+          value={announcementForm.title}
+          onChange={(e) => handleInputChange('title', e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="content">Content *</Label>
+        <Textarea
+          id="content"
+          placeholder="Enter announcement content"
+          value={announcementForm.content}
+          onChange={(e) => handleInputChange('content', e.target.value)}
+          rows={4}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="priority">Priority</Label>
+          <Select value={announcementForm.priority} onValueChange={(value) => handleInputChange('priority', value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="category">Category</Label>
+          <Select value={announcementForm.category} onValueChange={(value) => handleInputChange('category', value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="general">General</SelectItem>
+              <SelectItem value="feature">Feature</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="policy">Policy</SelectItem>
+              <SelectItem value="hours">Office Hours</SelectItem>
+              <SelectItem value="team">Team</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+              <SelectItem value="scholarship">Scholarship</SelectItem>
+              <SelectItem value="safety">Safety</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="icon">Icon</Label>
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 border rounded-md">
+          {ICON_OPTIONS.map(opt => (
+            <button
+              type="button"
+              key={opt.value}
+              className={`p-2 rounded border ${announcementForm.icon === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} hover:border-blue-400`}
+              onClick={() => handleInputChange('icon', opt.value)}
+              aria-label={opt.label}
+            >
+              {opt.icon}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Target Audience Section */}
+      <div className="grid gap-2 pt-4 border-t">
+        <Label htmlFor="target_audience">Target Audience *</Label>
+        <Select value={announcementForm.target_audience} onValueChange={(value) => handleInputChange('target_audience', value)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Students (Global)</SelectItem>
+            <SelectItem value="bucket">Specific Program Stage</SelectItem>
+            <SelectItem value="location">Specific Location</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Conditional fields based on target audience */}
+      {announcementForm.target_audience === 'bucket' && (
+        <div className="grid gap-2">
+          <Label htmlFor="target_bucket">Program Stage *</Label>
+          <Select value={announcementForm.target_bucket} onValueChange={(value) => handleInputChange('target_bucket', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select program stage" />
+            </SelectTrigger>
+            <SelectContent>
+              {BUCKETS.map(bucket => (
+                <SelectItem key={bucket} value={bucket}>{bucket}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {announcementForm.target_audience === 'location' && (
+        <div className="grid gap-2">
+          <Label htmlFor="target_state">State *</Label>
+          <Select value={announcementForm.target_state} onValueChange={(value) => handleInputChange('target_state', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select state" />
+            </SelectTrigger>
+            <SelectContent>
+              {US_STATES.map(state => (
+                <SelectItem key={state} value={state}>{state}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <Layout>
       <div className="flex flex-col max-h-[calc(100vh-6rem)]">
-      {/* Header */}
-      <section className="px-6 py-8 bg-white border-b border-gray-200 shrink-0">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <Megaphone className="h-4 w-4 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-black">Announcements</h1>
-            </div>
-            
-            {/* Create Announcement Button */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Announcement
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Announcement</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="Enter announcement title"
-                      value={newAnnouncement.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description *</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter announcement description"
-                      value={newAnnouncement.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select value={newAnnouncement.priority} onValueChange={(value) => handleInputChange('priority', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select value={newAnnouncement.category} onValueChange={(value) => handleInputChange('category', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="feature">Feature</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="policy">Policy</SelectItem>
-                          <SelectItem value="hours">Office Hours</SelectItem>
-                          <SelectItem value="team">Team</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                          <SelectItem value="scholarship">Scholarship</SelectItem>
-                          <SelectItem value="safety">Safety</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="icon">Icon</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {ICON_OPTIONS.map(opt => (
-                        <button
-                          type="button"
-                          key={opt.value}
-                          className={`p-2 rounded border ${newAnnouncement.icon === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} hover:border-blue-400`}
-                          onClick={() => handleInputChange('icon', opt.value)}
-                          aria-label={opt.label}
-                        >
-                          {opt.icon}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+        {/* Header */}
+        <section className="px-6 py-8 bg-white border-b border-gray-200 shrink-0">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                  <Megaphone className="h-4 w-4 text-white" />
                 </div>
-                
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleCreateAnnouncement}
-                    disabled={!isFormValid}
-                  >
+                <h1 className="text-3xl font-bold text-black">Announcements</h1>
+              </div>
+
+              {/* Create Announcement Button */}
+              <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+                setIsCreateDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
                     Create Announcement
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search announcements..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Create New Announcement</DialogTitle>
+                  </DialogHeader>
+                  {renderAnnouncementForm()}
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateAnnouncement}
+                      disabled={!isFormValid || submitting}
+                    >
+                      {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Create Announcement
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant={selectedPriority === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('all')}
-              >
-                All
-              </Button>
-              <Button
-                variant={selectedPriority === 'high' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('high')}
-                className="border-red-200 text-red-700 hover:bg-red-50"
-              >
-                High Priority
-              </Button>
-              <Button
-                variant={selectedPriority === 'medium' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('medium')}
-                className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-              >
-                Medium Priority
-              </Button>
-              <Button
-                variant={selectedPriority === 'low' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedPriority('low')}
-                className="border-blue-200 text-blue-700 hover:bg-blue-50"
-              >
-                Low Priority
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Announcements List */}
-      <section className="flex-1 min-h-0 overflow-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          {filteredAnnouncements.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Megaphone className="h-8 w-8 text-gray-400" />
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search announcements..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements Found</h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm || selectedPriority !== 'all' 
-                  ? "Try adjusting your search or filter criteria."
-                  : "There are no announcements at this time. Check back later for updates."
-                }
-              </p>
-              {(searchTerm || selectedPriority !== 'all') && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedPriority('all');
-                  }}
+              <div className="flex gap-2">
+                <Button
+                  variant={selectedPriority === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('all')}
                 >
-                  Clear Filters
+                  All
                 </Button>
-              )}
+                <Button
+                  variant={selectedPriority === 'high' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('high')}
+                  className="border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  High Priority
+                </Button>
+                <Button
+                  variant={selectedPriority === 'medium' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('medium')}
+                  className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
+                >
+                  Medium Priority
+                </Button>
+                <Button
+                  variant={selectedPriority === 'low' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedPriority('low')}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                >
+                  Low Priority
+                </Button>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredAnnouncements.map((announcement) => (
-                <div key={announcement.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
-                        {renderAnnouncementIcon(announcement.icon)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-semibold text-black">
+          </div>
+        </section>
+
+        {/* Announcements List */}
+        <section className="flex-1 min-h-0 overflow-auto px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : filteredAnnouncements.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Megaphone className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements Found</h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm || selectedPriority !== 'all'
+                    ? "Try adjusting your search or filter criteria."
+                    : "There are no announcements at this time. Create one to get started!"
+                  }
+                </p>
+                {(searchTerm || selectedPriority !== 'all') && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedPriority('all');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredAnnouncements.map((announcement) => (
+                  <div key={announcement.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
+                          {renderAnnouncementIcon(announcement.icon)}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-black mb-2">
                             {announcement.title}
                           </h3>
-                          {getPriorityIcon(announcement.priority)}
-                        </div>
-                        <p className="text-gray-600 mb-3 leading-relaxed">
-                          {announcement.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {announcement.date}
+                          <p className="text-gray-600 mb-3 leading-relaxed">
+                            {announcement.content}
+                          </p>
+                          <p className="text-sm text-gray-500 mb-3">
+                            {formatDate(announcement.created_at)}
+                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge
+                              variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'}
+                              className="text-xs capitalize"
+                            >
+                              {announcement.priority}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs capitalize bg-gray-50">
+                              {announcement.category}
+                            </Badge>
+                            {announcement.target_audience !== 'all' && (
+                              <Badge variant="outline" className="text-xs">
+                                {announcement.target_audience === 'bucket'
+                                  ? `📦 ${announcement.target_bucket}`
+                                  : `📍 ${announcement.target_state}`
+                                }
+                              </Badge>
+                            )}
                           </div>
-                          <Badge 
-                            variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'} 
-                            className="text-xs"
-                          >
-                            {announcement.priority === 'high' ? 'Important' : announcement.priority === 'medium' ? 'Notice' : 'Info'}
-                          </Badge>
                         </div>
                       </div>
+
+                      {/* 3-dot menu for edit/delete */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(announcement)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(announcement)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) {
+          resetForm();
+          setSelectedAnnouncement(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Announcement</DialogTitle>
+          </DialogHeader>
+          {renderAnnouncementForm()}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateAnnouncement}
+              disabled={!isFormValid || submitting}
+            >
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Update Announcement
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the announcement "{selectedAnnouncement?.title}".
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAnnouncement}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }

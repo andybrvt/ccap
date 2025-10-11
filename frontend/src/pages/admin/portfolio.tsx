@@ -1,14 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoute } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { api } from '@/lib/apiService';
+import { API_ENDPOINTS } from '@/lib/endpoints';
+import { toast } from 'sonner';
 
 export default function Portfolio() {
   const [match, params] = useRoute("/admin/portfolio/:id");
-  const user = exampleData.find((u) => String(u.id) === params?.id);
+  const [user, setUser] = useState<Submission | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch student data on mount
+  useEffect(() => {
+    const fetchStudent = async () => {
+      if (!params?.id) return;
+
+      try {
+        setIsLoading(true);
+        const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_STUDENT}${params.id}`);
+
+        if (response.data) {
+          const student = response.data;
+          const profile = student.student_profile || {};
+
+          // Transform backend data to match frontend interface
+          const transformedStudent: Submission = {
+            id: student.id,
+            submissionId: student.id,
+            formId: student.id,
+            submissionDate: profile.created_at || student.created_at,
+            firstName: profile.first_name || "",
+            lastName: profile.last_name || "",
+            preferredName: profile.preferred_name || "",
+            email: student.email || profile.email || "",
+            address: profile.address || "",
+            address2: profile.address_line2 || "",
+            city: profile.city || "",
+            state: profile.state || "",
+            zipCode: profile.zip_code || "",
+            willRelocate: profile.willing_to_relocate || "",
+            relocationStates: profile.relocation_states || [],
+            dateOfBirth: profile.date_of_birth || "",
+            mobileNumber: profile.phone || "",
+            highSchool: profile.high_school || "",
+            graduationYear: profile.graduation_year || "",
+            transportation: profile.transportation || "",
+            hoursWanted: profile.hours_per_week?.toString() || "0",
+            availableTimes: profile.availability?.join(", ") || "",
+            availableWeekends: profile.weekend_availability || "",
+            hasResume: profile.has_resume || "",
+            resumeUrl: profile.resume_url || "",
+            currentJob: profile.currently_employed || "",
+            currentEmployer: profile.current_employer || "",
+            currentPosition: profile.current_position || "",
+            currentHours: profile.current_hours_per_week?.toString() || "",
+            pastJob: profile.previous_employment || "",
+            pastEmployer: profile.previous_employer || "",
+            pastPosition: profile.previous_position || "",
+            pastHours: profile.previous_hours_per_week?.toString() || "",
+            readyToWork: profile.ready_to_work || "",
+            readyDate: profile.available_date || "",
+            interestedOptions: profile.interests || [],
+            foodHandlersCard: profile.has_food_handlers_card || "",
+            servsafeCredentials: profile.has_servsafe || "",
+            culinaryYears: profile.culinary_class_years?.toString() || "0",
+          };
+
+          setUser(transformedStudent);
+        }
+      } catch (error) {
+        console.error('Failed to fetch student:', error);
+        toast.error('Failed to load student data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudent();
+  }, [params?.id]);
 
   // Mock posts (replace with real data if available)
   const posts = [
@@ -57,14 +130,27 @@ export default function Portfolio() {
   // Modal state for post popup
   const [selectedPost, setSelectedPost] = useState<null | { url: string; caption: string }>(null);
 
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading student profile...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!user) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <Card className="max-w-md w-full mx-4">
             <CardContent className="pt-6">
-              <h1 className="text-2xl font-bold mb-2">User Not Found</h1>
-              <p className="text-gray-600">No user found for this portfolio ID.</p>
+              <h1 className="text-2xl font-bold mb-2">Student Not Found</h1>
+              <p className="text-gray-600">No student found for this portfolio ID.</p>
             </CardContent>
           </Card>
         </div>
@@ -136,8 +222,8 @@ export default function Portfolio() {
                         <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">{
                           user.hasResume === "Yes"
                             ? (user.resumeUrl && user.resumeUrl.trim() !== ""
-                                ? <a href={user.resumeUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
-                                : "Not Available")
+                              ? <a href={user.resumeUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
+                              : "Not Available")
                             : "Not Provided"
                         }</span></span>
                         <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">{user.foodHandlersCard}</span></span>
@@ -215,377 +301,45 @@ export default function Portfolio() {
   );
 }
 
-// Example data type based on Google Sheets structure
+// Student data interface
 interface Submission extends Record<string, unknown> {
-    submissionId: string;
-    formId: string;
-    submissionDate: string;
-    firstName: string;
-    lastName: string;
-    preferredName: string;
-    email: string;
-    address: string;
-    address2: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    willRelocate: string;
-    relocationStates: string[];
-    dateOfBirth: string;
-    mobileNumber: string;
-    highSchool: string;
-    graduationYear: string;
-    transportation: string;
-    hoursWanted: string;
-    availableTimes: string;
-    availableWeekends: string;
-    hasResume: string;
-    resumeUrl: string;
-    currentJob: string;
-    currentEmployer: string;
-    currentPosition: string;
-    currentHours: string;
-    pastJob: string;
-    pastEmployer: string;
-    pastPosition: string;
-    pastHours: string;
-    readyToWork: string;
-    readyDate: string;
-    interestedOptions: string[];
-    foodHandlersCard: string;
-    servsafeCredentials: string;
-    culinaryYears: string;
-  }
-  
-  // Example data based on Google Sheets structure
-  const exampleData: Submission[] = [
-    {
-      id: 1,
-      submissionId: "JxDW8d",
-      formId: "6r5BRY",
-      submissionDate: "2024-09-10 19:38:29",
-      firstName: "Taelyn",
-      lastName: "Morton",
-      preferredName: "",
-      email: "goldannmorton@gmail.com",
-      address: "14043 N 57th Way",
-      address2: "",
-      city: "Scottsdale",
-      state: "AZ",
-      zipCode: "85254",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2008-10-01",
-      mobileNumber: "16028317803",
-      highSchool: "Paradise Valley Highschool",
-      graduationYear: "2026",
-      transportation: "I will drive myself",
-      hoursWanted: "25",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "Yes",
-      hasResume: "No",
-      resumeUrl: "https://storage.tally.so/private/Morton-Resume.pdf?id=MEDodk&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1FRG9kayIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.k0TkChgdfD7z4_0WZlMWap53E-1bE9q5t6CsKPb5Eh0&signature=ef97b8d0f622c45a7c8aa42937b1c2544dbb759d151deaada05fbd1a7b708b87",
-      currentJob: "No",
-      currentEmployer: "",
-      currentPosition: "",
-      currentHours: "",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "Yes",
-      readyDate: "",
-      interestedOptions: ["Culinary", "Baking and Pastry"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "1"
-    },
-    { 
-      id: 2,
-      submissionId: "x1ylvJ",
-      formId: "gWroN4",
-      submissionDate: "2024-09-10 19:39:18",
-      firstName: "Madison",
-      lastName: "Yob",
-      preferredName: "",
-      email: "madisonyob13@gmail.com",
-      address: "3728 East Taro lane",
-      address2: "",
-      city: "Phoenix",
-      state: "CA",
-      zipCode: "85050",
-      willRelocate: "No",
-      relocationStates: ["KY", "IA", "ID", "GA", "DE"],
-      dateOfBirth: "2007-03-08",
-      mobileNumber: "15205914355",
-      highSchool: "Paradise Valley High School",
-      graduationYear: "2025",
-      transportation: "I will drive myself",
-      hoursWanted: "30",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "Yes",
-      hasResume: "Yes",
-      resumeUrl: "https://storage.tally.so/private/Morton-Resume.pdf?id=MEDodk&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1FRG9kayIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.k0TkChgdfD7z4_0WZlMWap53E-1bE9q5t6CsKPb5Eh0&signature=ef97b8d0f622c45a7c8aa42937b1c2544dbb759d151deaada05fbd1a7b708b87",
-      currentJob: "Yes",
-      currentEmployer: "Yogurtini",
-      currentPosition: "Employee",
-      currentHours: "20",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2025-03-08",
-      interestedOptions: ["Baking and Pastry", "Culinary"],
-      foodHandlersCard: "No",
-      servsafeCredentials: "",
-      culinaryYears: "2"
-    },
-    {
-      id: 3,
-      submissionId: "ZKYZev",
-      formId: "yeka0x",
-      submissionDate: "2024-09-10 19:39:32",
-      firstName: "Elyse",
-      lastName: "Chavez",
-      preferredName: "",
-      email: "elysemaria07@gmail.com",
-      address: "4722 East Bell Rd, Apt. 2143",
-      address2: "",
-      city: "Phoenix",
-      state: "AZ",
-      zipCode: "85032",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2007-05-01",
-      mobileNumber: "16027626552",
-      highSchool: "PVHS",
-      graduationYear: "2025",
-      transportation: "I will drive myself",
-      hoursWanted: "25",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "Yes",
-      hasResume: "Yes",
-      resumeUrl: "https://storage.tally.so/private/RUSSELL-JOHNSON-RESUME-2.docx?id=kN9MOe&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImtOOU1PZSIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.6LBqo8Y_BQ8mG-7MPpVbxRW-nVkk1I48I_rk2JktHUU&signature=a4866eeacacb23e1b02678c0c5bc3633b1fd93d8002620bc58af51dbdabd4cb2",
-      currentJob: "Yes",
-      currentEmployer: "QuikTrip",
-      currentPosition: "Clerk",
-      currentHours: "30",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2024-12-01",
-      interestedOptions: ["Baking and Pastry"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "0"
-    },
-    {
-      id: 4,
-      submissionId: "r1LkgL",
-      formId: "K8yj88",
-      submissionDate: "2024-09-10 19:39:56",
-      firstName: "Aiden",
-      lastName: "Hancharik",
-      preferredName: "",
-      email: "wynterhancharik@gmail.com",
-      address: "9415 N 32nd st",
-      address2: "",
-      city: "phoenix",
-      state: "AZ",
-      zipCode: "85028",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2006-09-25",
-      mobileNumber: "16028829770",
-      highSchool: "paradise valley high school",
-      graduationYear: "2025",
-      transportation: "I will drive myself",
-      hoursWanted: "34",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "No",
-      hasResume: "No",
-      resumeUrl: "",
-      currentJob: "No",
-      currentEmployer: "",
-      currentPosition: "",
-      currentHours: "",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2025-12-25",
-      interestedOptions: ["Culinary"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "2"
-    },
-    {
-      id: 5,
-      submissionId: "r1Lkgp",
-      formId: "zWv6WR",
-      submissionDate: "2024-09-10 19:40:00",
-      firstName: "Ibrahim",
-      lastName: "Haddad",
-      preferredName: "",
-      email: "ibrahimhaddad07@gmail.com",
-      address: "3826 west fallen leaf lane",
-      address2: "",
-      city: "Glendale",
-      state: "AZ",
-      zipCode: "85310",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2023-12-07",
-      mobileNumber: "14802400020",
-      highSchool: "3",
-      graduationYear: "2025",
-      transportation: "I will drive myself",
-      hoursWanted: "16",
-      availableTimes: "Morning (6AM - 10AM), Afternoon (10AM - 2PM)",
-      availableWeekends: "Yes",
-      hasResume: "Yes",
-      resumeUrl: "",
-      currentJob: "Yes",
-      currentEmployer: "Slim chicken",
-      currentPosition: "Qb1",
-      currentHours: "10",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2024-12-27",
-      interestedOptions: ["Culinary"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "3"
-    },
-    {
-      id: 6,
-      submissionId: "agEakW",
-      formId: "O8yN8R",
-      submissionDate: "2024-09-10 19:40:01",
-      firstName: "Russell",
-      lastName: "Johnson",
-      preferredName: "",
-      email: "russellpj55@gmail.com",
-      address: "3056 E Siesta Lane",
-      address2: "",
-      city: "Phoenix",
-      state: "AZ",
-      zipCode: "85032",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2007-04-21",
-      mobileNumber: "16023612341",
-      highSchool: "Paradise valley high school",
-      graduationYear: "2025",
-      transportation: "I will drive myself",
-      hoursWanted: "40",
-      availableTimes: "Evening (2PM - 6PM), Afternoon (10AM - 2PM)",
-      availableWeekends: "Yes",
-      hasResume: "Yes",
-      resumeUrl: "https://storage.tally.so/private/RUSSELL-JOHNSON-RESUME-2.docx?id=kN9MOe&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImtOOU1PZSIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.6LBqo8Y_BQ8mG-7MPpVbxRW-nVkk1I48I_rk2JktHUU&signature=a4866eeacacb23e1b02678c0c5bc3633b1fd93d8002620bc58af51dbdabd4cb2",
-      currentJob: "Yes",
-      currentEmployer: "The Mighty Axe",
-      currentPosition: "Axepert",
-      currentHours: "40",
-      pastJob: "Yes",
-      pastEmployer: "Tj maxx",
-      pastPosition: "Employee",
-      pastHours: "30",
-      readyToWork: "No",
-      readyDate: "2025-04-21",
-      interestedOptions: ["Culinary"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "3"
-    },
-    {
-      id: 7,
-      submissionId: "RaYVgv",
-      formId: "745k1Z",
-      submissionDate: "2024-09-10 19:40:06",
-      firstName: "Amaree",
-      lastName: "Vega",
-      preferredName: "",
-      email: "amareevega@gmail.com",
-      address: "E Hartford ave 3529",
-      address2: "",
-      city: "Phoenix",
-      state: "AZ",
-      zipCode: "85032",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2007-08-06",
-      mobileNumber: "16023125383",
-      highSchool: "Paradise Valley High School",
-      graduationYear: "2025",
-      transportation: "I will be dropped off",
-      hoursWanted: "18",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "No",
-      hasResume: "No",
-      resumeUrl: "",
-      currentJob: "No",
-      currentEmployer: "",
-      currentPosition: "",
-      currentHours: "",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2025-08-06",
-      interestedOptions: ["Culinary", "Baking and Pastry"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "3"
-    },
-    {
-      id: 8,
-      submissionId: "LNY6yz",
-      formId: "D0yGAR",
-      submissionDate: "2024-09-10 19:40:13",
-      firstName: "Aisha",
-      lastName: "Preciado",
-      preferredName: "",
-      email: "ishapc222@gmail.con",
-      address: "2950 E Greenway Rd",
-      address2: "",
-      city: "Phoenix",
-      state: "AZ",
-      zipCode: "85032",
-      willRelocate: "No",
-      relocationStates: [],
-      dateOfBirth: "2008-02-02",
-      mobileNumber: "14808098395",
-      highSchool: "Paradise Valley High School",
-      graduationYear: "2026",
-      transportation: "I will be dropped off",
-      hoursWanted: "23",
-      availableTimes: "Evening (2PM - 6PM)",
-      availableWeekends: "No",
-      hasResume: "Yes",
-      resumeUrl: "https://storage.tally.so/private/RUSSELL-JOHNSON-RESUME-2.docx?id=kN9MOe&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImtOOU1PZSIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.6LBqo8Y_BQ8mG-7MPpVbxRW-nVkk1I48I_rk2JktHUU&signature=a4866eeacacb23e1b02678c0c5bc3633b1fd93d8002620bc58af51dbdabd4cb2",
-      currentJob: "Yes",
-      currentEmployer: "Target",
-      currentPosition: "Style",
-      currentHours: "19",
-      pastJob: "No",
-      pastEmployer: "",
-      pastPosition: "",
-      pastHours: "",
-      readyToWork: "No",
-      readyDate: "2025-01-25",
-      interestedOptions: ["Baking and Pastry"],
-      foodHandlersCard: "Yes",
-      servsafeCredentials: "",
-      culinaryYears: "3"
-    }
-  ];
-  
+  submissionId: string;
+  formId: string;
+  submissionDate: string;
+  firstName: string;
+  lastName: string;
+  preferredName: string;
+  email: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  willRelocate: string;
+  relocationStates: string[];
+  dateOfBirth: string;
+  mobileNumber: string;
+  highSchool: string;
+  graduationYear: string;
+  transportation: string;
+  hoursWanted: string;
+  availableTimes: string;
+  availableWeekends: string;
+  hasResume: string;
+  resumeUrl: string;
+  currentJob: string;
+  currentEmployer: string;
+  currentPosition: string;
+  currentHours: string;
+  pastJob: string;
+  pastEmployer: string;
+  pastPosition: string;
+  pastHours: string;
+  readyToWork: string;
+  readyDate: string;
+  interestedOptions: string[];
+  foodHandlersCard: string;
+  servsafeCredentials: string;
+  culinaryYears: string;
+  id?: string;
+}
