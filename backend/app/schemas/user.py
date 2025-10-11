@@ -9,6 +9,7 @@ class StudentProfileMinimal(BaseModel):
     first_name: str
     last_name: str
     email: Optional[str] = None
+    onboarding_step: int = 0  # Track onboarding progress
     
     class Config:
         from_attributes = True
