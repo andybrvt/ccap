@@ -84,6 +84,28 @@ class S3Service:
             return ""
     
     @staticmethod
+    async def upload_post_image(file: UploadFile, user_id: str) -> str:
+        """
+        Upload post image to PUBLIC folder in S3 bucket
+        Returns: Public URL
+        """
+        file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+        file_key = f"public/post-images/{user_id}_{uuid4()}.{file_extension}"
+        
+        # Upload to S3 public folder
+        s3_client.upload_fileobj(
+            file.file,
+            BUCKET_NAME,
+            file_key,
+            ExtraArgs={
+                'ContentType': file.content_type or 'image/jpeg',
+            }
+        )
+        
+        # Return public URL
+        return f"https://{BUCKET_NAME}.s3.amazonaws.com/{file_key}"
+    
+    @staticmethod
     def delete_file(file_key: str) -> bool:
         """
         Delete a file from S3
