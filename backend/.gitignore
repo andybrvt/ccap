@@ -4,6 +4,8 @@
 # Local files
 login.txt
 create_test_students.py
+create_test_announcements.py
+cleanup_test_announcements.py
 
 # Python
 __pycache__/

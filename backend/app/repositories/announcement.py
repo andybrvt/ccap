@@ -60,22 +60,12 @@ class AnnouncementRepository(BaseRepository[Announcement]):
                 )
             )
         
-        # 3. Location-specific announcements
-        if student_profile.city and student_profile.state:
+        # 3. Location-specific announcements (state-level only)
+        if student_profile.state:
             filters.append(
                 and_(
                     Announcement.target_audience == "location",
-                    Announcement.target_city == student_profile.city,
                     Announcement.target_state == student_profile.state
-                )
-            )
-        elif student_profile.state:
-            # Match by state only if city is not set
-            filters.append(
-                and_(
-                    Announcement.target_audience == "location",
-                    Announcement.target_state == student_profile.state,
-                    Announcement.target_city.is_(None)
                 )
             )
         
