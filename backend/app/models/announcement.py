@@ -14,6 +14,9 @@ class Announcement(Base):
     # Content
     title = Column(String, nullable=False)
     content = Column(Text, nullable=False)
+    priority = Column(String, default="medium", nullable=False)  # "low", "medium", "high"
+    category = Column(String, default="general", nullable=False)  # "general", "feature", "maintenance", etc.
+    icon = Column(String, default="megaphone", nullable=False)  # Icon identifier for frontend
     
     # Target audience filtering
     target_audience = Column(String, default="all", nullable=False)  # "all", "bucket", "location"

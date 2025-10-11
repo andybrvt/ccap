@@ -7,7 +7,10 @@ from uuid import UUID
 class AnnouncementBase(BaseModel):
     title: str
     content: str
-    target_audience: str = "all"
+    priority: str = "medium"  # low, medium, high
+    category: str = "general"  # general, feature, maintenance, policy, etc.
+    icon: str = "megaphone"  # Icon identifier
+    target_audience: str = "all"  # all, bucket, location
     target_bucket: Optional[str] = None
     target_city: Optional[str] = None
     target_state: Optional[str] = None
@@ -20,6 +23,9 @@ class AnnouncementCreate(AnnouncementBase):
 class AnnouncementUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
+    priority: Optional[str] = None
+    category: Optional[str] = None
+    icon: Optional[str] = None
     target_audience: Optional[str] = None
     target_bucket: Optional[str] = None
     target_city: Optional[str] = None

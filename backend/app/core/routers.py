@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, students
+from app.routes import auth, students, announcements
 
 def setup_routers(app: FastAPI):
     """
@@ -17,5 +17,12 @@ def setup_routers(app: FastAPI):
         students.router,
         prefix="/api/students",
         tags=["Students"]
+    )
+    
+    # Announcement routes
+    app.include_router(
+        announcements.router,
+        prefix="/api/announcements",
+        tags=["Announcements"]
     )
 

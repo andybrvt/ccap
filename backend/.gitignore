@@ -3,6 +3,7 @@
 
 # Local files
 login.txt
+create_test_students.py
 
 # Python
 __pycache__/
