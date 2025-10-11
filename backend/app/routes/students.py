@@ -7,19 +7,19 @@ from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
 from app.models.user import User
 from app.repositories.student import StudentRepository
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
 from app.models.student_profile import StudentProfile
 from app.utils.s3 import S3Service
 
 router = APIRouter()
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/", response_model=List[UserWithFullProfile])
 def get_all_students(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    """Get all students - Admin only"""
+    """Get all students with full profile data - Admin only"""
     student_repo = StudentRepository(db)
     try:
         students = student_repo.get_all_students(admin_user)
@@ -30,13 +30,13 @@ def get_all_students(
             detail="Only admins can access all students"
         )
 
-@router.get("/{student_id}", response_model=UserResponse)
+@router.get("/{student_id}", response_model=UserWithFullProfile)
 def get_student_by_id(
     student_id: UUID,
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    """Get a specific student by ID - Admin only"""
+    """Get a specific student with full profile - Admin only"""
     student_repo = StudentRepository(db)
     try:
         student = student_repo.get_student_by_id(student_id, admin_user)

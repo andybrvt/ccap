@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from app.schemas.student_profile import StudentProfileResponse
 
 # Minimal student profile for auth/me (only what's needed everywhere)
 class StudentProfileMinimal(BaseModel):
@@ -36,6 +37,17 @@ class UserResponse(UserBase):
     is_active: bool
     created_at: datetime
     student_profile: Optional[StudentProfileMinimal] = None  # Minimal profile for auth/me
+    
+    class Config:
+        from_attributes = True
+
+# Schema for admin endpoints with full student profile
+class UserWithFullProfile(UserBase):
+    id: UUID
+    role: str
+    is_active: bool
+    created_at: datetime
+    student_profile: Optional[StudentProfileResponse] = None  # Full profile for admin
     
     class Config:
         from_attributes = True
