@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/apiService";
+import { API_ENDPOINTS } from "@/lib/endpoints";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload } from "lucide-react";
@@ -14,8 +16,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function Portfolio() {
   const { user, logout } = useAuth();
-  const student = exampleData.find((u) => u.id === user?.id);
   const [, setLocation] = useLocation();
+  const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch student profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user || user.role !== 'student') return;
+
+      try {
+        setIsLoading(true);
+        const response = await api.get(API_ENDPOINTS.STUDENT_GET_PROFILE);
+        if (response.data) {
+          setStudentProfile(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        setStudentProfile(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   // Mock posts (replace with real data if available)
   const posts = [
@@ -72,14 +97,69 @@ export default function Portfolio() {
   const [newPostDish, setNewPostDish] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  if (!student) {
+  // Document viewing handlers
+  const handleViewResume = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.STUDENT_GET_RESUME_URL);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get resume URL:', error);
+      alert('Failed to view resume. Please try again.');
+    }
+  };
+
+  const handleViewCredential = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.STUDENT_GET_CREDENTIAL_URL);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get credential URL:', error);
+      alert('Failed to view credential. Please try again.');
+    }
+  };
+
+  const handleViewServSafe = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.STUDENT_GET_SERVSAFE_URL);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get ServSafe URL:', error);
+      alert('Failed to view ServSafe certificate. Please try again.');
+    }
+  };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show error state if no profile found
+  if (!studentProfile) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <Card className="max-w-md w-full mx-4">
-            <CardContent className="">
-              <h1 className="text-2xl font-bold mb-2">User Not Found</h1>
-              <p className="text-gray-600">No user found for this portfolio ID.</p>
+            <CardContent className="p-6">
+              <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
+              <p className="text-gray-600 mb-4">Your profile data could not be loaded.</p>
+              <Button
+                onClick={() => setLocation('/student/editPortfolio')}
+                className="w-full"
+              >
+                Create Profile
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -107,24 +187,24 @@ export default function Portfolio() {
               {/* Avatar and Name */}
               <div className="flex flex-col items-center md:items-start md:w-1/3 bg-blue-50 rounded-xl p-6 mb-4 md:mb-0">
                 <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-500 mb-4 border-4 border-blue-200 overflow-hidden">
-                  {student.profilePicture ? (
-                    <img 
-                      src={student.profilePicture} 
-                      alt={`${student.firstName} ${student.lastName}`}
+                  {studentProfile.profile_picture_url ? (
+                    <img
+                      src={studentProfile.profile_picture_url}
+                      alt={`${studentProfile.first_name} ${studentProfile.last_name}`}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`
+                    `${studentProfile.first_name?.charAt(0) || ''}${studentProfile.last_name?.charAt(0) || ''}`
                   )}
                 </div>
                 <h1 className="text-2xl font-bold text-blue-700 mb-1 text-center md:text-left">
-                  {student.firstName} {student.lastName}
-                  {student.preferredName && (
-                    <span className="text-lg text-blue-400 ml-2">({student.preferredName})</span>
+                  {studentProfile.first_name} {studentProfile.last_name}
+                  {studentProfile.preferred_name && (
+                    <span className="text-lg text-blue-400 ml-2">({studentProfile.preferred_name})</span>
                   )}
                 </h1>
                 <div className="flex flex-wrap gap-2 mb-2 justify-center md:justify-start">
-                  {student.interestedOptions.map((option, i) => (
+                  {studentProfile.interests?.map((option: string, i: number) => (
                     <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">
                       {option}
                     </Badge>
@@ -132,23 +212,22 @@ export default function Portfolio() {
                 </div>
                 {/* Bucket Status */}
                 <div className="flex justify-center md:justify-start mb-2">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs font-medium ${
-                      student.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                      student.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                      student.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                      student.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                      'bg-gray-50 text-gray-700 border-gray-200'
-                    }`}
+                  <Badge
+                    variant="outline"
+                    className={`text-xs font-medium ${studentProfile.current_bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                      studentProfile.current_bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        studentProfile.current_bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                          studentProfile.current_bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                            'bg-gray-50 text-gray-700 border-gray-200'
+                      }`}
                   >
-                    {student.bucket}
+                    {studentProfile.current_bucket || 'Pre-Apprentice'}
                   </Badge>
                 </div>
                 {/* Bio Section */}
-                {student.bio && (
+                {studentProfile.bio && (
                   <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
-                    <p className="text-sm text-gray-700 leading-relaxed">{student.bio}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{studentProfile.bio}</p>
                   </div>
                 )}
               </div>
@@ -157,57 +236,104 @@ export default function Portfolio() {
               <div className="flex-1 flex flex-col gap-6">
                 {/* Contact Row */}
                 <div className="flex flex-wrap gap-4 text-blue-900 text-sm items-center">
-                  <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-blue-400" />{student.email}</span>
-                  <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-blue-400" />{student.mobileNumber}</span>
-                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-blue-400" />{student.city}, {student.state}</span>
+                  <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-blue-400" />{studentProfile.email || user?.email}</span>
+                  <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-blue-400" />{studentProfile.phone}</span>
+                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-blue-400" />{studentProfile.city}, {studentProfile.state}</span>
                 </div>
                 <hr className="my-2 border-blue-100" />
                 {/* Education */}
                 <div className="flex flex-col gap-1">
                   <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-blue-500" />Education</span>
                   <span className="ml-7 text-blue-900 text-sm">
-                    <span className="font-semibold text-blue-600">{student.highSchool}</span> <span className="text-gray-500">({student.graduationYear})</span>
+                    <span className="font-semibold text-blue-600">{studentProfile.high_school}</span> <span className="text-gray-500">({studentProfile.graduation_year})</span>
                   </span>
                 </div>
                 {/* Work */}
                 <div className="flex flex-col gap-1 mt-2">
                   <span className="font-semibold text-green-700 flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-green-500" />Work</span>
                   <span className="ml-7 text-green-700 text-sm">
-                    <span className="font-semibold">{student.currentJob === "Yes" ? "Currently at" : "Not currently working"}</span>
-                    <span className="text-gray-900">{student.currentJob === "Yes" ? ` ${student.currentEmployer}` : ""}</span>
+                    <span className="font-semibold">{studentProfile.currently_employed === "Yes" ? "Currently at" : "Not currently working"}</span>
+                    <span className="text-gray-900">{studentProfile.currently_employed === "Yes" ? ` ${studentProfile.current_employer}` : ""}</span>
                   </span>
-                  {student.pastJob === "Yes" && (
-                    <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{student.pastPosition} at {student.pastEmployer} ({student.pastHours} hrs/week)</span></span>
+                  {studentProfile.previous_employment === "Yes" && (
+                    <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{studentProfile.previous_position} at {studentProfile.previous_employer} ({studentProfile.previous_hours_per_week} hrs/week)</span></span>
                   )}
-                  <span className="ml-7 text-green-600 text-xs">Culinary Exp: <span className="text-gray-900">{student.culinaryYears} years</span></span>
+                  <span className="ml-7 text-green-600 text-xs">Culinary Exp: <span className="text-gray-900">{studentProfile.culinary_class_years} years</span></span>
                 </div>
                 {/* Credentials */}
                 <div className="flex flex-col gap-1 mt-2">
                   <span className="font-semibold text-purple-700 flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-purple-500" />Credentials</span>
-                  <div className="ml-7 flex flex-col gap-2 text-purple-900 text-sm">
-                    <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">{
-                      student.hasResume === "Yes"
-                        ? (student.resumeUrl && student.resumeUrl.trim() !== ""
-                          ? <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
-                          : "Not Available")
-                        : "Not Provided"
-                    }</span></span>
-                    <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">{student.foodHandlersCard}</span></span>
-                    <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">{student.servsafeCredentials || "No"}</span></span>
+                  <div className="ml-7 flex flex-col gap-3 text-purple-900 text-sm">
+                    {/* Resume */}
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <FileCheck className="w-4 h-4 text-purple-400" />
+                        <span className="font-semibold text-purple-700">Resume:</span>
+                        <span className="text-gray-900">{studentProfile.has_resume === "Yes" ? "Available" : "Not Provided"}</span>
+                      </span>
+                      {studentProfile.has_resume === "Yes" && studentProfile.resume_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleViewResume}
+                          className="text-xs"
+                        >
+                          View
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Food Handlers Card */}
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Utensils className="w-4 h-4 text-purple-400" />
+                        <span className="font-semibold text-purple-700">Food Handler:</span>
+                        <span className="text-gray-900">{studentProfile.has_food_handlers_card || "Not Provided"}</span>
+                      </span>
+                      {studentProfile.has_food_handlers_card === "Yes" && studentProfile.food_handlers_card_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleViewCredential}
+                          className="text-xs"
+                        >
+                          View
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* ServSafe Certificate */}
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Shield className="w-4 h-4 text-purple-400" />
+                        <span className="font-semibold text-purple-700">ServSafe:</span>
+                        <span className="text-gray-900">{studentProfile.has_servsafe || "Not Provided"}</span>
+                      </span>
+                      {studentProfile.has_servsafe === "Yes" && studentProfile.servsafe_certificate_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleViewServSafe}
+                          className="text-xs"
+                        >
+                          View
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {/* Details */}
                 <div className="flex flex-col gap-1 mt-4">
                   <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg">Details</span>
                   <div className="ml-7 flex flex-col gap-y-1 text-xs text-gray-500 bg-blue-50 rounded-lg p-4 border border-blue-100 mt-1">
-                    <span><span className="font-semibold text-blue-700">Date of Birth:</span> <span className="text-gray-900">{student.dateOfBirth}</span></span>
-                    <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{student.transportation}</span></span>
-                    <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{student.availableTimes}</span></span>
-                    <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{student.availableWeekends}</span></span>
-                    <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{student.readyToWork} {student.readyDate && `(from ${student.readyDate})`}</span></span>
-                    <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{student.willRelocate} {student.relocationStates.length > 0 && `(${student.relocationStates.join(", ")})`}</span></span>
-                    <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{student.address} {student.address2}</span></span>
-                    <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{student.zipCode}</span></span>
+                    <span><span className="font-semibold text-blue-700">Date of Birth:</span> <span className="text-gray-900">{studentProfile.date_of_birth}</span></span>
+                    <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{studentProfile.transportation}</span></span>
+                    <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{studentProfile.availability?.join(", ")}</span></span>
+                    <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{studentProfile.weekend_availability}</span></span>
+                    <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{studentProfile.ready_to_work} {studentProfile.available_date && `(from ${studentProfile.available_date})`}</span></span>
+                    <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{studentProfile.willing_to_relocate} {studentProfile.relocation_states?.length > 0 && `(${studentProfile.relocation_states.join(", ")})`}</span></span>
+                    <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{studentProfile.address} {studentProfile.address_line2}</span></span>
+                    <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{studentProfile.zip_code}</span></span>
                   </div>
                 </div>
               </div>
@@ -219,17 +345,16 @@ export default function Portfolio() {
         <Card className="mb-8 shadow-lg border-blue-100">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-3 h-3 rounded-full ${
-                student.bucket === 'Pre-Apprentice' ? 'bg-yellow-400' :
-                student.bucket === 'Apprentice' ? 'bg-blue-400' :
-                student.bucket === 'Completed Pre-Apprentice' ? 'bg-green-400' :
-                student.bucket === 'Completed Apprentice' ? 'bg-purple-400' :
-                'bg-gray-400'
-              }`}></div>
+              <div className={`w-3 h-3 rounded-full ${studentProfile.current_bucket === 'Pre-Apprentice' ? 'bg-yellow-400' :
+                studentProfile.current_bucket === 'Apprentice' ? 'bg-blue-400' :
+                  studentProfile.current_bucket === 'Completed Pre-Apprentice' ? 'bg-green-400' :
+                    studentProfile.current_bucket === 'Completed Apprentice' ? 'bg-purple-400' :
+                      'bg-gray-400'
+                }`}></div>
               <h2 className="text-xl font-semibold text-blue-700">Your Program Status</h2>
             </div>
-            
-            {student.bucket === 'Pre-Apprentice' && (
+
+            {studentProfile.current_bucket === 'Pre-Apprentice' && (
               <div className="space-y-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <h3 className="font-semibold text-yellow-800 mb-2">Welcome to C-CAP Pre-Apprentice Program!</h3>
@@ -256,7 +381,7 @@ export default function Portfolio() {
               </div>
             )}
 
-            {student.bucket === 'Apprentice' && (
+            {studentProfile.current_bucket === 'Apprentice' && (
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-semibold text-blue-800 mb-2">C-CAP Apprentice Program</h3>
@@ -283,7 +408,7 @@ export default function Portfolio() {
               </div>
             )}
 
-            {student.bucket === 'Completed Pre-Apprentice' && (
+            {studentProfile.current_bucket === 'Completed Pre-Apprentice' && (
               <div className="space-y-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h3 className="font-semibold text-green-800 mb-2">Congratulations! Pre-Apprentice Complete</h3>
@@ -310,7 +435,7 @@ export default function Portfolio() {
               </div>
             )}
 
-            {student.bucket === 'Completed Apprentice' && (
+            {studentProfile.current_bucket === 'Completed Apprentice' && (
               <div className="space-y-4">
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <h3 className="font-semibold text-purple-800 mb-2">C-CAP Graduate - Apprentice Complete</h3>
@@ -337,7 +462,7 @@ export default function Portfolio() {
               </div>
             )}
 
-            {student.bucket === 'Not Active' && (
+            {studentProfile.current_bucket === 'Not Active' && (
               <div className="space-y-4">
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-800 mb-2">Account Status: Not Active</h3>

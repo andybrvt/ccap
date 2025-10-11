@@ -98,48 +98,18 @@ export function AuthProvider({
   const isProfileComplete = (user: User): boolean => {
     if (user.role !== 'student') return true; // Admins don't need profile completion
 
-    // Check if student_profile exists and has required fields
+    // Check if student_profile exists and has basic required fields
     const profile = user.student_profile;
     if (!profile) return false;
 
-    // Check ALL required fields from the form (matching validation in editPortfolio.tsx)
-    // Students must complete these before accessing the platform
+    // Only check for the absolute minimum required fields
     const checkField = (field: any) => field && String(field).trim().length > 0;
-    const checkArray = (arr: any[]) => arr && arr.length > 0;
 
+    // Just check for basic profile info - much more lenient
     return !!(
-      // Personal Information
       checkField(profile.first_name) &&
       checkField(profile.last_name) &&
-      checkField(profile.email) &&
-      checkField(profile.date_of_birth) &&
-      checkField(profile.phone) &&
-
-      // Address Information
-      checkField(profile.address) &&
-      checkField(profile.city) &&
-      checkField(profile.state) &&
-      checkField(profile.zip_code) &&
-
-      // Education Information
-      checkField(profile.high_school) &&
-      checkField(profile.graduation_year) &&
-
-      // Work Preferences
-      checkField(profile.transportation) &&
-      checkArray(profile.availability) &&
-      checkField(profile.weekend_availability) &&
-
-      // Employment Status
-      checkField(profile.currently_employed) &&
-      checkField(profile.previous_employment) &&
-
-      // Documents & Credentials
-      checkField(profile.has_resume) &&
-      checkField(profile.ready_to_work) &&
-      checkArray(profile.interests) &&
-      checkField(profile.has_food_handlers_card) &&
-      checkField(profile.has_servsafe)
+      checkField(profile.email)
     );
   };
 
@@ -172,13 +142,8 @@ export function AuthProvider({
         return;
       }
 
-      // Check if student profile is complete (only for students, not on editPortfolio page)
-      if (user.role === 'student' && !skipProfileCheck && !isProfileComplete(user)) {
-        // Only redirect if not already on editPortfolio
-        if (location !== '/student/editPortfolio') {
-          setLocation('/student/editPortfolio');
-        }
-      }
+      // Skip profile completion check - let users navigate freely
+      // They can complete their profile at their own pace
     }, [requiredRole, setLocation, location, skipProfileCheck]);
 
     // Show loading spinner while auth is initializing

@@ -60,6 +60,8 @@ interface PortfolioFormData {
   foodHandlersCardUpload: File | null;
   existingFoodHandlersUrl: string;
   hasServSafe: string;
+  servSafeUpload: File | null;
+  existingServSafeUrl: string;
   culinaryClassYears: number;
   preferredName2: string;
   profilePicture: File | null;
@@ -232,6 +234,8 @@ export default function EditPortfolio() {
     foodHandlersCardUpload: null,
     existingFoodHandlersUrl: "",
     hasServSafe: "",
+    servSafeUpload: null,
+    existingServSafeUrl: "",
     culinaryClassYears: 0,
     preferredName2: "",
     profilePicture: null,
@@ -286,6 +290,8 @@ export default function EditPortfolio() {
         foodHandlersCardUpload: null,
         existingFoodHandlersUrl: fullProfile.food_handlers_card_url || "",
         hasServSafe: fullProfile.has_servsafe || "",
+        servSafeUpload: null,
+        existingServSafeUrl: fullProfile.servsafe_certificate_url || "",
         culinaryClassYears: fullProfile.culinary_class_years || 0,
         preferredName2: fullProfile.preferred_name || "",
         profilePicture: null,
@@ -296,7 +302,12 @@ export default function EditPortfolio() {
   }, [fullProfile, user]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  // File upload states
+  const [isUploadingProfilePic, setIsUploadingProfilePic] = useState(false);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [isUploadingCredential, setIsUploadingCredential] = useState(false);
+  const [isUploadingServSafe, setIsUploadingServSafe] = useState(false);
 
   // Handle form field changes
   const handleInputChange = (field: keyof PortfolioFormData, value: string | number | string[] | null) => {
@@ -318,163 +329,280 @@ export default function EditPortfolio() {
     });
   };
 
-  // Handle file upload
-  const handleFileUpload = (field: keyof PortfolioFormData, file: File | null) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: file
-    }));
-  };
-
-  // Handle removing existing documents
-  const handleRemoveExistingDocument = (field: 'existingResumeUrl' | 'existingFoodHandlersUrl' | 'existingProfilePicture') => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: ""
-    }));
-  };
-
-  // Form validation
-  const validateForm = (): string[] => {
-    const errors: string[] = [];
-
-    if (!formData.firstName.trim()) errors.push("First name is required");
-    if (!formData.lastName.trim()) errors.push("Last name is required");
-    if (!formData.emailAddress.trim()) errors.push("Email address is required");
-    if (!formData.mailingAddress.trim()) errors.push("Mailing address is required");
-    if (!formData.city.trim()) errors.push("City is required");
-    if (!formData.state) errors.push("State is required");
-    if (!formData.zipCode.trim()) errors.push("Zip code is required");
-    if (!formData.dateOfBirth) errors.push("Date of birth is required");
-    if (!formData.mobilePhoneNumber.trim()) errors.push("Mobile phone number is required");
-    if (!formData.culinarySchool.trim()) errors.push("Culinary school is required");
-    if (!formData.transportation) errors.push("Transportation method is required");
-    if (!formData.availability.length) errors.push("At least one availability option is required");
-    if (!formData.weekendAvailability) errors.push("Weekend availability is required");
-    if (!formData.currentlyEmployed) errors.push("Current employment status is required");
-    if (!formData.previousEmployment) errors.push("Previous employment status is required");
-    if (!formData.hasResume) errors.push("Resume status is required");
-    if (!formData.readyToWork) errors.push("Ready to work status is required");
-    if (!formData.interests.length) errors.push("At least one interest is required");
-    if (!formData.hasFoodHandlersCard) errors.push("Food handlers card status is required");
-    if (!formData.hasServSafe) errors.push("ServSafe status is required");
-
-    // Conditional validations
-    if (["Yes", "Maybe"].includes(formData.willingToRelocate) && formData.relocationStates.length === 0) {
-      errors.push("Please select at least one relocation state");
-    }
-    if (formData.currentlyEmployed === "Yes") {
-      if (!formData.currentWorkplace.trim()) errors.push("Current workplace is required");
-      if (!formData.currentPosition.trim()) errors.push("Current position is required");
-      if (!formData.currentHoursPerWeek) errors.push("Current hours per week is required");
-    }
-    if (formData.previousEmployment === "Yes") {
-      if (!formData.previousWorkplace.trim()) errors.push("Previous workplace is required");
-      if (!formData.previousPosition.trim()) errors.push("Previous position is required");
-      if (!formData.previousHoursPerWeek) errors.push("Previous hours per week is required");
-    }
-    if (formData.hasResume === "Yes" && !formData.resumeUpload && !formData.existingResumeUrl) {
-      errors.push("Resume upload is required");
-    }
-    if (formData.readyToWork === "No" && !formData.availableDate) {
-      errors.push("Available date is required when not ready to work");
-    }
-    if (formData.hasFoodHandlersCard === "Yes" && !formData.foodHandlersCardUpload && !formData.existingFoodHandlersUrl) {
-      errors.push("Food handlers card upload is required");
+  // Handle profile picture upload to S3
+  const handleProfilePictureUpload = async (file: File | null) => {
+    if (!file) {
+      setFormData(prev => ({ ...prev, profilePicture: null }));
+      return;
     }
 
-    return errors;
-  };
-
-  // Save draft without validation (allows partial saves)
-  const handleSaveDraft = async () => {
-    setIsSavingDraft(true);
-
+    setIsUploadingProfilePic(true);
     try {
-      // Map frontend camelCase to backend snake_case
-      const profileData = {
-        first_name: formData.firstName || null,
-        last_name: formData.lastName || null,
-        preferred_name: formData.preferredName || null,
-        email: formData.emailAddress || null,
-        phone: formData.mobilePhoneNumber || null,
-        bio: formData.bio || null,
-        profile_picture_url: formData.existingProfilePicture || null,
-        date_of_birth: formData.dateOfBirth || null,
+      const formData = new FormData();
+      formData.append('file', file);
 
-        // Address
-        address: formData.mailingAddress || null,
-        address_line2: formData.addressLine2 || null,
-        city: formData.city || null,
-        state: formData.state || null,
-        zip_code: formData.zipCode || null,
-
-        // Relocation
-        willing_to_relocate: formData.willingToRelocate || null,
-        relocation_states: formData.relocationStates.length > 0 ? formData.relocationStates : null,
-
-        // Education
-        high_school: formData.culinarySchool || null,
-        graduation_year: formData.yearOfGraduation ? formData.yearOfGraduation.toString() : null,
-        culinary_class_years: formData.culinaryClassYears || null,
-
-        // Work Experience
-        currently_employed: formData.currentlyEmployed || null,
-        current_employer: formData.currentWorkplace || null,
-        current_position: formData.currentPosition || null,
-        current_hours_per_week: formData.currentHoursPerWeek,
-
-        previous_employment: formData.previousEmployment || null,
-        previous_employer: formData.previousWorkplace || null,
-        previous_position: formData.previousPosition || null,
-        previous_hours_per_week: formData.previousHoursPerWeek,
-
-        // Availability & Work Preferences
-        transportation: formData.transportation || null,
-        hours_per_week: formData.hoursPerWeek || null,
-        availability: formData.availability.length > 0 ? formData.availability : null,
-        weekend_availability: formData.weekendAvailability || null,
-        ready_to_work: formData.readyToWork || null,
-        available_date: formData.availableDate || null,
-
-        // Documents
-        has_resume: formData.hasResume || null,
-        resume_url: formData.existingResumeUrl || null,
-        has_food_handlers_card: formData.hasFoodHandlersCard || null,
-        food_handlers_card_url: formData.existingFoodHandlersUrl || null,
-        has_servsafe: formData.hasServSafe || null,
-
-        // Interests
-        interests: formData.interests.length > 0 ? formData.interests : null,
-      };
-
-      console.log('Saving draft - profileData:', profileData); // Debug
-      console.log('State being saved:', profileData.state); // Debug
-
-      // Save to backend
-      await api.put(API_ENDPOINTS.STUDENT_UPDATE_PROFILE, profileData);
-
-      toast.success("Draft saved!", {
-        description: "Your progress has been saved. You can continue later.",
-        duration: 3000,
+      const response = await api.post(API_ENDPOINTS.STUDENT_UPLOAD_PROFILE_PICTURE, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+
+      if (response.data?.url) {
+        // Update form data with the new URL
+        setFormData(prev => ({
+          ...prev,
+          existingProfilePicture: response.data.url,
+          profilePicture: null
+        }));
+
+        toast.success("Profile picture uploaded successfully!");
+      }
     } catch (error: any) {
-      console.error("Failed to save draft:", error);
-      const errorMessage = error.response?.data?.detail || "Failed to save draft. Please try again.";
-      toast.error("Save Failed", {
+      console.error('Failed to upload profile picture:', error);
+      const errorMessage = error.response?.data?.detail || "Failed to upload profile picture";
+      toast.error("Upload Failed", {
         description: errorMessage,
         duration: 5000,
       });
     } finally {
-      setIsSavingDraft(false);
+      setIsUploadingProfilePic(false);
     }
   };
+
+  // Handle resume upload to S3
+  const handleResumeUpload = async (file: File | null) => {
+    if (!file) {
+      setFormData(prev => ({ ...prev, resumeUpload: null }));
+      return;
+    }
+
+    setIsUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      await api.post(API_ENDPOINTS.STUDENT_UPLOAD_RESUME, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Update form data to show upload succeeded
+      setFormData(prev => ({
+        ...prev,
+        resumeUpload: file,
+        hasResume: "Yes"
+      }));
+
+      toast.success("Resume uploaded successfully!");
+    } catch (error: any) {
+      console.error('Failed to upload resume:', error);
+      const errorMessage = error.response?.data?.detail || "Failed to upload resume";
+      toast.error("Upload Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
+      // Clear the file on error
+      setFormData(prev => ({ ...prev, resumeUpload: null }));
+    } finally {
+      setIsUploadingResume(false);
+    }
+  };
+
+  // Handle credential (food handlers card) upload to S3
+  const handleCredentialUpload = async (file: File | null) => {
+    if (!file) {
+      setFormData(prev => ({ ...prev, foodHandlersCardUpload: null }));
+      return;
+    }
+
+    setIsUploadingCredential(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      await api.post(API_ENDPOINTS.STUDENT_UPLOAD_CREDENTIAL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Update form data to show upload succeeded
+      setFormData(prev => ({
+        ...prev,
+        foodHandlersCardUpload: file,
+        hasFoodHandlersCard: "Yes"
+      }));
+
+      toast.success("Food Handlers Card uploaded successfully!");
+    } catch (error: any) {
+      console.error('Failed to upload credential:', error);
+      const errorMessage = error.response?.data?.detail || "Failed to upload credential";
+      toast.error("Upload Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
+      // Clear the file on error
+      setFormData(prev => ({ ...prev, foodHandlersCardUpload: null }));
+    } finally {
+      setIsUploadingCredential(false);
+    }
+  };
+
+  // Handle ServSafe certificate upload to S3
+  const handleServSafeUpload = async (file: File | null) => {
+    if (!file) {
+      setFormData(prev => ({ ...prev, servSafeUpload: null }));
+      return;
+    }
+
+    setIsUploadingServSafe(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      await api.post(API_ENDPOINTS.STUDENT_UPLOAD_SERVSAFE, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Update form data to show upload succeeded
+      setFormData(prev => ({
+        ...prev,
+        servSafeUpload: file,
+        hasServSafe: "Yes"
+      }));
+
+      toast.success("ServSafe certificate uploaded successfully!");
+    } catch (error: any) {
+      console.error('Failed to upload ServSafe certificate:', error);
+      const errorMessage = error.response?.data?.detail || "Failed to upload ServSafe certificate";
+      toast.error("Upload Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
+      // Clear the file on error
+      setFormData(prev => ({ ...prev, servSafeUpload: null }));
+    } finally {
+      setIsUploadingServSafe(false);
+    }
+  };
+
+  // Handle viewing resume with signed URL
+  const handleViewResume = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.STUDENT_GET_RESUME_URL);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get resume URL:', error);
+      toast.error("Failed to view resume", {
+        description: error.response?.data?.detail || "Could not generate download link",
+        duration: 5000,
+      });
+    }
+  };
+
+  // Handle viewing credential with signed URL
+  const handleViewCredential = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.STUDENT_GET_CREDENTIAL_URL);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get credential URL:', error);
+      toast.error("Failed to view credential", {
+        description: error.response?.data?.detail || "Could not generate download link",
+        duration: 5000,
+      });
+    }
+  };
+
+  // Handle viewing ServSafe certificate with signed URL
+  const handleViewServSafe = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.STUDENT_GET_SERVSAFE_URL);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get ServSafe URL:', error);
+      toast.error("Failed to view ServSafe certificate", {
+        description: error.response?.data?.detail || "Could not generate download link",
+        duration: 5000,
+      });
+    }
+  };
+
+  // Handle removing existing documents
+  const handleRemoveExistingDocument = async (field: 'existingResumeUrl' | 'existingFoodHandlersUrl' | 'existingServSafeUrl' | 'existingProfilePicture') => {
+    try {
+      // Determine which endpoint to call based on the field
+      let endpoint = '';
+      let fieldName = '';
+
+      switch (field) {
+        case 'existingProfilePicture':
+          endpoint = API_ENDPOINTS.STUDENT_DELETE_PROFILE_PICTURE;
+          fieldName = 'Profile picture';
+          break;
+        case 'existingResumeUrl':
+          endpoint = API_ENDPOINTS.STUDENT_DELETE_RESUME;
+          fieldName = 'Resume';
+          break;
+        case 'existingFoodHandlersUrl':
+          endpoint = API_ENDPOINTS.STUDENT_DELETE_CREDENTIAL;
+          fieldName = 'Food Handlers Card';
+          break;
+        case 'existingServSafeUrl':
+          endpoint = API_ENDPOINTS.STUDENT_DELETE_SERVSAFE;
+          fieldName = 'ServSafe certificate';
+          break;
+      }
+
+      // Call the backend to delete
+      await api.delete(endpoint);
+
+      // Update local state to remove the URL
+      setFormData(prev => ({
+        ...prev,
+        [field]: ""
+      }));
+
+      toast.success(`${fieldName} deleted successfully!`);
+    } catch (error: any) {
+      console.error('Failed to delete document:', error);
+      const errorMessage = error.response?.data?.detail || "Failed to delete document";
+      toast.error("Delete Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
+    }
+  };
+
+  // Simplified form validation - only check absolute minimum required fields
+  const validateForm = (): string[] => {
+    const errors: string[] = [];
+
+    // Only require the absolute minimum
+    if (!formData.firstName.trim()) errors.push("First name is required");
+    if (!formData.lastName.trim()) errors.push("Last name is required");
+    if (!formData.emailAddress.trim()) errors.push("Email address is required");
+
+    // Everything else is optional - users can fill it out later
+    return errors;
+  };
+
 
   // Handle form submission (validates + saves + marks complete)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const errors = validateForm();
+
+
     if (errors.length > 0) {
       errors.forEach(error => toast.error(error));
       return;
@@ -491,7 +619,7 @@ export default function EditPortfolio() {
         email: formData.emailAddress,
         phone: formData.mobilePhoneNumber,
         bio: formData.bio || null,
-        profile_picture_url: formData.existingProfilePicture || null,
+        // Note: profile_picture_url is handled separately via upload endpoint
         date_of_birth: formData.dateOfBirth,
 
         // Address
@@ -529,16 +657,15 @@ export default function EditPortfolio() {
         ready_to_work: formData.readyToWork,
         available_date: formData.availableDate || null,
 
-        // Documents
+        // Documents - only status, not URLs (URLs are handled separately via upload endpoints)
         has_resume: formData.hasResume,
-        resume_url: formData.existingResumeUrl || null,
         has_food_handlers_card: formData.hasFoodHandlersCard,
-        food_handlers_card_url: formData.existingFoodHandlersUrl || null,
         has_servsafe: formData.hasServSafe,
 
         // Interests
         interests: formData.interests,
       };
+
 
       // Save to backend
       const response = await api.put(API_ENDPOINTS.STUDENT_UPDATE_PROFILE, profileData);
@@ -655,24 +782,24 @@ export default function EditPortfolio() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => handleFileUpload('profilePicture', e.target.files?.[0] || null)}
+                      onChange={(e) => handleProfilePictureUpload(e.target.files?.[0] || null)}
+                      disabled={isUploadingProfilePic}
                     />
 
                     {/* Profile Picture Display */}
                     <div className="relative group">
                       <div className="w-32 h-32 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center border-4 border-gray-200 shadow-lg">
-                        {formData.profilePicture ? (
-                          <img
-                            src={URL.createObjectURL(formData.profilePicture)}
-                            alt="Profile Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : formData.existingProfilePicture ? (
+                        {formData.existingProfilePicture ? (
                           <img
                             src={formData.existingProfilePicture}
                             alt="Profile"
                             className="w-full h-full object-cover"
                           />
+                        ) : isUploadingProfilePic ? (
+                          <div className="flex flex-col items-center justify-center text-blue-600">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-1"></div>
+                            <span className="text-xs">Uploading...</span>
+                          </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center text-blue-400">
                             <Upload className="w-8 h-8 mb-1" />
@@ -690,45 +817,41 @@ export default function EditPortfolio() {
                             size="sm"
                             className="bg-white text-gray-900 hover:bg-gray-100"
                             onClick={() => document.getElementById('profilePicture')?.click()}
+                            disabled={isUploadingProfilePic}
                           >
-                            {formData.profilePicture || formData.existingProfilePicture ? 'Change' : 'Upload'}
+                            {isUploadingProfilePic ? 'Uploading...' : (formData.existingProfilePicture ? 'Change' : 'Upload')}
                           </Button>
                         </label>
                       </div>
                     </div>
 
-                    {/* File info and remove button */}
+                    {/* Upload status and remove button */}
                     <div className="flex flex-col items-center space-y-2">
-                      {formData.profilePicture && (
+                      {isUploadingProfilePic && (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="text-sm text-gray-600">Uploading...</span>
+                        </div>
+                      )}
+
+                      {formData.existingProfilePicture && !isUploadingProfilePic && (
                         <>
-                          <Badge variant="secondary" className="text-xs">
-                            {formData.profilePicture.name}
+                          <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                            Profile picture uploaded
                           </Badge>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleFileUpload('profilePicture', null)}
+                            onClick={() => handleRemoveExistingDocument('existingProfilePicture')}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
-                            Remove
+                            Remove Current Picture
                           </Button>
                         </>
                       )}
 
-                      {formData.existingProfilePicture && !formData.profilePicture && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveExistingDocument('existingProfilePicture')}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          Remove Current Picture
-                        </Button>
-                      )}
-
-                      {!formData.profilePicture && !formData.existingProfilePicture && (
+                      {!formData.existingProfilePicture && !isUploadingProfilePic && (
                         <p className="text-xs text-gray-500 text-center">
                           Click the upload button above to add a profile picture
                         </p>
@@ -1191,7 +1314,7 @@ export default function EditPortfolio() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(formData.existingResumeUrl, '_blank')}
+                            onClick={handleViewResume}
                           >
                             View
                           </Button>
@@ -1209,14 +1332,15 @@ export default function EditPortfolio() {
                   )}
 
                   {/* Show upload area if no existing resume or after removal */}
-                  {(!formData.existingResumeUrl || formData.resumeUpload) && (
+                  {!formData.existingResumeUrl && !formData.resumeUpload && (
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
                       <input
                         id="resumeUpload"
                         type="file"
                         accept=".pdf,.doc,.docx"
                         className="hidden"
-                        onChange={(e) => handleFileUpload('resumeUpload', e.target.files?.[0] || null)}
+                        onChange={(e) => handleResumeUpload(e.target.files?.[0] || null)}
+                        disabled={isUploadingResume}
                       />
                       <label htmlFor="resumeUpload" className="cursor-pointer">
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -1226,18 +1350,19 @@ export default function EditPortfolio() {
                     </div>
                   )}
 
+                  {/* Show uploading state */}
+                  {isUploadingResume && (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <span className="text-sm text-gray-600">Uploading resume...</span>
+                    </div>
+                  )}
+
                   {/* Show uploaded file preview */}
-                  {formData.resumeUpload && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary">{formData.resumeUpload.name}</Badge>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleFileUpload('resumeUpload', null)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                  {formData.resumeUpload && !isUploadingResume && (
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">{formData.resumeUpload.name}</Badge>
+                      <span className="text-xs text-green-700 ml-auto">✓ Uploaded</span>
                     </div>
                   )}
                 </div>
@@ -1283,7 +1408,7 @@ export default function EditPortfolio() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(formData.existingFoodHandlersUrl, '_blank')}
+                            onClick={handleViewCredential}
                           >
                             View
                           </Button>
@@ -1301,14 +1426,15 @@ export default function EditPortfolio() {
                   )}
 
                   {/* Show upload area if no existing card or after removal */}
-                  {(!formData.existingFoodHandlersUrl || formData.foodHandlersCardUpload) && (
+                  {!formData.existingFoodHandlersUrl && !formData.foodHandlersCardUpload && (
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
                       <input
                         id="foodHandlersCardUpload"
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         className="hidden"
-                        onChange={(e) => handleFileUpload('foodHandlersCardUpload', e.target.files?.[0] || null)}
+                        onChange={(e) => handleCredentialUpload(e.target.files?.[0] || null)}
+                        disabled={isUploadingCredential}
                       />
                       <label htmlFor="foodHandlersCardUpload" className="cursor-pointer">
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -1318,18 +1444,19 @@ export default function EditPortfolio() {
                     </div>
                   )}
 
+                  {/* Show uploading state */}
+                  {isUploadingCredential && (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <span className="text-sm text-gray-600">Uploading credential...</span>
+                    </div>
+                  )}
+
                   {/* Show uploaded file preview */}
-                  {formData.foodHandlersCardUpload && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary">{formData.foodHandlersCardUpload.name}</Badge>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleFileUpload('foodHandlersCardUpload', null)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                  {formData.foodHandlersCardUpload && !isUploadingCredential && (
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">{formData.foodHandlersCardUpload.name}</Badge>
+                      <span className="text-xs text-green-700 ml-auto">✓ Uploaded</span>
                     </div>
                   )}
                 </div>
@@ -1355,6 +1482,83 @@ export default function EditPortfolio() {
                   </div>
                 </RadioGroup>
               </div>
+              {formData.hasServSafe === "Yes" && (
+                <div className="space-y-2">
+                  <Label htmlFor="servSafeUpload">ServSafe Certificate *</Label>
+
+                  {/* Show existing servsafe certificate if available */}
+                  {formData.existingServSafeUrl && !formData.servSafeUpload && (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Current ServSafe Certificate</p>
+                            <p className="text-xs text-gray-500">Document</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleViewServSafe}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveExistingDocument('existingServSafeUrl')}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show upload area if no existing certificate or after removal */}
+                  {!formData.existingServSafeUrl && !formData.servSafeUpload && (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                      <input
+                        id="servSafeUpload"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => handleServSafeUpload(e.target.files?.[0] || null)}
+                        disabled={isUploadingServSafe}
+                      />
+                      <label htmlFor="servSafeUpload" className="cursor-pointer">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="text-sm text-gray-600">Click to upload your ServSafe certificate</p>
+                        <p className="text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Show uploading state */}
+                  {isUploadingServSafe && (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <span className="text-sm text-gray-600">Uploading certificate...</span>
+                    </div>
+                  )}
+
+                  {/* Show uploaded file preview */}
+                  {formData.servSafeUpload && !isUploadingServSafe && (
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">{formData.servSafeUpload.name}</Badge>
+                      <span className="text-xs text-green-700 ml-auto">✓ Uploaded</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1430,37 +1634,16 @@ export default function EditPortfolio() {
               </Button>
             )}
 
-            {/* Save Draft Button - No validation */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSaveDraft}
-              disabled={isSavingDraft || isSubmitting}
-              className="border-blue-600 text-blue-600 hover:bg-blue-50"
-            >
-              {isSavingDraft ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                  Saving Draft...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Draft
-                </>
-              )}
-            </Button>
-
-            {/* Submit Button - With validation */}
+            {/* Save Button */}
             <Button
               type="submit"
-              disabled={isSubmitting || isSavingDraft}
+              disabled={isSubmitting}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Submitting...
+                  Saving...
                 </>
               ) : (
                 <>
