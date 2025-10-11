@@ -62,6 +62,9 @@ class StudentProfileBase(BaseModel):
     
     # Program Status
     current_bucket: str = "Pre-Apprentice"
+    
+    # Onboarding Status (0 = complete, 1-6 = current step)
+    onboarding_step: int = 1
 
 # Schema for creating student profile
 class StudentProfileCreate(StudentProfileBase):
@@ -126,6 +129,9 @@ class StudentProfileUpdate(BaseModel):
     
     # Program Status
     current_bucket: Optional[str] = None
+    
+    # Onboarding Status
+    onboarding_step: Optional[int] = None
 
 # Schema for response
 class StudentProfileResponse(StudentProfileBase):
