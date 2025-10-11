@@ -64,7 +64,7 @@ export default function RegisterStudentPage() {
 
             if (response.data) {
                 toast.success('Account Created!', {
-                    description: 'Welcome! Please complete your profile.',
+                    description: 'Welcome! Let\'s get your profile set up.',
                     duration: 5000,
                 });
 
@@ -72,9 +72,9 @@ export default function RegisterStudentPage() {
                 const loginSuccess = await login(data.email, data.password);
 
                 if (loginSuccess) {
-                    // Redirect to edit portfolio to complete profile
+                    // Redirect to onboarding - user will be guided through profile setup
                     setTimeout(() => {
-                        setLocation("/student/editPortfolio");
+                        setLocation("/student/onboarding");
                     }, 100);
                 } else {
                     // If auto-login fails, redirect to login page

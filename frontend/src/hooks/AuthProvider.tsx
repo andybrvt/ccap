@@ -48,9 +48,22 @@ export function AuthProvider({
       const response = await api.get(API_ENDPOINTS.AUTH_ME);
       if (response.data) {
         setUser(response.data);
+        localStorage.setItem("auth_user", JSON.stringify(response.data));
       }
     } catch (error) {
       logout();
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.AUTH_ME);
+      if (response.data) {
+        setUser(response.data);
+        localStorage.setItem("auth_user", JSON.stringify(response.data));
+      }
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
     }
   };
 
@@ -94,30 +107,31 @@ export function AuthProvider({
     setLocation("/login");
   };
 
-  // Helper function to check if student profile is complete
-  const isProfileComplete = (user: User): boolean => {
-    if (user.role !== 'student') return true; // Admins don't need profile completion
+  // Helper function to check if student has completed onboarding
+  const isOnboardingComplete = (user: User): boolean => {
+    if (user.role !== 'student') return true; // Admins don't need onboarding
 
-    // Check if student_profile exists and has basic required fields
+    // Check if student_profile exists and onboarding is complete
     const profile = user.student_profile;
-    if (!profile) return false;
+    if (!profile) {
+      console.log('No student profile found');
+      return false;
+    }
 
-    // Only check for the absolute minimum required fields
-    const checkField = (field: any) => field && String(field).trim().length > 0;
-
-    // Just check for basic profile info - much more lenient
-    return !!(
-      checkField(profile.first_name) &&
-      checkField(profile.last_name) &&
-      checkField(profile.email)
-    );
+    // onboarding_step === 0 means onboarding is complete
+    const isComplete = profile.onboarding_step === 0;
+    console.log('Onboarding check:', {
+      onboarding_step: profile.onboarding_step,
+      isComplete
+    });
+    return isComplete;
   };
 
   // Protected Route component that handles authentication and role-based access
-  const ProtectedRoute = ({ children, requiredRole, skipProfileCheck }: {
+  const ProtectedRoute = ({ children, requiredRole, skipOnboardingCheck }: {
     children: ReactNode;
     requiredRole?: UserRole;
-    skipProfileCheck?: boolean; // Allow skipping profile check for editPortfolio page
+    skipOnboardingCheck?: boolean; // Allow skipping onboarding check (for /student/onboarding itself)
   }) => {
     const [location, setLocation] = useLocation();
 
@@ -142,9 +156,14 @@ export function AuthProvider({
         return;
       }
 
-      // Skip profile completion check - let users navigate freely
-      // They can complete their profile at their own pace
-    }, [requiredRole, setLocation, location, skipProfileCheck]);
+      // Check if student needs to complete onboarding (unless we're already on onboarding page)
+      if (!skipOnboardingCheck && user.role === 'student' && !isOnboardingComplete(user)) {
+        if (location !== '/student/onboarding') {
+          setLocation('/student/onboarding');
+          return;
+        }
+      }
+    }, [requiredRole, setLocation, location, skipOnboardingCheck]);
 
     // Show loading spinner while auth is initializing
     if (isLoading) {
@@ -185,6 +204,7 @@ export function AuthProvider({
         isLoading,
         login,
         logout,
+        refreshUser,
         ProtectedRoute,
       }}
     >

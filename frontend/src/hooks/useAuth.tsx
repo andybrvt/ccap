@@ -9,6 +9,7 @@ export interface StudentProfile {
   first_name: string;
   last_name: string;
   email?: string;
+  onboarding_step: number; // 0 = complete, 1-6 = current step
   // Add more fields here as needed when we use them in the UI
   // The backend returns all fields, but we only type-check the ones we access
   [key: string]: any; // Allow accessing any other field from backend
@@ -29,7 +30,8 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  ProtectedRoute: (props: { children: ReactNode; requiredRole?: UserRole; skipProfileCheck?: boolean }) => React.JSX.Element;
+  refreshUser: () => Promise<void>;
+  ProtectedRoute: (props: { children: ReactNode; requiredRole?: UserRole; skipOnboardingCheck?: boolean }) => React.JSX.Element;
 }
 
 // Context
