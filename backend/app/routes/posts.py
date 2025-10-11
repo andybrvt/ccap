@@ -211,10 +211,41 @@ def delete_post(
     """
     Delete a post
     Only the post owner can delete their post
+    Also deletes the associated image from S3
     """
     repo = PostRepository(db)
+    s3_service = S3Service()
     
     try:
+        # First, get the post to extract the image URL
+        post = repo.get_by_id(post_id)
+        
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Post not found"
+            )
+        
+        # Check permission (will raise PermissionError if not owner)
+        if post.user_id != current_user.id:
+            raise PermissionError("You can only delete your own posts")
+        
+        # Extract S3 key from image URL
+        # URL format: https://bucket-name.s3.amazonaws.com/public/post-images/file.jpg
+        # We need: public/post-images/file.jpg
+        if post.image_url:
+            try:
+                # Split by .com/ to get the key
+                s3_key = post.image_url.split('.com/')[-1] if '.com/' in post.image_url else None
+                
+                if s3_key:
+                    # Delete from S3
+                    s3_service.delete_file(s3_key)
+            except Exception as e:
+                # Log but don't fail the deletion if S3 cleanup fails
+                print(f"Warning: Failed to delete S3 image for post {post_id}: {str(e)}")
+        
+        # Delete the post from database
         success = repo.delete_post(post_id, current_user)
         
         if not success:

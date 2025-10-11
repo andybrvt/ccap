@@ -6,6 +6,8 @@ login.txt
 create_test_students.py
 create_test_announcements.py
 cleanup_test_announcements.py
+cleanup_test_posts.py
+create_test_posts.py
 
 # Python
 __pycache__/
