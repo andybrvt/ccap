@@ -27,8 +27,7 @@ app.add_middleware(
         "http://localhost:5173",  # Local development (Vite)
         "http://localhost:3000",
         "http://localhost:5174", # Alternative local port
-        # Add your Vercel domain once deployed:
-        # "https://your-app.vercel.app",
+        "https://ccap-gold.vercel.app",  # Production frontend
     ],
     allow_credentials=True,
     allow_methods=["*"],
