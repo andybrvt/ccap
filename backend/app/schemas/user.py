@@ -64,3 +64,19 @@ class TokenData(BaseModel):
 class BulkProgramStatusUpdate(BaseModel):
     student_ids: List[UUID]
     program_status: str
+
+# Admin Management Schemas
+class AdminCreate(BaseModel):
+    email: EmailStr
+
+class AdminResponse(BaseModel):
+    id: UUID
+    email: str
+    username: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class AdminWithPassword(AdminResponse):
+    temporary_password: str  # Only returned once on creation/reset

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, students, announcements, posts
+from app.routes import auth, students, announcements, posts, admin
 
 def setup_routers(app: FastAPI):
     """
@@ -31,5 +31,12 @@ def setup_routers(app: FastAPI):
         posts.router,
         prefix="/api/posts",
         tags=["Posts"]
+    )
+    
+    # Admin management routes
+    app.include_router(
+        admin.router,
+        prefix="/api/admin",
+        tags=["Admin Management"]
     )
 
