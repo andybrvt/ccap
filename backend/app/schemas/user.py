@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from app.schemas.student_profile import StudentProfileResponse
 
@@ -59,3 +59,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[UUID] = None
+
+# Schema for bulk update request
+class BulkProgramStatusUpdate(BaseModel):
+    student_ids: List[UUID]
+    program_status: str

@@ -2,17 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
+from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
 from app.models.user import User
 from app.repositories.student import StudentRepository
-from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile
+from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile, BulkProgramStatusUpdate
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
 from app.models.student_profile import StudentProfile
 from app.utils.s3 import S3Service
 
 router = APIRouter()
+
+
 
 @router.get("/search", response_model=List[UserWithFullProfile])
 def search_students(
@@ -717,4 +720,72 @@ async def admin_delete_servsafe(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete ServSafe certificate: {str(e)}"
+        )
+
+
+# Bulk Update Endpoint
+
+@router.post("/bulk-update-program-status")
+def bulk_update_program_status(
+    update_data: BulkProgramStatusUpdate,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk update program status (current_bucket) for multiple students - Admin only
+    
+    Request body:
+    {
+        "student_ids": ["uuid1", "uuid2", ...],
+        "program_status": "Pre-Apprentice" | "Apprentice" | "Completed Pre-Apprentice" | "Completed Apprentice" | "Not Active"
+    }
+    """
+    try:
+        # Validate program status
+        valid_statuses = ["Pre-Apprentice", "Apprentice", "Completed Pre-Apprentice", "Completed Apprentice", "Not Active"]
+        if update_data.program_status not in valid_statuses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid program status. Must be one of: {', '.join(valid_statuses)}"
+            )
+        
+        updated_count = 0
+        failed_ids = []
+        
+        for student_id in update_data.student_ids:
+            try:
+                # Find the student profile
+                profile = db.query(StudentProfile).filter(StudentProfile.user_id == student_id).first()
+                
+                if profile:
+                    profile.current_bucket = update_data.program_status
+                    updated_count += 1
+                else:
+                    failed_ids.append(str(student_id))
+            except Exception as e:
+                print(f"Failed to update student {student_id}: {str(e)}")
+                failed_ids.append(str(student_id))
+        
+        # Commit all changes at once
+        db.commit()
+        
+        response = {
+            "message": f"Successfully updated {updated_count} student(s)",
+            "updated_count": updated_count,
+            "total_requested": len(update_data.student_ids),
+        }
+        
+        if failed_ids:
+            response["failed_ids"] = failed_ids
+            response["failed_count"] = len(failed_ids)
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to bulk update program status: {str(e)}"
         )
