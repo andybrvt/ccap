@@ -32,15 +32,17 @@ class StudentRepository:
         search_term = f"%{query.lower()}%"
         
         # Search across User and StudentProfile tables
+        # Note: first_name and last_name are in StudentProfile, not User
         students = (
             self.db.query(User)
             .join(StudentProfile, User.id == StudentProfile.user_id, isouter=True)
             .filter(
                 User.role == "student",
                 or_(
-                    User.full_name.ilike(search_term),
                     User.email.ilike(search_term),
                     User.username.ilike(search_term),
+                    StudentProfile.first_name.ilike(search_term),
+                    StudentProfile.last_name.ilike(search_term),
                     StudentProfile.high_school.ilike(search_term)
                 )
             )
