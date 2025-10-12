@@ -159,8 +159,12 @@ class PostRepository(BaseRepository[Post]):
     def add_comment(self, post_id: UUID, user: User, content: str) -> Comment:
         """
         Add a comment to a post
-        Everyone can comment on posts
+        Only students can comment on posts
         """
+        # Check if user is a student
+        if user.role != "student":
+            raise PermissionError("Only students can comment on posts")
+        
         # Check if post exists
         post = self.get_by_id(post_id)
         if not post:

@@ -14,6 +14,26 @@ from app.utils.s3 import S3Service
 
 router = APIRouter()
 
+@router.get("/search", response_model=List[UserWithFullProfile])
+def search_students(
+    q: str,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin)
+):
+    """
+    Search students by name, email, or school - Admin only
+    Query parameter 'q' is the search term (minimum 2 characters)
+    """
+    student_repo = StudentRepository(db)
+    try:
+        students = student_repo.search_students(q, admin_user)
+        return students
+    except PermissionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can search students"
+        )
+
 @router.get("/", response_model=List[UserWithFullProfile])
 def get_all_students(
     db: Session = Depends(get_db),

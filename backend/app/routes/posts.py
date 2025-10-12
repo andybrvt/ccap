@@ -386,7 +386,7 @@ def add_comment(
 ):
     """
     Add a comment to a post
-    Everyone can comment on posts
+    Only students can comment on posts
     """
     repo = PostRepository(db)
     
@@ -397,6 +397,11 @@ def add_comment(
             comment_data.content
         )
         return comment
+    except PermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

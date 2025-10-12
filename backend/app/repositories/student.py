@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
 from uuid import UUID
 from app.models.user import User
@@ -15,6 +16,39 @@ class StudentRepository:
     def get_all_students(self, requesting_user: User) -> List[User]:
         """Get all students - with permission check"""
         return self.user_repo.get_students_for_admin(requesting_user)
+    
+    def search_students(self, query: str, requesting_user: User) -> List[User]:
+        """
+        Search students by name, email, or school
+        Admin only - returns students matching the search query
+        """
+        if requesting_user.role != "admin":
+            raise PermissionError("Only admins can search students")
+        
+        # If query is too short, return empty list
+        if len(query.strip()) < 2:
+            return []
+        
+        search_term = f"%{query.lower()}%"
+        
+        # Search across User and StudentProfile tables
+        students = (
+            self.db.query(User)
+            .join(StudentProfile, User.id == StudentProfile.user_id, isouter=True)
+            .filter(
+                User.role == "student",
+                or_(
+                    User.full_name.ilike(search_term),
+                    User.email.ilike(search_term),
+                    User.username.ilike(search_term),
+                    StudentProfile.high_school.ilike(search_term)
+                )
+            )
+            .distinct()
+            .all()
+        )
+        
+        return students
 
     def get_student_by_id(self, student_id: UUID, requesting_user: User) -> Optional[User]:
         """Get a specific student by ID - with permission check"""
