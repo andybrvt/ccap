@@ -804,35 +804,6 @@ export default function Homepage() {
         </DialogContent>
       </Dialog>
 
-      {/* Quick Actions Bar */}
-      <section className="px-6 py-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-black mb-1">
-                  Need help getting started?
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Our team is here to guide you through every step
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Schedule Demo
-                </Button>
-                <Button className="bg-black text-white hover:bg-gray-800">
-                  Contact Support
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-8 px-6">
         <div className="max-w-7xl mx-auto">

@@ -177,15 +177,6 @@ export default function LoginPage() {
                 </a>
               </p>
             </div>
-
-            {/* Test credentials info - remove in production */}
-            <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-              <p className="text-xs text-gray-400 mb-2 font-medium">Test Credentials:</p>
-              <div className="space-y-1 text-xs text-gray-500">
-                <p><span className="text-blue-400">Admin:</span> admin@test.com / admin123</p>
-                <p><span className="text-green-400">Student:</span> student@test.com / student123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
