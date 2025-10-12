@@ -5,7 +5,7 @@ import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload, Heart, Loader2, Trash2, MessageCircle } from "lucide-react";
 import Layout from "@/components/layout/StudentLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
+interface Post {
+  id: string;
+  user_id: string;
+  image_url: string;
+  caption: string | null;
+  featured_dish: string | null;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  is_liked?: boolean;
+  author?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
 
 export default function Portfolio() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Posts state
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [featuredDishes, setFeaturedDishes] = useState<string[]>([]);
+
+  // Modal state for post popup
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  // Modal state for create post
+  const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [newPostImage, setNewPostImage] = useState<File | null>(null);
+  const [newPostCaption, setNewPostCaption] = useState('');
+  const [newPostDish, setNewPostDish] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Comments state
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   // Fetch student profile data
   useEffect(() => {
@@ -42,60 +95,286 @@ export default function Portfolio() {
     fetchProfile();
   }, [user]);
 
-  // Mock posts (replace with real data if available)
-  const posts = [
-    {
-      url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80",
-      caption: "First day at C-CAP!"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?auto=format&fit=crop&w=600&q=80",
-      caption: "Baking class fun."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1607631568010-a87245c0daf8?auto=format&fit=crop&w=600&q=80",
-      caption: "Teamwork in the kitchen."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=600&q=80",
-      caption: "Trying a new recipe."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80",
-      caption: "Plating practice."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80",
-      caption: "Pastry perfection."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1571805529673-0f56b922b359?auto=format&fit=crop&w=600&q=80",
-      caption: "Culinary competition day."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=600&q=80",
-      caption: "Learning from the chef."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80",
-      caption: "Group project success."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=600&q=80",
-      caption: "Final presentation!"
+  // Fetch user's posts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!user) return;
+
+      try {
+        setLoadingPosts(true);
+        const response = await api.get(`${API_ENDPOINTS.POSTS_GET_BY_USER}${user.id}`);
+
+        // Check which posts are liked by current user
+        const postsWithLikeStatus = await Promise.all(
+          response.data.map(async (post: Post) => {
+            try {
+              const likeStatus = await api.get(`${API_ENDPOINTS.POSTS_CHECK_LIKED}${post.id}/liked`);
+              return { ...post, is_liked: likeStatus.data };
+            } catch {
+              return { ...post, is_liked: false };
+            }
+          })
+        );
+
+        setPosts(postsWithLikeStatus);
+      } catch (error) {
+        console.error('Failed to load posts:', error);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchPosts();
+  }, [user]);
+
+  // Fetch featured dishes
+  useEffect(() => {
+    const fetchDishes = async () => {
+      try {
+        const response = await api.get(API_ENDPOINTS.POSTS_GET_DISHES);
+        setFeaturedDishes(response.data);
+      } catch (error) {
+        console.error('Failed to load dishes:', error);
+      }
+    };
+
+    fetchDishes();
+  }, []);
+
+  // Refresh posts
+  const refreshPosts = async () => {
+    if (!user) return;
+
+    try {
+      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_BY_USER}${user.id}`);
+
+      const postsWithLikeStatus = await Promise.all(
+        response.data.map(async (post: Post) => {
+          try {
+            const likeStatus = await api.get(`${API_ENDPOINTS.POSTS_CHECK_LIKED}${post.id}/liked`);
+            return { ...post, is_liked: likeStatus.data };
+          } catch {
+            return { ...post, is_liked: false };
+          }
+        })
+      );
+
+      setPosts(postsWithLikeStatus);
+    } catch (error) {
+      console.error('Failed to refresh posts:', error);
     }
-  ];
+  };
 
+  // Create post handler
+  const handleCreatePost = async () => {
+    if (!newPostImage || !newPostCaption.trim() || !newPostDish) return;
 
-  // Modal state for post popup
-  const [selectedPost, setSelectedPost] = useState<null | { url: string; caption: string }>(null);
+    try {
+      setSubmitting(true);
 
-  // Modal state for create post
-  const [createPostOpen, setCreatePostOpen] = useState(false);
-  const [newPostImage, setNewPostImage] = useState<File | null>(null);
-  const [newPostCaption, setNewPostCaption] = useState('');
-  const [newPostDish, setNewPostDish] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+      const formData = new FormData();
+      formData.append('image', newPostImage);
+      formData.append('caption', newPostCaption);
+      formData.append('featured_dish', newPostDish);
+
+      await api.post(API_ENDPOINTS.POSTS_CREATE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      toast.success('Post created successfully!');
+
+      // Reset form
+      setCreatePostOpen(false);
+      setNewPostImage(null);
+      setNewPostCaption('');
+      setNewPostDish('');
+      setImagePreview(null);
+
+      // Refresh posts
+      refreshPosts();
+    } catch (error: any) {
+      console.error('Failed to create post:', error);
+      toast.error(error.response?.data?.detail || 'Failed to create post');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Like/unlike handler
+  const handleLikeToggle = async (postId: string, isLiked: boolean) => {
+    try {
+      if (isLiked) {
+        await api.delete(`${API_ENDPOINTS.POSTS_UNLIKE}${postId}/like`);
+      } else {
+        await api.post(`${API_ENDPOINTS.POSTS_LIKE}${postId}/like`);
+      }
+
+      // Update local state
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            is_liked: !isLiked,
+            likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1
+          };
+        }
+        return post;
+      }));
+
+      // Update selected post if viewing it
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost({
+          ...selectedPost,
+          is_liked: !isLiked,
+          likes_count: isLiked ? selectedPost.likes_count - 1 : selectedPost.likes_count + 1
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle like:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update like');
+    }
+  };
+
+  // Delete post handler
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
+    try {
+      await api.delete(`${API_ENDPOINTS.POSTS_DELETE}${postId}`);
+      toast.success('Post deleted successfully!');
+
+      // Close modal if viewing deleted post
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost(null);
+      }
+
+      // Refresh posts
+      refreshPosts();
+    } catch (error: any) {
+      console.error('Failed to delete post:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete post');
+    }
+  };
+
+  // Open post modal and fetch comments
+  const handleOpenPost = async (post: Post) => {
+    setSelectedPost(post);
+    setNewComment('');
+
+    // Fetch comments for this post
+    try {
+      setLoadingComments(true);
+      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_COMMENTS}${post.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Add comment handler
+  const handleAddComment = async () => {
+    if (!selectedPost || !newComment.trim()) return;
+
+    try {
+      setSubmittingComment(true);
+      const response = await api.post(
+        `${API_ENDPOINTS.POSTS_ADD_COMMENT}${selectedPost.id}/comments`,
+        { content: newComment }
+      );
+
+      // Add new comment to list
+      setComments([...comments, response.data]);
+      setNewComment('');
+
+      // Update comments count in posts list
+      setPosts(posts.map(post => {
+        if (post.id === selectedPost.id) {
+          return { ...post, comments_count: post.comments_count + 1 };
+        }
+        return post;
+      }));
+
+      // Update selected post
+      setSelectedPost({
+        ...selectedPost,
+        comments_count: selectedPost.comments_count + 1
+      });
+
+      toast.success('Comment added!');
+    } catch (error: any) {
+      console.error('Failed to add comment:', error);
+      toast.error(error.response?.data?.detail || 'Failed to add comment');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  // Delete comment handler
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('Delete this comment?')) return;
+
+    try {
+      await api.delete(`${API_ENDPOINTS.POSTS_DELETE_COMMENT}${commentId}`);
+
+      // Remove comment from list
+      setComments(comments.filter(c => c.id !== commentId));
+
+      // Update comments count
+      if (selectedPost) {
+        setPosts(posts.map(post => {
+          if (post.id === selectedPost.id) {
+            return { ...post, comments_count: Math.max(0, post.comments_count - 1) };
+          }
+          return post;
+        }));
+
+        setSelectedPost({
+          ...selectedPost,
+          comments_count: Math.max(0, selectedPost.comments_count - 1)
+        });
+      }
+
+      toast.success('Comment deleted!');
+    } catch (error: any) {
+      console.error('Failed to delete comment:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete comment');
+    }
+  };
+
+  // Navigate to portfolio (only if it's the current user)
+  const handleNavigateToProfile = (userId: string) => {
+    // Only allow navigation to own portfolio (stays on same page)
+    if (user && String(user.id) === String(userId)) {
+      // Already on own portfolio, no need to navigate
+      return;
+    }
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return diffMins <= 1 ? 'Just now' : `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+      return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+      return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
 
   // Document viewing handlers
   const handleViewResume = async () => {
@@ -502,37 +781,200 @@ export default function Portfolio() {
             Create Post
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-2 md:gap-4">
-          {posts.map((post, i) => (
-            <button
-              key={i}
-              className="aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none"
-              onClick={() => setSelectedPost(post)}
-              style={{ width: "100%" }}
+
+        {loadingPosts ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="text-center py-12 border border-blue-200 rounded-lg bg-blue-50">
+            <p className="text-blue-600 mb-4">No posts yet. Share your culinary journey!</p>
+            <Button
+              onClick={() => setCreatePostOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              <img src={post.url} alt="Post" className="object-cover w-full h-full hover:scale-115 transition-transform duration-200 cursor-pointer" />
-            </button>
-          ))}
-        </div>
-        {/* Post Modal Popup */}
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Post
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            {posts.map((post) => (
+              <button
+                key={post.id}
+                className="relative aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none group"
+                onClick={() => handleOpenPost(post)}
+                style={{ width: "100%" }}
+              >
+                <img src={post.image_url} alt="Post" className="object-cover w-full h-full hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                {/* Overlay with like and comment count on hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-2 text-white">
+                    <Heart className="w-5 h-5 fill-white" />
+                    <span className="font-semibold">{post.likes_count}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white">
+                    <MessageCircle className="w-5 h-5 fill-white" />
+                    <span className="font-semibold">{post.comments_count}</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Post Modal with Comments */}
         {selectedPost && (
           <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
-            <DialogContent className="max-w-md w-full p-0">
-              <DialogHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-2 border-b">
-                <DialogTitle className="text-lg font-semibold">Post</DialogTitle>
-
-              </DialogHeader>
-              <div className="flex flex-col items-center">
-                <div className="w-full flex items-center justify-center bg-black/5" style={{ minHeight: '300px', maxHeight: '60vh' }}>
+            <DialogContent
+              className="p-0 max-h-[95vh]"
+              style={{ width: '95vw', maxWidth: 'none' }}
+            >
+              <div className="flex flex-col md:flex-row h-full">
+                {/* Left Side - Image */}
+                <div className="md:w-3/5 bg-black flex items-center justify-center">
                   <img
-                    src={selectedPost.url}
+                    src={selectedPost.image_url}
                     alt="Post"
-                    className="object-contain max-h-[60vh] w-full rounded-none"
-                    style={{ maxWidth: '100%' }}
+                    className="w-full h-auto max-h-[95vh] object-contain"
                   />
                 </div>
-                <div className="p-4 w-full text-gray-800 text-base text-center break-words overflow-y-auto max-h-32">
-                  {selectedPost.caption}
+
+                {/* Right Side - Comments */}
+                <div className="md:w-2/5 flex flex-col bg-white">
+                  {/* Post Header with Delete Button */}
+                  <div className="p-4 border-b flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                      {user?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-semibold text-gray-900 block">{user?.username || 'Student'}</span>
+                      <span className="text-xs text-gray-500">{formatDate(selectedPost.created_at)}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeletePost(selectedPost.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Caption */}
+                  <div className="p-4 border-b">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                        {user?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-semibold text-gray-900">{user?.username || 'Student'} </span>
+                        <span className="text-gray-900">{selectedPost.caption}</span>
+                        {selectedPost.featured_dish && (
+                          <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
+                            Featured: {selectedPost.featured_dish}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comments List */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
+                    {loadingComments ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No comments yet.</p>
+                        <p className="text-xs">Be the first to comment!</p>
+                      </div>
+                    ) : (
+                      comments.map((comment) => (
+                        <div key={comment.id} className="flex gap-3 group">
+                          <div
+                            className={`w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 ${user && comment.user?.id && String(user.id) === String(comment.user.id) ? 'cursor-pointer hover:bg-blue-200 transition-colors' : ''
+                              }`}
+                            onClick={() => comment.user?.id && handleNavigateToProfile(comment.user.id)}
+                          >
+                            {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <span
+                                className={`font-semibold text-gray-900 text-sm ${user && comment.user?.id && String(user.id) === String(comment.user.id) ? 'cursor-pointer hover:underline' : ''
+                                  }`}
+                                onClick={() => comment.user?.id && handleNavigateToProfile(comment.user.id)}
+                              >
+                                {comment.user?.username || 'Student'}
+                              </span>
+                              <p className="text-gray-900 text-sm break-words">{comment.content}</p>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 px-3">
+                              <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
+                              {comment.user_id === String(user?.id) && (
+                                <button
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Actions & Comment Input */}
+                  <div className="border-t p-4 space-y-3">
+                    {/* Like Button */}
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLikeToggle(selectedPost.id, selectedPost.is_liked || false);
+                        }}
+                        className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                      >
+                        <Heart
+                          className={`w-6 h-6 ${selectedPost.is_liked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+                        />
+                        <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-6 h-6 text-gray-600" />
+                        <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
+                      </div>
+                    </div>
+
+                    {/* Add Comment */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add a comment..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAddComment();
+                          }
+                        }}
+                        disabled={submittingComment}
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim() || submittingComment}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {submittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -606,23 +1048,20 @@ export default function Portfolio() {
               {/* Dish Selection */}
               <div className="space-y-2">
                 <Label htmlFor="dish-select" className="text-sm font-medium">
-                  Featured Dish
+                  Featured Dish *
                 </Label>
                 <Select value={newPostDish} onValueChange={setNewPostDish}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a dish featured in this post" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="beef-wellington">Beef Wellington</SelectItem>
-                    <SelectItem value="coq-au-vin">Coq au Vin</SelectItem>
-                    <SelectItem value="risotto-milanese">Risotto Milanese</SelectItem>
-                    <SelectItem value="bouillabaisse">Bouillabaisse</SelectItem>
-                    <SelectItem value="beef-bourguignon">Beef Bourguignon</SelectItem>
-                    <SelectItem value="ratatouille">Ratatouille</SelectItem>
-                    <SelectItem value="paella">Paella</SelectItem>
-                    <SelectItem value="osso-buco">Osso Buco</SelectItem>
-                    <SelectItem value="cassoulet">Cassoulet</SelectItem>
-                    <SelectItem value="souffle">Soufflé</SelectItem>
+                    {featuredDishes.length > 0 ? (
+                      featuredDishes.map(dish => (
+                        <SelectItem key={dish} value={dish}>{dish}</SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>Loading dishes...</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -639,30 +1078,16 @@ export default function Portfolio() {
                     setImagePreview(null);
                   }}
                   className="flex-1"
+                  disabled={submitting}
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => {
-                    if (newPostImage && newPostCaption.trim()) {
-                      // Here you would typically upload to your backend
-                      // For now, we'll just close the dialog
-                      console.log('Creating post:', { image: newPostImage, caption: newPostCaption, dish: newPostDish });
-
-                      // Reset form
-                      setCreatePostOpen(false);
-                      setNewPostImage(null);
-                      setNewPostCaption('');
-                      setNewPostDish('');
-                      setImagePreview(null);
-
-                      // You could add the new post to the posts array here
-                      // posts.push({ url: imagePreview, caption: newPostCaption });
-                    }
-                  }}
-                  disabled={!newPostImage || !newPostCaption.trim()}
+                  onClick={handleCreatePost}
+                  disabled={!newPostImage || !newPostCaption.trim() || !newPostDish || submitting}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
+                  {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Create Post
                 </Button>
               </div>

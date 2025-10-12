@@ -14,6 +14,9 @@ import { User, Mail, Phone, MapPin, GraduationCap, Briefcase, Clock as ClockIcon
 import DataTable, { Column, FilterOption } from '@/components/ui/data-table';
 import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
+import { api } from '@/lib/apiService';
+import { API_ENDPOINTS } from '@/lib/endpoints';
+import { toast } from 'sonner';
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
 function useDynamicItemsPerPage() {
@@ -156,8 +159,9 @@ const filterOptions: FilterOption[] = [
 ];
 
 export default function BulkBucketAssignPage() {
-  // Local state for data (so we can update buckets)
-  const [data, setData] = useState<Submission[]>(initialData);
+  // Local state for data (fetched from API)
+  const [data, setData] = useState<Submission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // State for search and filters
   const [searchKey, setSearchKey] = useState("");
@@ -168,10 +172,79 @@ export default function BulkBucketAssignPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [assignBucket, setAssignBucket] = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [, setLocation] = useLocation();
 
   // Dynamic items per page calculation
   const { itemsPerPage, containerRef } = useDynamicItemsPerPage();
+
+  // Fetch all students on mount
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS);
+
+      if (response.data) {
+        // Transform backend data to match frontend Submission interface
+        const transformedData: Submission[] = response.data.map((student: any) => {
+          const profile = student.student_profile || {};
+          return {
+            id: student.id,
+            submissionId: student.id,
+            formId: student.id,
+            submissionDate: profile.created_at || student.created_at,
+            firstName: profile.first_name || "",
+            lastName: profile.last_name || "",
+            preferredName: profile.preferred_name || "",
+            email: student.email || profile.email || "",
+            address: profile.address || "",
+            address2: profile.address_line2 || "",
+            city: profile.city || "",
+            state: profile.state || "",
+            zipCode: profile.zip_code || "",
+            willRelocate: profile.willing_to_relocate || "",
+            relocationStates: profile.relocation_states || [],
+            dateOfBirth: profile.date_of_birth || "",
+            mobileNumber: profile.phone || "",
+            highSchool: profile.high_school || "",
+            graduationYear: profile.graduation_year || "",
+            transportation: profile.transportation || "",
+            hoursWanted: profile.hours_per_week?.toString() || "0",
+            availableTimes: profile.availability?.join(", ") || "",
+            availableWeekends: profile.weekend_availability || "",
+            hasResume: profile.has_resume || "",
+            resumeUrl: profile.resume_url || "",
+            currentJob: profile.currently_employed || "",
+            currentEmployer: profile.current_employer || "",
+            currentPosition: profile.current_position || "",
+            currentHours: profile.current_hours_per_week?.toString() || "",
+            pastJob: profile.previous_employment || "",
+            pastEmployer: profile.previous_employer || "",
+            pastPosition: profile.previous_position || "",
+            pastHours: profile.previous_hours_per_week?.toString() || "",
+            readyToWork: profile.ready_to_work || "",
+            readyDate: profile.available_date || "",
+            interestedOptions: profile.interests || [],
+            foodHandlersCard: profile.has_food_handlers_card || "",
+            servsafeCredentials: profile.has_servsafe || "",
+            culinaryYears: profile.culinary_class_years?.toString() || "0",
+            bucket: profile.current_bucket || "",
+          };
+        });
+
+        setData(transformedData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch students:', error);
+      toast.error('Failed to load student data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleViewDetails = (item: Submission) => {
     setLocation(`/admin/portfolio/${item.id}`);
@@ -262,9 +335,7 @@ export default function BulkBucketAssignPage() {
 
       return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
         matchesStateOfRelocation && matchesBucket && matchesStatus;
-    })
-      // Only show students with no bucket ("", null, or undefined)
-      .filter((item) => !item.bucket);
+    });
   }, [data, searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, statusFilter]);
 
   // Selection logic
@@ -288,17 +359,32 @@ export default function BulkBucketAssignPage() {
   };
 
   // Bulk assign handler
-  const handleBulkAssign = () => {
+  const handleBulkAssign = async () => {
     if (!assignBucket || selected.length === 0) return;
-    setData((prev) =>
-      prev.map((item) =>
-        selected.includes(item.submissionId)
-          ? { ...item, bucket: assignBucket }
-          : item
-      )
-    );
-    setSelected([]);
-    setAssignBucket(null);
+
+    try {
+      setIsAssigning(true);
+
+      // Call the bulk update API
+      const response = await api.post(API_ENDPOINTS.ADMIN_BULK_UPDATE_PROGRAM_STATUS, {
+        student_ids: selected,
+        program_status: assignBucket
+      });
+
+      toast.success(response.data.message || `Successfully updated ${selected.length} student(s)`);
+
+      // Reset selection
+      setSelected([]);
+      setAssignBucket(null);
+
+      // Refresh the student list
+      await fetchStudents();
+    } catch (error: any) {
+      console.error('Failed to bulk update:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update program status');
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   // Get selected candidates for display in slide panel
@@ -354,6 +440,30 @@ export default function BulkBucketAssignPage() {
             <Phone className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{item.mobileNumber}</span>
           </div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'currentStatus',
+      header: 'Current Status',
+      minWidth: '160px',
+      render: (item) => (
+        <div className="space-y-1">
+          {item.bucket ? (
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+              item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                  item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                    'bg-gray-50 text-gray-700 border-gray-200'
+              } border`}>
+              {item.bucket}
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+              Not Assigned
+            </span>
+          )}
         </div>
       ),
       sortable: true,
@@ -425,6 +535,19 @@ export default function BulkBucketAssignPage() {
       ),
     },
   ];
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading student data...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -532,8 +655,8 @@ export default function BulkBucketAssignPage() {
         <div className="flex flex-wrap gap-4">
           {/* DataTable with selection checkboxes */}
           <div className="flex-1 min-w-0">
-          <p className="text-gray-800 text-sm font-medium mb-2 block lg:hidden">Select Candidates
-          to assign a program status</p>
+            <p className="text-gray-800 text-sm font-medium mb-2 block lg:hidden">Select Candidates
+              to assign or update program status</p>
             <DataTable<Submission>
               data={filteredData}
               columns={columns}
@@ -554,8 +677,15 @@ export default function BulkBucketAssignPage() {
 
           {/* Action Panel - Desktop and Tablet */}
           <div className="h-full bg-black hidden lg:block w-80 border border-gray-700 rounded-lg p-6 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-white">Assign Program Status</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Manage Program Status</h3>
+              <button
+                onClick={() => setLocation('/admin/submissions')}
+                className="text-gray-400 hover:text-white transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <div className="space-y-4">
@@ -603,14 +733,15 @@ export default function BulkBucketAssignPage() {
                   <div className="space-y-2">
                     <Button
                       onClick={handleBulkAssign}
-                      disabled={!assignBucket}
+                      disabled={!assignBucket || isAssigning}
                       className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
                     >
-                      Assign to {selected.length} Candidate{selected.length !== 1 ? 's' : ''}
+                      {isAssigning ? 'Updating...' : `Update Status for ${selected.length} Candidate${selected.length !== 1 ? 's' : ''}`}
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => setSelected([])}
+                      disabled={isAssigning}
                       className="w-full bg-transparent text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white hover:border-gray-500"
                     >
                       Cancel
@@ -628,7 +759,7 @@ export default function BulkBucketAssignPage() {
                       Select Candidates
                     </p>
                     <p className="text-gray-400 text-xs">
-                      to assign a program status
+                      to manage program status
                     </p>
                   </div>
 
@@ -657,7 +788,7 @@ export default function BulkBucketAssignPage() {
                       disabled
                       className="w-full bg-gray-600 text-gray-400 cursor-not-allowed"
                     >
-                      Assign Program Status
+                      Update Status
                     </Button>
                   </div>
                 </>
@@ -667,8 +798,15 @@ export default function BulkBucketAssignPage() {
 
           {/* Mobile Action Panel - Below table */}
           <div className="lg:hidden w-full bg-black border border-gray-700 rounded-lg p-4 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-white">Assign Program Status</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Manage Program Status</h3>
+              <button
+                onClick={() => setLocation('/admin/submissions')}
+                className="text-gray-400 hover:text-white transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <div className="space-y-4">
@@ -716,14 +854,15 @@ export default function BulkBucketAssignPage() {
                   <div className="space-y-2">
                     <Button
                       onClick={handleBulkAssign}
-                      disabled={!assignBucket}
+                      disabled={!assignBucket || isAssigning}
                       className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
                     >
-                      Assign to {selected.length} Candidate{selected.length !== 1 ? 's' : ''}
+                      {isAssigning ? 'Updating...' : `Update Status for ${selected.length} Candidate${selected.length !== 1 ? 's' : ''}`}
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => setSelected([])}
+                      disabled={isAssigning}
                       className="w-full bg-transparent text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white hover:border-gray-500"
                     >
                       Cancel
@@ -741,7 +880,7 @@ export default function BulkBucketAssignPage() {
                       Select Candidates
                     </p>
                     <p className="text-gray-400 text-xs">
-                      to assign a program status
+                      to manage program status
                     </p>
                   </div>
 
@@ -770,7 +909,7 @@ export default function BulkBucketAssignPage() {
                       disabled
                       className="w-full bg-gray-600 text-gray-400 cursor-not-allowed"
                     >
-                      Assign Program Status
+                      Update Status
                     </Button>
                   </div>
                 </>
@@ -782,346 +921,3 @@ export default function BulkBucketAssignPage() {
     </Layout>
   );
 }
-
-
-// Example data 
-const initialData: Submission[] = [
-  {
-    id: 1,
-    submissionId: "JxDW8d",
-    formId: "6r5BRY",
-    submissionDate: "2024-09-10 19:38:29",
-    firstName: "Taelyn",
-    lastName: "Morton",
-    preferredName: "",
-    email: "goldannmorton@gmail.com",
-    address: "14043 N 57th Way",
-    address2: "",
-    city: "Scottsdale",
-    state: "AZ",
-    zipCode: "85254",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2008-10-01",
-    mobileNumber: "16028317803",
-    highSchool: "Paradise Valley Highschool",
-    graduationYear: "2026",
-    transportation: "I will drive myself",
-    hoursWanted: "25",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "Yes",
-    hasResume: "No",
-    resumeUrl: "",
-    currentJob: "No",
-    currentEmployer: "",
-    currentPosition: "",
-    currentHours: "",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "Yes",
-    readyDate: "",
-    interestedOptions: ["Culinary", "Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "1",
-    bucket: ""
-  },
-  {
-    id: 2,
-    submissionId: "x1ylvJ",
-    formId: "gWroN4",
-    submissionDate: "2024-09-10 19:39:18",
-    firstName: "Madison",
-    lastName: "Yob",
-    preferredName: "",
-    email: "madisonyob13@gmail.com",
-    address: "3728 East Taro lane",
-    address2: "",
-    city: "Phoenix",
-    state: "CA",
-    zipCode: "85050",
-    willRelocate: "No",
-    relocationStates: ["KY", "IA", "ID", "GA", "DE"],
-    dateOfBirth: "2007-03-08",
-    mobileNumber: "15205914355",
-    highSchool: "Paradise Valley High School",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "30",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "https://storage.tally.so/private/Morton-Resume.pdf?id=MEDodk&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik1FRG9kayIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.k0TkChgdfD7z4_0WZlMWap53E-1bE9q5t6CsKPb5Eh0&signature=ef97b8d0f622c45a7c8aa42937b1c2544dbb759d151deaada05fbd1a7b708b87",
-    currentJob: "Yes",
-    currentEmployer: "Yogurtini",
-    currentPosition: "Employee",
-    currentHours: "20",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-03-08",
-    interestedOptions: ["Baking and Pastry", "Culinary"],
-    foodHandlersCard: "No",
-    servsafeCredentials: "",
-    culinaryYears: "2",
-    // bucket: "Apprentice"
-    bucket: ""
-  },
-  {
-    id: 3,
-    submissionId: "ZKYZev",
-    formId: "yeka0x",
-    submissionDate: "2024-09-10 19:39:32",
-    firstName: "Elyse",
-    lastName: "Chavez",
-    preferredName: "",
-    email: "elysemaria07@gmail.com",
-    address: "4722 East Bell Rd, Apt. 2143",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2007-05-01",
-    mobileNumber: "16027626552",
-    highSchool: "PVHS",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "25",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "",
-    currentJob: "Yes",
-    currentEmployer: "QuikTrip",
-    currentPosition: "Clerk",
-    currentHours: "30",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2024-12-01",
-    interestedOptions: ["Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "0",
-    // bucket: "Completed Pre-Apprentice"
-    bucket: ""
-  },
-  {
-    id: 4,
-    submissionId: "r1LkgL",
-    formId: "K8yj88",
-    submissionDate: "2024-09-10 19:39:56",
-    firstName: "Aiden",
-    lastName: "Hancharik",
-    preferredName: "",
-    email: "wynterhancharik@gmail.com",
-    address: "9415 N 32nd st",
-    address2: "",
-    city: "phoenix",
-    state: "AZ",
-    zipCode: "85028",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2006-09-25",
-    mobileNumber: "16028829770",
-    highSchool: "paradise valley high school",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "34",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "No",
-    hasResume: "No",
-    resumeUrl: "",
-    currentJob: "No",
-    currentEmployer: "",
-    currentPosition: "",
-    currentHours: "",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-12-25",
-    interestedOptions: ["Culinary"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "2",
-    bucket: "Completed Apprentice"
-  },
-  {
-    id: 5,
-    submissionId: "r1Lkgp",
-    formId: "zWv6WR",
-    submissionDate: "2024-09-10 19:40:00",
-    firstName: "Ibrahim",
-    lastName: "Haddad",
-    preferredName: "",
-    email: "ibrahimhaddad07@gmail.com",
-    address: "3826 west fallen leaf lane",
-    address2: "",
-    city: "Glendale",
-    state: "AZ",
-    zipCode: "85310",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2023-12-07",
-    mobileNumber: "14802400020",
-    highSchool: "3",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "16",
-    availableTimes: "Morning (6AM - 10AM), Afternoon (10AM - 2PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "",
-    currentJob: "Yes",
-    currentEmployer: "Slim chicken",
-    currentPosition: "Qb1",
-    currentHours: "10",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2024-12-27",
-    interestedOptions: ["Culinary"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: "Not Active"
-  },
-  {
-    id: 6,
-    submissionId: "agEakW",
-    formId: "O8yN8R",
-    submissionDate: "2024-09-10 19:40:01",
-    firstName: "Russell",
-    lastName: "Johnson",
-    preferredName: "",
-    email: "russellpj55@gmail.com",
-    address: "3056 E Siesta Lane",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2007-04-21",
-    mobileNumber: "16023612341",
-    highSchool: "Paradise valley high school",
-    graduationYear: "2025",
-    transportation: "I will drive myself",
-    hoursWanted: "40",
-    availableTimes: "Evening (2PM - 6PM), Afternoon (10AM - 2PM)",
-    availableWeekends: "Yes",
-    hasResume: "Yes",
-    resumeUrl: "https://storage.tally.so/private/RUSSELL-JOHNSON-RESUME-2.docx?id=kN9MOe&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImtOOU1PZSIsImZvcm1JZCI6Im1ZZGREcSIsImlhdCI6MTc0NjY0NDI4MX0.6LBqo8Y_BQ8mG-7MPpVbxRW-nVkk1I48I_rk2JktHUU&signature=a4866eeacacb23e1b02678c0c5bc3633b1fd93d8002620bc58af51dbdabd4cb2",
-    currentJob: "Yes",
-    currentEmployer: "The Mighty Axe",
-    currentPosition: "Axepert",
-    currentHours: "40",
-    pastJob: "Yes",
-    pastEmployer: "Tj maxx",
-    pastPosition: "Employee",
-    pastHours: "30",
-    readyToWork: "No",
-    readyDate: "2025-04-21",
-    interestedOptions: ["Culinary"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: ""
-  },
-  {
-    id: 7,
-    submissionId: "RaYVgv",
-    formId: "745k1Z",
-    submissionDate: "2024-09-10 19:40:06",
-    firstName: "Amaree",
-    lastName: "Vega",
-    preferredName: "",
-    email: "amareevega@gmail.com",
-    address: "E Hartford ave 3529",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2007-08-06",
-    mobileNumber: "16023125383",
-    highSchool: "Paradise Valley High School",
-    graduationYear: "2025",
-    transportation: "I will be dropped off",
-    hoursWanted: "18",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "No",
-    hasResume: "No",
-    resumeUrl: "",
-    currentJob: "No",
-    currentEmployer: "",
-    currentPosition: "",
-    currentHours: "",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-08-06",
-    interestedOptions: ["Culinary", "Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: "Pre-Apprentice"
-  },
-  {
-    id: 8,
-    submissionId: "LNY6yz",
-    formId: "D0yGAR",
-    submissionDate: "2024-09-10 19:40:13",
-    firstName: "Aisha",
-    lastName: "Preciado",
-    preferredName: "",
-    email: "ishapc222@gmail.con",
-    address: "2950 E Greenway Rd",
-    address2: "",
-    city: "Phoenix",
-    state: "AZ",
-    zipCode: "85032",
-    willRelocate: "No",
-    relocationStates: [],
-    dateOfBirth: "2008-02-02",
-    mobileNumber: "14808098395",
-    highSchool: "Paradise Valley High School",
-    graduationYear: "2026",
-    transportation: "I will be dropped off",
-    hoursWanted: "23",
-    availableTimes: "Evening (2PM - 6PM)",
-    availableWeekends: "No",
-    hasResume: "Yes",
-    resumeUrl: "",
-    currentJob: "Yes",
-    currentEmployer: "Target",
-    currentPosition: "Style",
-    currentHours: "19",
-    pastJob: "No",
-    pastEmployer: "",
-    pastPosition: "",
-    pastHours: "",
-    readyToWork: "No",
-    readyDate: "2025-01-25",
-    interestedOptions: ["Baking and Pastry"],
-    foodHandlersCard: "Yes",
-    servsafeCredentials: "",
-    culinaryYears: "3",
-    bucket: ""
-  }
-];

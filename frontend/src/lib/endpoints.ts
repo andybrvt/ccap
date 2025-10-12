@@ -11,7 +11,9 @@ export const API_ENDPOINTS = {
 
   // Admin student management endpoints
   ADMIN_GET_ALL_STUDENTS: '/students/',          // GET all students (admin only)
+  ADMIN_SEARCH_STUDENTS: '/students/search',     // GET search students (admin only, requires ?q=query)
   ADMIN_GET_STUDENT: '/students/',               // GET single student by ID (admin only)
+  ADMIN_BULK_UPDATE_PROGRAM_STATUS: '/students/bulk-update-program-status', // POST bulk update program status (admin only)
 
   // Student file uploads
   STUDENT_UPLOAD_PROFILE_PICTURE: '/students/profile/picture', // POST upload profile picture
@@ -51,4 +53,24 @@ export const API_ENDPOINTS = {
   ANNOUNCEMENTS_CREATE: '/announcements/',               // POST create announcement (admin only)
   ANNOUNCEMENTS_UPDATE: '/announcements/',               // PUT update announcement (admin only)
   ANNOUNCEMENTS_DELETE: '/announcements/',               // DELETE announcement (admin only)
+
+  // Post endpoints
+  POSTS_GET_DISHES: '/posts/dishes',                     // GET featured dishes list
+  POSTS_GET_ALL: '/posts/',                              // GET all posts (community feed)
+  POSTS_GET_BY_USER: '/posts/user/',                     // GET posts by specific user
+  POSTS_GET_BY_ID: '/posts/',                            // GET single post
+  POSTS_CREATE: '/posts/',                               // POST create post with image (students only)
+  POSTS_UPDATE: '/posts/',                               // PUT update post (owner only)
+  POSTS_DELETE: '/posts/',                               // DELETE post (owner only)
+  POSTS_LIKE: '/posts/',                                 // POST like a post (append {id}/like)
+  POSTS_UNLIKE: '/posts/',                               // DELETE unlike a post (append {id}/like)
+  POSTS_CHECK_LIKED: '/posts/',                          // GET check if liked (append {id}/liked)
+  POSTS_GET_COMMENTS: '/posts/',                         // GET comments (append {id}/comments)
+  POSTS_ADD_COMMENT: '/posts/',                          // POST add comment (append {id}/comments)
+  POSTS_DELETE_COMMENT: '/posts/comments/',              // DELETE comment by ID
+
+  // Admin management endpoints
+  ADMIN_GET_ALL_ADMINS: '/admin/admins',                 // GET all admins (super admin only)
+  ADMIN_CREATE_ADMIN: '/admin/admins',                   // POST create new admin (super admin only)
+  ADMIN_RESET_PASSWORD: '/admin/admins/',                // POST reset admin password (append {id}/reset-password)
 };

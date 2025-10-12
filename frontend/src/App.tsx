@@ -14,6 +14,7 @@ import AdminSubmissions from "@/pages/admin/submissions";
 import AdminPortfolio from "@/pages/admin/portfolio";
 import AdminPortfolioLookup from "@/pages/admin/portfolioLookup";
 import AdminBulkBucketAssign from "@/pages/admin/assignProgramStatus";
+import AdminManagement from "@/pages/admin/adminManagement";
 
 import StudentHomepage from "@/pages/student/homepage";
 import StudentAnnouncements from "@/pages/student/anouncements";
@@ -69,6 +70,11 @@ function AppRoutes() {
       <Route path="/admin/assign-program-status">
         <ProtectedRoute requiredRole="admin">
           <AdminBulkBucketAssign />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/admin-management">
+        <ProtectedRoute requiredRole="admin">
+          <AdminManagement />
         </ProtectedRoute>
       </Route>
 

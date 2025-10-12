@@ -78,8 +78,8 @@ export function Navigation() {
                   <Button
                     variant="ghost"
                     className={`px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ${isActive(item.href)
-                        ? "text-black bg-gray-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "text-black bg-gray-100"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                   >
                     {item.label}
@@ -199,9 +199,11 @@ export function Navigation() {
                       </DropdownMenuItem>
                     ))}
                     {/* Static profile/settings/sign out */}
-                    <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
-                      <Settings className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">Account Settings</span>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/admin-management" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
+                        <Settings className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">Admin Management</span>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-100" />
                     <DropdownMenuItem

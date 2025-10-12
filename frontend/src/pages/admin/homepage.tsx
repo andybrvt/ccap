@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,13 +22,45 @@ import {
   Globe,
   Mail,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
+
+interface Post {
+  id: string;
+  user_id: string;
+  image_url: string;
+  caption: string | null;
+  featured_dish: string | null;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  is_liked?: boolean;
+  author?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
 
 // Types
 interface Announcement {
@@ -46,8 +78,8 @@ interface Announcement {
   updated_at?: string | null;
 }
 
-// Dummy posts data
-const posts = [
+// Dummy posts data - WILL BE REPLACED WITH API
+const dummyPosts = [
   {
     id: 1,
     user: {
@@ -260,10 +292,24 @@ function formatDate(dateString: string): string {
 
 export default function Homepage() {
   const { user, logout } = useAuth();
-  const [selectedPost, setSelectedPost] = useState<typeof posts[0] | null>(null);
+  const [, setLocation] = useLocation();
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+
+  // Announcements state
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+
+  // Posts state
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadingMorePosts, setLoadingMorePosts] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [postsOffset, setPostsOffset] = useState(0);
+
+  // Comments state
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
   // Fetch announcements
   useEffect(() => {
@@ -283,6 +329,73 @@ export default function Homepage() {
 
     fetchAnnouncements();
   }, []);
+
+  // Fetch posts (initial load)
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoadingPosts(true);
+        const response = await api.get(API_ENDPOINTS.POSTS_GET_ALL, {
+          params: { limit: 10, offset: 0 }
+        });
+        setPosts(response.data);
+        setHasMorePosts(response.data.length === 10);
+        setPostsOffset(10);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  // Load more posts
+  const handleLoadMorePosts = async () => {
+    if (loadingMorePosts || !hasMorePosts) return;
+
+    try {
+      setLoadingMorePosts(true);
+      const response = await api.get(API_ENDPOINTS.POSTS_GET_ALL, {
+        params: { limit: 10, offset: postsOffset }
+      });
+
+      setPosts([...posts, ...response.data]);
+      setHasMorePosts(response.data.length === 10);
+      setPostsOffset(postsOffset + response.data.length);
+    } catch (error) {
+      console.error('Error loading more posts:', error);
+    } finally {
+      setLoadingMorePosts(false);
+    }
+  };
+
+  // Open post modal and fetch comments
+  const handleOpenPost = async (post: Post) => {
+    setSelectedPost(post);
+    setIsPostDialogOpen(true);
+
+    // Fetch comments for this post
+    try {
+      setLoadingComments(true);
+      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_COMMENTS}${post.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Navigate to student portfolio
+  const handleNavigateToPortfolio = (userId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    setLocation(`/admin/portfolio/${userId}`);
+  };
 
   return (
     <Layout>
@@ -375,81 +488,102 @@ export default function Homepage() {
               </div>
 
               <div className="border border-gray-200 rounded-xl bg-white flex-1 flex flex-col h-full p-6">
-                {posts.length === 0 ? (
+                {loadingPosts ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                      <MessageCircle className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600">Loading posts...</p>
+                  </div>
+                ) : posts.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <MessageCircle className="h-8 w-8 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No Posts</h3>
-                    <p className="text-gray-600">There are no posts at this time. Check back later for updates.</p>
+                    <p className="text-gray-600">No student posts yet.</p>
                   </div>
                 ) : (
-                  <div className="max-h-[600px] overflow-y-auto scrollbar-hide">
+                  <div className="max-h-[550px] overflow-y-auto scrollbar-hide space-y-3">
                     {posts.map((post) => (
-                      <div key={post.id} className="border-b border-gray-100 last:border-b-0">
-                        <div
-                          className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                          onClick={() => {
-                            setSelectedPost(post);
-                            setIsPostDialogOpen(true);
-                          }}
-                        >
-                          {/* Post Header */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={post.user.avatar}
-                                alt={post.user.name}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-gray-900">{post.user.name}</span>
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ${post.user.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                      post.user.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                        post.user.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                                          post.user.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                            'bg-gray-50 text-gray-700 border-gray-200'
-                                      }`}
-                                  >
-                                    {post.user.bucket}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                  <span>{post.timestamp}</span>
-                                </div>
-                              </div>
+                      <div key={post.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                        {/* Post Header */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
+                              onClick={(e) => post.author?.id && handleNavigateToPortfolio(post.author.id, e)}
+                            >
+                              {post.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                            </div>
+                            <div className="flex-1">
+                              <span
+                                className="font-semibold text-gray-900 block cursor-pointer hover:underline"
+                                onClick={(e) => post.author?.id && handleNavigateToPortfolio(post.author.id, e)}
+                              >
+                                {post.author?.username || 'Student'}
+                              </span>
+                              <span className="text-xs text-gray-500">{formatDate(post.created_at)}</span>
                             </div>
                           </div>
-
-                          {/* Post Content */}
-                          <div className="mb-3">
-                            <p className="text-gray-900 mb-3">{post.content}</p>
-
-                            {post.dish && (
-                              <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700 mb-3">
-                                Featured: {post.dish}
-                              </Badge>
-                            )}
-
-                            {post.image && (
-                              <div className="rounded-lg overflow-hidden">
-                                <img
-                                  src={post.image}
-                                  alt="Post"
-                                  className="w-full h-48 object-cover"
-                                />
-                              </div>
-                            )}
-
-                          </div>
-
-
                         </div>
+
+                        {/* Post Image */}
+                        <div
+                          className="rounded-lg overflow-hidden mb-3 cursor-pointer"
+                          onClick={() => handleOpenPost(post)}
+                        >
+                          <img
+                            src={post.image_url}
+                            alt="Post"
+                            className="w-full h-48 object-cover hover:scale-105 transition-transform"
+                          />
+                        </div>
+
+                        {/* Post Actions */}
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex items-center gap-1">
+                            <Heart className="w-5 h-5 text-gray-600" />
+                            <span className="text-sm font-semibold">{post.likes_count}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="w-5 h-5 text-gray-600" />
+                            <span className="text-sm font-semibold">{post.comments_count}</span>
+                          </div>
+                        </div>
+
+                        {/* Post Caption */}
+                        {post.caption && (
+                          <p className="text-gray-900 text-sm mb-2 line-clamp-2">{post.caption}</p>
+                        )}
+
+                        {/* Featured Dish */}
+                        {post.featured_dish && (
+                          <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700">
+                            Featured: {post.featured_dish}
+                          </Badge>
+                        )}
                       </div>
                     ))}
+
+                    {/* Load More Button or Spinner */}
+                    {hasMorePosts && (
+                      <div className="text-center py-4">
+                        {loadingMorePosts ? (
+                          <div className="flex items-center justify-center">
+                            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={handleLoadMorePosts}
+                            className="w-full"
+                          >
+                            Load More Posts
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -539,61 +673,132 @@ export default function Homepage() {
           </div>
         </div>
       </section>
-      {/* Post Dialog */}
+      {/* Post Dialog with Comments */}
       <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
-        <DialogContent className="max-w-2xl w-full p-0">
+        <DialogContent
+          className="p-0 max-h-[95vh]"
+          style={{ width: '95vw', maxWidth: 'none' }}
+        >
           {selectedPost && (
-            <div className="p-6">
-              {/* Post Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={selectedPost.user.avatar}
-                    alt={selectedPost.user.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+            <div className="flex flex-col md:flex-row h-full">
+              {/* Left Side - Image */}
+              <div className="md:w-3/5 bg-black flex items-center justify-center">
+                <img
+                  src={selectedPost.image_url}
+                  alt="Post"
+                  className="w-full h-auto max-h-[95vh] object-contain"
+                />
+              </div>
+
+              {/* Right Side - Comments */}
+              <div className="md:w-2/5 flex flex-col bg-white">
+                {/* Post Header */}
+                <div className="p-4 border-b flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
+                    onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                  >
+                    {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                  </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900 text-lg">{selectedPost.user.name}</span>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${selectedPost.user.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                          selectedPost.user.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                            selectedPost.user.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                              selectedPost.user.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                'bg-gray-50 text-gray-700 border-gray-200'
-                          }`}
-                      >
-                        {selectedPost.user.bucket}
-                      </Badge>
+                    <span
+                      className="font-semibold text-gray-900 block cursor-pointer hover:underline"
+                      onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                    >
+                      {selectedPost.author?.username || 'Student'}
+                    </span>
+                    <span className="text-xs text-gray-500">{formatDate(selectedPost.created_at)}</span>
+                  </div>
+                </div>
+
+                {/* Caption */}
+                <div className="p-4 border-b">
+                  <div className="flex gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
+                      onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                    >
+                      {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>{selectedPost.timestamp}</span>
+                    <div className="flex-1">
+                      <span
+                        className="font-semibold text-gray-900 cursor-pointer hover:underline"
+                        onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                      >
+                        {selectedPost.author?.username || 'Student'}
+                      </span>
+                      <span className="text-gray-900"> {selectedPost.caption}</span>
+                      {selectedPost.featured_dish && (
+                        <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
+                          Featured: {selectedPost.featured_dish}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Post Content */}
-              <div className="mb-4">
-                <p className="text-gray-900 text-base mb-4 leading-relaxed">{selectedPost.content}</p>
-                {selectedPost.dish && (
-                  <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700 mb-4">
-                    Featured: {selectedPost.dish}
-                  </Badge>
-                )}
-                {selectedPost.image && (
-                  <div className="rounded-lg overflow-hidden mb-3">
-                    <img
-                      src={selectedPost.image}
-                      alt="Post"
-                      className="w-full h-64 object-cover"
-                    />
+                {/* Comments List */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
+                  {loadingComments ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    </div>
+                  ) : comments.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No comments yet.</p>
+                      <p className="text-xs">Students can comment on posts</p>
+                    </div>
+                  ) : (
+                    comments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <div
+                          className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
+                          onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
+                        >
+                          {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <span
+                              className="font-semibold text-gray-900 text-sm cursor-pointer hover:underline"
+                              onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
+                            >
+                              {comment.user?.username || 'Student'}
+                            </span>
+                            <p className="text-gray-900 text-sm break-words">{comment.content}</p>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 px-3">
+                            <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Actions & Admin Notice */}
+                <div className="border-t p-4 space-y-3">
+                  {/* Like Button */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-6 h-6 text-gray-600" />
+                      <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-6 h-6 text-gray-600" />
+                      <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
+                    </div>
                   </div>
-                )}
+
+                  {/* Admin Notice */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-700">
+                      <strong>Admin View:</strong> You can view comments but cannot comment as an admin.
+                    </p>
+                  </div>
+                </div>
               </div>
-
-
             </div>
           )}
         </DialogContent>

@@ -1,57 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Mail, GraduationCap, Search, User2, Award, Sparkles } from "lucide-react";
+import { Mail, GraduationCap, Search, User2, Award, Sparkles, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
+import { api } from "@/lib/apiService";
+import { API_ENDPOINTS } from "@/lib/endpoints";
+import { toast } from "sonner";
 
-// Example data type and data (copy from portfolio.tsx)
-interface Submission extends Record<string, unknown> {
-    id: number;
-    submissionId: string;
-    formId: string;
-    submissionDate: string;
-    firstName: string;
-    lastName: string;
-    preferredName: string;
+// Student interface (from API) - matches actual response structure
+interface Student {
+    id: string;
     email: string;
-    address: string;
-    address2: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    willRelocate: string;
-    relocationStates: string[];
-    dateOfBirth: string;
-    mobileNumber: string;
-    highSchool: string;
-    graduationYear: string;
-    transportation: string;
-    hoursWanted: string;
-    availableTimes: string;
-    availableWeekends: string;
-    hasResume: string;
-    resumeUrl: string;
-    currentJob: string;
-    currentEmployer: string;
-    currentPosition: string;
-    currentHours: string;
-    pastJob: string;
-    pastEmployer: string;
-    pastPosition: string;
-    pastHours: string;
-    readyToWork: string;
-    readyDate: string;
-    interestedOptions: string[];
-    foodHandlersCard: string;
-    servsafeCredentials: string;
-    culinaryYears: string;
+    username: string;
+    role: string;
+    created_at: string;
+    student_profile?: {  // Changed from 'profile' to 'student_profile' to match API
+        user_id: string;
+        first_name?: string;
+        last_name?: string;
+        preferred_name?: string;
+        high_school?: string;
+        graduation_year?: string;
+        interests?: string[];
+        city?: string;
+        state?: string;
+        zip_code?: string;
+        address?: string;
+        phone?: string;
+        transportation?: string;
+        hours_per_week?: number;
+        availability?: string[];
+        weekend_availability?: string;
+        currently_employed?: string;
+        current_employer?: string;
+        current_position?: string;
+        current_hours_per_week?: number;
+        has_food_handlers_card?: string;
+        has_servsafe?: string;
+        culinary_class_years?: number;
+        current_bucket?: string;
+        [key: string]: any;
+    };
 }
 
-// Example data based on Google Sheets structure
-const exampleData: Submission[] = [
+// Old dummy data - REMOVED (now using API)
+const exampleDataOLD: any[] = [
     {
         id: 1,
         submissionId: "JxDW8d",
@@ -386,15 +382,40 @@ const exampleData: Submission[] = [
 export default function PortfolioLookup() {
     const [search, setSearch] = useState("");
     const [, setLocation] = useLocation();
+    const [students, setStudents] = useState<Student[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
 
-    const filtered = search.length < 2 ? [] : exampleData.filter(u => {
-        const q = search.toLowerCase();
-        return (
-            `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
-            u.email.toLowerCase().includes(q) ||
-            u.highSchool.toLowerCase().includes(q)
-        );
-    });
+    // Debounced search effect
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (search.length >= 2) {
+                searchStudents();
+            } else {
+                setStudents([]);
+                setHasSearched(false);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [search]);
+
+    const searchStudents = async () => {
+        try {
+            setLoading(true);
+            setHasSearched(true);
+            const response = await api.get(API_ENDPOINTS.ADMIN_SEARCH_STUDENTS, {
+                params: { q: search }
+            });
+            setStudents(response.data);
+        } catch (error: any) {
+            console.error('Search failed:', error);
+            toast.error(error.response?.data?.detail || 'Failed to search students');
+            setStudents([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
 
@@ -443,49 +464,108 @@ export default function PortfolioLookup() {
                         className="w-full bg-white border-gray-200 text-gray-900"
                     />
                 </div>
-                {search.length < 2 && (
-                    <div className="text-gray-500 text-center">Type at least 2 characters to search for a user.</div>
+                {/* Loading State */}
+                {loading && (
+                    <div className="text-center py-8">
+                        <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                        <p className="text-gray-600">Searching students...</p>
+                    </div>
                 )}
-                <div className="space-y-4 mt-4">
-                    {filtered.map(user => (
-                        <Card key={user.id} className="hover:shadow-lg transition-shadow">
-                            <CardContent className="flex flex-col md:flex-row items-center gap-4 p-4">
-                                <div className="flex-shrink-0 w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-500">
-                                    {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-lg font-semibold text-blue-900">
-                                        {user.firstName} {user.lastName}
-                                        {user.preferredName && (
-                                            <span className="text-gray-500 ml-2">({user.preferredName})</span>
-                                        )}
+
+                {/* Empty State - Before Search */}
+                {!loading && search.length < 2 && (
+                    <div className="text-gray-500 text-center py-8">
+                        <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <p>Type at least 2 characters to search for a student.</p>
+                        <p className="text-sm text-gray-400 mt-1">Search by name, email, or school</p>
+                    </div>
+                )}
+
+                {/* Results */}
+                {!loading && hasSearched && (
+                    <div className="space-y-4 mt-4">
+                        {students.map(student => (
+                            <Card key={student.id} className="hover:shadow-lg transition-shadow">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center gap-6">
+                                        {/* Left - Avatar */}
+                                        <div className="flex-shrink-0">
+                                            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-500">
+                                                {student.student_profile?.first_name && student.student_profile?.last_name
+                                                    ? `${student.student_profile.first_name.charAt(0)}${student.student_profile.last_name.charAt(0)}`
+                                                    : student.username?.substring(0, 2).toUpperCase() || 'ST'
+                                                }
+                                            </div>
+                                        </div>
+
+                                        {/* Center - Detailed Info */}
+                                        <div className="flex-1 space-y-2">
+                                            {/* Name and Email */}
+                                            <div>
+                                                <h3 className="text-xl font-bold text-blue-900">
+                                                    {student.student_profile?.first_name && student.student_profile?.last_name
+                                                        ? `${student.student_profile.first_name} ${student.student_profile.last_name}`
+                                                        : student.username
+                                                    }
+                                                    {student.student_profile?.preferred_name && (
+                                                        <span className="text-gray-500 ml-2 text-base font-normal">
+                                                            ({student.student_profile.preferred_name})
+                                                        </span>
+                                                    )}
+                                                </h3>
+                                                <div className="flex items-center gap-2 text-sm text-gray-700 mt-1">
+                                                    <Mail className="w-4 h-4 text-blue-400" /> {student.email}
+                                                </div>
+                                            </div>
+
+                                            {/* Education Info - Always show if available */}
+                                            {(student.student_profile?.high_school || student.student_profile?.graduation_year) && (
+                                                <div className="flex items-center gap-2 text-sm text-gray-700">
+                                                    <GraduationCap className="w-4 h-4 text-blue-400" />
+                                                    <span>
+                                                        {student.student_profile.high_school || 'High School'}
+                                                        {student.student_profile.graduation_year && ` - Class of ${student.student_profile.graduation_year}`}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Interests - Always show if available */}
+                                            {student.student_profile?.interests && student.student_profile.interests.length > 0 && (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {student.student_profile.interests.map((interest, i) => (
+                                                        <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">
+                                                            {interest}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                        </div>
+
+                                        {/* Right - View Portfolio Button */}
+                                        <div className="flex-shrink-0">
+                                            <Button
+                                                onClick={() => setLocation(`/admin/portfolio/${student.id}`)}
+                                                variant="default"
+                                            >
+                                                View Portfolio
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-700 mt-1">
-                                        <Mail className="w-4 h-4 text-blue-400" /> {user.email}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-700 mt-1">
-                                        <GraduationCap className="w-4 h-4 text-blue-400" /> {user.highSchool} ({user.graduationYear})
-                                    </div>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {user.interestedOptions.map((opt, i) => (
-                                            <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">{opt}</Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                                <Button
-                                    className="mt-4 md:mt-0"
-                                    onClick={() => setLocation(`/admin/portfolio/${user.id}`)}
-                                    variant="default"
-                                >
-                                    View Portfolio
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    ))}
-                    {search.length >= 2 && filtered.length === 0 && (
-                        <div className="text-gray-500 text-center">No users found.</div>
-                    )}
-                </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+
+                        {/* No Results */}
+                        {search.length >= 2 && students.length === 0 && (
+                            <div className="text-center py-8">
+                                <User2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-gray-600 font-medium">No students found</p>
+                                <p className="text-sm text-gray-500 mt-1">Try searching with a different name, email, or school</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </Layout>
     );

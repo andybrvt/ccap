@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Building2, ChevronDown, Home, FileText, User, Settings, LogOut, Calculator, Search } from "lucide-react";
+import { Building2, ChevronDown, Home, FileText, User, LogOut, Calculator, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -78,8 +78,8 @@ export function Navigation() {
                   <Button
                     variant="ghost"
                     className={`px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ${isActive(item.href)
-                        ? "text-black bg-gray-100"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "text-black bg-gray-100"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                   >
                     {item.label}
@@ -199,9 +199,11 @@ export function Navigation() {
                       </DropdownMenuItem>
                     ))}
                     {/* Static profile/settings/sign out */}
-                    <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
-                      <Settings className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">Account Settings</span>
+                    <DropdownMenuItem asChild>
+                      <Link href="/student/portfolio" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
+                        <User className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">My Portfolio</span>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-100" />
                     <DropdownMenuItem

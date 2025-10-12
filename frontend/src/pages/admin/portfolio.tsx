@@ -1,18 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Heart, MessageCircle, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
 
+interface Post {
+  id: string;
+  user_id: string;
+  image_url: string;
+  caption: string | null;
+  featured_dish: string | null;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  is_liked?: boolean;
+  author?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
 export default function Portfolio() {
   const [match, params] = useRoute("/admin/portfolio/:id");
+  const [, setLocation] = useLocation();
   const [user, setUser] = useState<Submission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Posts state
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  // Modal state for post popup
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  // Comments state
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
   // Fetch student data on mount
   useEffect(() => {
@@ -68,6 +110,7 @@ export default function Portfolio() {
             foodHandlersCard: profile.has_food_handlers_card || "",
             servsafeCredentials: profile.has_servsafe || "",
             culinaryYears: profile.culinary_class_years?.toString() || "0",
+            bio: profile.bio || "",
           };
 
           setUser(transformedStudent);
@@ -83,52 +126,70 @@ export default function Portfolio() {
     fetchStudent();
   }, [params?.id]);
 
-  // Mock posts (replace with real data if available)
-  const posts = [
-    {
-      url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80",
-      caption: "First day at C-CAP!"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?auto=format&fit=crop&w=600&q=80",
-      caption: "Baking class fun."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1607631568010-a87245c0daf8?auto=format&fit=crop&w=600&q=80",
-      caption: "Teamwork in the kitchen."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=600&q=80",
-      caption: "Trying a new recipe."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80",
-      caption: "Plating practice."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80",
-      caption: "Pastry perfection."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1571805529673-0f56b922b359?auto=format&fit=crop&w=600&q=80",
-      caption: "Culinary competition day."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=600&q=80",
-      caption: "Learning from the chef."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80",
-      caption: "Group project success."
-    },
-    {
-      url: "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=600&q=80",
-      caption: "Final presentation!"
-    }
-  ];
+  // Fetch user's posts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!params?.id) return;
 
-  // Modal state for post popup
-  const [selectedPost, setSelectedPost] = useState<null | { url: string; caption: string }>(null);
+      try {
+        setLoadingPosts(true);
+        const response = await api.get(`${API_ENDPOINTS.POSTS_GET_BY_USER}${params.id}`);
+        setPosts(response.data);
+      } catch (error) {
+        console.error('Failed to load posts:', error);
+        setPosts([]);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchPosts();
+  }, [params?.id]);
+
+  // Open post modal and fetch comments
+  const handleOpenPost = async (post: Post) => {
+    setSelectedPost(post);
+
+    // Fetch comments for this post
+    try {
+      setLoadingComments(true);
+      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_COMMENTS}${post.id}/comments`);
+      setComments(response.data);
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Navigate to student portfolio
+  const handleNavigateToPortfolio = (userId: string) => {
+    setLocation(`/admin/portfolio/${userId}`);
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return diffMins <= 1 ? 'Just now' : `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+      return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+      return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -185,6 +246,12 @@ export default function Portfolio() {
                         </Badge>
                       ))}
                     </div>
+                    {/* Bio Section */}
+                    {user.bio && (
+                      <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                        <p className="text-sm text-gray-700 leading-relaxed">{user.bio}</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Main Info */}
@@ -255,42 +322,170 @@ export default function Portfolio() {
             <div className="lg:sticky lg:top-6">
               <h2 className="text-xl font-semibold mb-4 text-blue-700">Posts</h2>
               <div className="lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-2">
-                <div className="grid grid-cols-3 gap-2 md:gap-4">
-                  {posts.map((post, i) => (
-                    <button
-                      key={i}
-                      className="aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none"
-                      onClick={() => setSelectedPost(post)}
-                      style={{ width: "100%" }}
-                    >
-                      <img src={post.url} alt="Post" className="object-cover w-full h-full hover:scale-115 transition-transform duration-200 cursor-pointer" />
-                    </button>
-                  ))}
-                </div>
+                {loadingPosts ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="text-center py-12 border border-blue-200 rounded-lg bg-blue-50">
+                    <p className="text-blue-600 mb-4">No posts yet.</p>
+                    <p className="text-blue-500 text-sm">This student hasn't shared any posts.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 md:gap-4">
+                    {posts.map((post) => (
+                      <button
+                        key={post.id}
+                        className="relative aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none group"
+                        onClick={() => handleOpenPost(post)}
+                        style={{ width: "100%" }}
+                      >
+                        <img src={post.image_url} alt="Post" className="object-cover w-full h-full hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                        {/* Overlay with like and comment count on hover */}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                          <div className="flex items-center gap-2 text-white">
+                            <Heart className="w-5 h-5 fill-white" />
+                            <span className="font-semibold">{post.likes_count}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-white">
+                            <MessageCircle className="w-5 h-5 fill-white" />
+                            <span className="font-semibold">{post.comments_count}</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Post Modal Popup */}
+        {/* Post Modal with Comments */}
         {selectedPost && (
           <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
-            <DialogContent className="max-w-md w-full p-0">
-              <DialogHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-2 border-b">
-                <DialogTitle className="text-lg font-semibold">Post</DialogTitle>
-
-              </DialogHeader>
-              <div className="flex flex-col items-center">
-                <div className="w-full flex items-center justify-center bg-black/5" style={{ minHeight: '300px', maxHeight: '60vh' }}>
+            <DialogContent
+              className="p-0 max-h-[95vh]"
+              style={{ width: '95vw', maxWidth: 'none' }}
+            >
+              <div className="flex flex-col md:flex-row h-full">
+                {/* Left Side - Image */}
+                <div className="md:w-3/5 bg-black flex items-center justify-center">
                   <img
-                    src={selectedPost.url}
+                    src={selectedPost.image_url}
                     alt="Post"
-                    className="object-contain max-h-[60vh] w-full rounded-none"
-                    style={{ maxWidth: '100%' }}
+                    className="w-full h-auto max-h-[95vh] object-contain"
                   />
                 </div>
-                <div className="p-4 w-full text-gray-800 text-base text-center break-words overflow-y-auto max-h-32">
-                  {selectedPost.caption}
+
+                {/* Right Side - Comments */}
+                <div className="md:w-2/5 flex flex-col bg-white">
+                  {/* Post Header */}
+                  <div className="p-4 border-b flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
+                      onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                    >
+                      {selectedPost.author?.username?.substring(0, 2).toUpperCase() || user?.firstName?.charAt(0) || 'ST'}
+                    </div>
+                    <div className="flex-1">
+                      <span
+                        className="font-semibold text-gray-900 block cursor-pointer hover:underline"
+                        onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                      >
+                        {selectedPost.author?.username || `${user?.firstName} ${user?.lastName}` || 'Student'}
+                      </span>
+                      <span className="text-xs text-gray-500">{formatDate(selectedPost.created_at)}</span>
+                    </div>
+                  </div>
+
+                  {/* Caption */}
+                  <div className="p-4 border-b">
+                    <div className="flex gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
+                        onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                      >
+                        {selectedPost.author?.username?.substring(0, 2).toUpperCase() || user?.firstName?.charAt(0) || 'ST'}
+                      </div>
+                      <div className="flex-1">
+                        <span
+                          className="font-semibold text-gray-900 cursor-pointer hover:underline"
+                          onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
+                        >
+                          {selectedPost.author?.username || `${user?.firstName} ${user?.lastName}` || 'Student'}
+                        </span>
+                        <span className="text-gray-900"> {selectedPost.caption}</span>
+                        {selectedPost.featured_dish && (
+                          <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
+                            Featured: {selectedPost.featured_dish}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comments List */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
+                    {loadingComments ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No comments yet.</p>
+                        <p className="text-xs">Students can comment on posts</p>
+                      </div>
+                    ) : (
+                      comments.map((comment) => (
+                        <div key={comment.id} className="flex gap-3">
+                          <div
+                            className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
+                            onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
+                          >
+                            {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <span
+                                className="font-semibold text-gray-900 text-sm cursor-pointer hover:underline"
+                                onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
+                              >
+                                {comment.user?.username || 'Student'}
+                              </span>
+                              <p className="text-gray-900 text-sm break-words">{comment.content}</p>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 px-3">
+                              <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Actions & Admin Notice */}
+                  <div className="border-t p-4 space-y-3">
+                    {/* Like Button */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Heart className="w-6 h-6 text-gray-600" />
+                        <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-6 h-6 text-gray-600" />
+                        <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
+                      </div>
+                    </div>
+
+                    {/* Admin Notice */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-700">
+                        <strong>Admin View:</strong> You can view comments but cannot comment as an admin.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -341,5 +536,6 @@ interface Submission extends Record<string, unknown> {
   foodHandlersCard: string;
   servsafeCredentials: string;
   culinaryYears: string;
+  bio: string;
   id?: string;
 }
