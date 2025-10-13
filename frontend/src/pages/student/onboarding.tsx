@@ -220,8 +220,16 @@ export default function StudentOnboarding() {
             });
 
             if (response.data?.profile_picture_url) {
-                setFormData(prev => ({ ...prev, existingProfilePicture: response.data.profile_picture_url }));
+                console.log('Profile picture upload successful:', response.data.profile_picture_url); // Debug
+                setFormData(prev => ({
+                    ...prev,
+                    existingProfilePicture: response.data.profile_picture_url,
+                    profilePicture: file // Set the file state too
+                }));
                 toast.success('Profile picture uploaded successfully!');
+            } else {
+                console.error('No profile_picture_url in response:', response.data); // Debug
+                toast.error('Upload successful but no image URL returned');
             }
         } catch (error) {
             console.error('Failed to upload profile picture:', error);
@@ -247,8 +255,16 @@ export default function StudentOnboarding() {
             });
 
             if (response.data?.resume_url) {
-                setFormData(prev => ({ ...prev, existingResumeUrl: response.data.resume_url }));
+                console.log('Resume upload successful:', response.data.resume_url); // Debug
+                setFormData(prev => ({
+                    ...prev,
+                    existingResumeUrl: response.data.resume_url,
+                    resumeUpload: file // Set the file state too
+                }));
                 toast.success('Resume uploaded successfully!');
+            } else {
+                console.error('No resume_url in response:', response.data); // Debug
+                toast.error('Upload successful but no resume URL returned');
             }
         } catch (error) {
             console.error('Failed to upload resume:', error);
@@ -274,8 +290,16 @@ export default function StudentOnboarding() {
             });
 
             if (response.data?.food_handlers_card_url) {
-                setFormData(prev => ({ ...prev, existingFoodHandlersUrl: response.data.food_handlers_card_url }));
+                console.log('Food Handlers Card upload successful:', response.data.food_handlers_card_url); // Debug
+                setFormData(prev => ({
+                    ...prev,
+                    existingFoodHandlersUrl: response.data.food_handlers_card_url,
+                    foodHandlersCardUpload: file // Set the file state too
+                }));
                 toast.success('Food Handlers Card uploaded successfully!');
+            } else {
+                console.error('No food_handlers_card_url in response:', response.data); // Debug
+                toast.error('Upload successful but no certificate URL returned');
             }
         } catch (error) {
             console.error('Failed to upload credential:', error);
@@ -301,8 +325,16 @@ export default function StudentOnboarding() {
             });
 
             if (response.data?.servsafe_certificate_url) {
-                setFormData(prev => ({ ...prev, existingServSafeUrl: response.data.servsafe_certificate_url }));
+                console.log('ServSafe certificate upload successful:', response.data.servsafe_certificate_url); // Debug
+                setFormData(prev => ({
+                    ...prev,
+                    existingServSafeUrl: response.data.servsafe_certificate_url,
+                    servSafeUpload: file // Set the file state too
+                }));
                 toast.success('ServSafe certificate uploaded successfully!');
+            } else {
+                console.error('No servsafe_certificate_url in response:', response.data); // Debug
+                toast.error('Upload successful but no certificate URL returned');
             }
         } catch (error) {
             console.error('Failed to upload ServSafe certificate:', error);

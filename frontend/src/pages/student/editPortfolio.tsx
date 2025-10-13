@@ -347,15 +347,18 @@ export default function EditPortfolio() {
         },
       });
 
-      if (response.data?.url) {
+      if (response.data?.profile_picture_url) {
         // Update form data with the new URL
         setFormData(prev => ({
           ...prev,
-          existingProfilePicture: response.data.url,
+          existingProfilePicture: response.data.profile_picture_url,
           profilePicture: null
         }));
 
         toast.success("Profile picture uploaded successfully!");
+      } else {
+        console.error('No profile_picture_url in response:', response.data);
+        toast.error('Upload successful but no image URL returned');
       }
     } catch (error: any) {
       console.error('Failed to upload profile picture:', error);
@@ -381,20 +384,26 @@ export default function EditPortfolio() {
       const formData = new FormData();
       formData.append('file', file);
 
-      await api.post(API_ENDPOINTS.STUDENT_UPLOAD_RESUME, formData, {
+      const response = await api.post(API_ENDPOINTS.STUDENT_UPLOAD_RESUME, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      // Update form data to show upload succeeded
-      setFormData(prev => ({
-        ...prev,
-        resumeUpload: file,
-        hasResume: "Yes"
-      }));
-
-      toast.success("Resume uploaded successfully!");
+      if (response.data?.resume_url) {
+        console.log('Resume upload successful:', response.data.resume_url);
+        // Update form data to show upload succeeded
+        setFormData(prev => ({
+          ...prev,
+          existingResumeUrl: response.data.resume_url,
+          resumeUpload: file,
+          hasResume: "Yes"
+        }));
+        toast.success("Resume uploaded successfully!");
+      } else {
+        console.error('No resume_url in response:', response.data);
+        toast.error('Upload successful but no resume URL returned');
+      }
     } catch (error: any) {
       console.error('Failed to upload resume:', error);
       const errorMessage = error.response?.data?.detail || "Failed to upload resume";
@@ -421,20 +430,26 @@ export default function EditPortfolio() {
       const formData = new FormData();
       formData.append('file', file);
 
-      await api.post(API_ENDPOINTS.STUDENT_UPLOAD_CREDENTIAL, formData, {
+      const response = await api.post(API_ENDPOINTS.STUDENT_UPLOAD_CREDENTIAL, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      // Update form data to show upload succeeded
-      setFormData(prev => ({
-        ...prev,
-        foodHandlersCardUpload: file,
-        hasFoodHandlersCard: "Yes"
-      }));
-
-      toast.success("Food Handlers Card uploaded successfully!");
+      if (response.data?.food_handlers_card_url) {
+        console.log('Food Handlers Card upload successful:', response.data.food_handlers_card_url);
+        // Update form data to show upload succeeded
+        setFormData(prev => ({
+          ...prev,
+          existingFoodHandlersUrl: response.data.food_handlers_card_url,
+          foodHandlersCardUpload: file,
+          hasFoodHandlersCard: "Yes"
+        }));
+        toast.success("Food Handlers Card uploaded successfully!");
+      } else {
+        console.error('No food_handlers_card_url in response:', response.data);
+        toast.error('Upload successful but no certificate URL returned');
+      }
     } catch (error: any) {
       console.error('Failed to upload credential:', error);
       const errorMessage = error.response?.data?.detail || "Failed to upload credential";
@@ -461,20 +476,26 @@ export default function EditPortfolio() {
       const formData = new FormData();
       formData.append('file', file);
 
-      await api.post(API_ENDPOINTS.STUDENT_UPLOAD_SERVSAFE, formData, {
+      const response = await api.post(API_ENDPOINTS.STUDENT_UPLOAD_SERVSAFE, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      // Update form data to show upload succeeded
-      setFormData(prev => ({
-        ...prev,
-        servSafeUpload: file,
-        hasServSafe: "Yes"
-      }));
-
-      toast.success("ServSafe certificate uploaded successfully!");
+      if (response.data?.servsafe_certificate_url) {
+        console.log('ServSafe certificate upload successful:', response.data.servsafe_certificate_url);
+        // Update form data to show upload succeeded
+        setFormData(prev => ({
+          ...prev,
+          existingServSafeUrl: response.data.servsafe_certificate_url,
+          servSafeUpload: file,
+          hasServSafe: "Yes"
+        }));
+        toast.success("ServSafe certificate uploaded successfully!");
+      } else {
+        console.error('No servsafe_certificate_url in response:', response.data);
+        toast.error('Upload successful but no certificate URL returned');
+      }
     } catch (error: any) {
       console.error('Failed to upload ServSafe certificate:', error);
       const errorMessage = error.response?.data?.detail || "Failed to upload ServSafe certificate";
