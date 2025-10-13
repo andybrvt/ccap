@@ -239,7 +239,7 @@ async def upload_profile_picture(
                 detail="Failed to update profile picture"
             )
         
-        return {"url": public_url, "message": "Profile picture uploaded successfully"}
+        return {"profile_picture_url": public_url, "message": "Profile picture uploaded successfully"}
         
     except Exception as e:
         raise HTTPException(
@@ -283,7 +283,7 @@ async def upload_resume(
                 detail="Failed to update resume"
             )
         
-        return {"message": "Resume uploaded successfully"}
+        return {"resume_url": s3_key, "message": "Resume uploaded successfully"}
         
     except Exception as e:
         raise HTTPException(
@@ -332,7 +332,7 @@ async def upload_credential(
                 detail="Failed to update credential"
             )
         
-        return {"message": "Credential uploaded successfully"}
+        return {"food_handlers_card_url": s3_key, "message": "Credential uploaded successfully"}
         
     except Exception as e:
         raise HTTPException(
@@ -447,7 +447,7 @@ async def upload_servsafe(
                 detail="Failed to update ServSafe certificate"
             )
         
-        return {"message": "ServSafe certificate uploaded successfully"}
+        return {"servsafe_certificate_url": s3_key, "message": "ServSafe certificate uploaded successfully"}
         
     except Exception as e:
         raise HTTPException(
