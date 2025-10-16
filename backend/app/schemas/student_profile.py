@@ -29,6 +29,7 @@ class StudentProfileBase(BaseModel):
     high_school: Optional[str] = None
     graduation_year: Optional[str] = None
     culinary_class_years: Optional[int] = None
+    ccap_connection: Optional[str] = None
     
     # Work Experience
     currently_employed: Optional[str] = None
@@ -96,6 +97,7 @@ class StudentProfileUpdate(BaseModel):
     high_school: Optional[str] = None
     graduation_year: Optional[str] = None
     culinary_class_years: Optional[int] = None
+    ccap_connection: Optional[str] = None
     
     # Work Experience
     currently_employed: Optional[str] = None
