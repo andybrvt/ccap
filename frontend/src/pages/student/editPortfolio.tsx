@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowLeft, Save, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS } from "@/lib/constants";
 
 // Form data interface based on the schema
 interface PortfolioFormData {
@@ -67,6 +68,7 @@ interface PortfolioFormData {
   profilePicture: File | null;
   existingProfilePicture: string;
   bio: string;
+  ccapConnection: string;
 }
 
 // States array
@@ -240,7 +242,8 @@ export default function EditPortfolio() {
     preferredName2: "",
     profilePicture: null,
     existingProfilePicture: "",
-    bio: ""
+    bio: "",
+    ccapConnection: ""
   });
 
   // Update form data when full profile loads
@@ -296,7 +299,8 @@ export default function EditPortfolio() {
         preferredName2: fullProfile.preferred_name || "",
         profilePicture: null,
         existingProfilePicture: fullProfile.profile_picture_url || "",
-        bio: fullProfile.bio || ""
+        bio: fullProfile.bio || "",
+        ccapConnection: fullProfile.ccap_connection || ""
       });
     }
   }, [fullProfile, user]);
@@ -658,6 +662,7 @@ export default function EditPortfolio() {
         high_school: formData.culinarySchool,
         graduation_year: formData.yearOfGraduation.toString(),
         culinary_class_years: formData.culinaryClassYears,
+        ccap_connection: formData.ccapConnection,
 
         // Work Experience
         currently_employed: formData.currentlyEmployed,
@@ -758,23 +763,12 @@ export default function EditPortfolio() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto p-6">
-        {/* Onboarding Banner */}
-        {isOnboarding && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h2 className="text-lg font-semibold text-blue-900 mb-1">Welcome to C-CAP! 👋</h2>
-            <p className="text-sm text-blue-700">
-              Please complete all required fields (*) to access the platform and connect with opportunities.
-              <br />
-              <span className="font-medium mt-1 inline-block">You must fill out this form before exploring the platform.</span>
-            </p>
-          </div>
-        )}
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {isOnboarding ? 'Complete Your Profile' : 'Edit Portfolio'}
+              Edit Your Profile
             </h1>
             <p className="text-gray-600">
               {isOnboarding
@@ -1100,6 +1094,25 @@ export default function EditPortfolio() {
                     required
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ccapConnection">How are you connected to C-CAP? *</Label>
+                <Select
+                  key={formData.ccapConnection || 'no-ccap'}
+                  value={formData.ccapConnection}
+                  onValueChange={(value) => handleInputChange('ccapConnection', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your connection" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CCAP_CONNECTION_DROPDOWN_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

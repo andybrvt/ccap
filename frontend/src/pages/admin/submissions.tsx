@@ -20,6 +20,7 @@ import { useState as useReactState } from 'react';
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS } from '@/lib/constants';
 
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
@@ -96,6 +97,7 @@ export default function Submissions() {
   const [selectedStatesOfResidence, setSelectedStatesOfResidence] = useState<string[]>([]);
   const [selectedStatesOfRelocation, setSelectedStatesOfRelocation] = useState<string[]>([]);
   const [selectedBuckets, setSelectedBuckets] = useState<string[]>([]);
+  const [selectedCcapConnections, setSelectedCcapConnections] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [onboardingFilter, setOnboardingFilter] = useState("all"); // New: onboarding status filter
 
@@ -156,6 +158,7 @@ export default function Submissions() {
               culinaryYears: profile.culinary_class_years?.toString() || "0",
               bucket: profile.current_bucket || "",
               onboardingStep: profile.onboarding_step || 0,
+              ccapConnection: profile.ccap_connection || "",
             };
           });
 
@@ -235,6 +238,7 @@ export default function Submissions() {
             culinaryYears: profile.culinary_class_years?.toString() || "0",
             bucket: profile.current_bucket || "",
             onboardingStep: profile.onboarding_step || 0,
+            ccapConnection: profile.ccap_connection || "",
           };
         });
 
@@ -280,6 +284,16 @@ export default function Submissions() {
     ];
   }, []);
 
+  const uniqueCcapConnections = useMemo(() => {
+    return Array.from(
+      new Set(
+        data
+          .map((item) => item.ccapConnection)
+          .filter((connection) => connection !== undefined && connection !== '')
+      )
+    ).map((connection) => ({ value: connection, label: connection }));
+  }, [data]);
+
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
     return data.filter((item) => {
@@ -304,6 +318,10 @@ export default function Submissions() {
       // Bucket filtering
       const matchesBucket = selectedBuckets.length === 0 ||
         (item.bucket && selectedBuckets.includes(item.bucket));
+
+      // CCAP Connection filtering
+      const matchesCcapConnection = selectedCcapConnections.length === 0 ||
+        (item.ccapConnection && selectedCcapConnections.includes(item.ccapConnection));
 
       // Status filtering
       let matchesStatus = true;
@@ -341,9 +359,9 @@ export default function Submissions() {
       }
 
       return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
-        matchesStateOfRelocation && matchesBucket && matchesStatus && matchesOnboarding;
+        matchesStateOfRelocation && matchesBucket && matchesCcapConnection && matchesStatus && matchesOnboarding;
     });
-  }, [data, searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, statusFilter, onboardingFilter]);
+  }, [data, searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, selectedCcapConnections, statusFilter, onboardingFilter]);
 
   // Reset all filters
   const handleResetFilters = () => {
@@ -352,6 +370,7 @@ export default function Submissions() {
     setSelectedStatesOfResidence([]);
     setSelectedStatesOfRelocation([]);
     setSelectedBuckets([]);
+    setSelectedCcapConnections([]);
     setStatusFilter("all");
     setOnboardingFilter("all");
   };
@@ -490,6 +509,11 @@ export default function Submissions() {
           <div className="text-xs text-gray-500">
             Graduates: {item.graduationYear}
           </div>
+          {item.ccapConnection && (
+            <div className="text-xs text-gray-500">
+              CCAP Connection: {item.ccapConnection}
+            </div>
+          )}
         </div>
       ),
       sortable: true,
@@ -696,6 +720,7 @@ export default function Submissions() {
                     State of Residence
                   </label>
                   <MultiSelect
+                    key={`states-residence-${selectedStatesOfResidence.length}`}
                     options={uniqueStatesOfResidence}
                     onValueChange={setSelectedStatesOfResidence}
                     defaultValue={selectedStatesOfResidence}
@@ -710,6 +735,7 @@ export default function Submissions() {
                     State of Relocation
                   </label>
                   <MultiSelect
+                    key={`states-relocation-${selectedStatesOfRelocation.length}`}
                     options={uniqueStatesOfRelocation}
                     onValueChange={setSelectedStatesOfRelocation}
                     defaultValue={selectedStatesOfRelocation}
@@ -724,10 +750,26 @@ export default function Submissions() {
                     Program Stages
                   </label>
                   <MultiSelect
+                    key={`buckets-${selectedBuckets.length}`}
                     options={uniqueBuckets}
                     onValueChange={setSelectedBuckets}
                     defaultValue={selectedBuckets}
                     placeholder="Select Program Stages"
+                    maxCount={3}
+                  />
+                </div>
+
+                {/* CCAP Connection Filter */}
+                <div className="min-w-[180px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    CCAP Connection
+                  </label>
+                  <MultiSelect
+                    key={`ccap-connections-${selectedCcapConnections.length}`}
+                    options={uniqueCcapConnections}
+                    onValueChange={setSelectedCcapConnections}
+                    defaultValue={selectedCcapConnections}
+                    placeholder="Select CCAP Connection"
                     maxCount={3}
                   />
                 </div>
@@ -935,6 +977,7 @@ interface Submission extends Record<string, unknown> {
   culinaryYears: string;
   bucket: string;
   onboardingStep: number; // 0 = complete, 1-6 = in progress
+  ccapConnection: string;
   id?: string;
 }
 

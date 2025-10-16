@@ -110,6 +110,7 @@ export default function Portfolio() {
             foodHandlersCard: profile.has_food_handlers_card || "",
             servsafeCredentials: profile.has_servsafe || "",
             culinaryYears: profile.culinary_class_years?.toString() || "0",
+            ccapConnection: profile.ccap_connection || "",
             bio: profile.bio || "",
           };
 
@@ -269,6 +270,11 @@ export default function Portfolio() {
                       <span className="ml-7 text-blue-900 text-sm">
                         <span className="font-semibold text-blue-600">{user.highSchool}</span> <span className="text-gray-500">({user.graduationYear})</span>
                       </span>
+                      {user.ccapConnection && (
+                        <span className="ml-7 text-blue-600 text-sm font-semibold">
+                          CCAP Connection: <span className="text-gray-700 font-normal">{user.ccapConnection}</span>
+                        </span>
+                      )}
                     </div>
                     {/* Work */}
                     <div className="flex flex-col gap-1 mt-2">
@@ -537,5 +543,6 @@ interface Submission extends Record<string, unknown> {
   servsafeCredentials: string;
   culinaryYears: string;
   bio: string;
+  ccapConnection: string;
   id?: string;
 }

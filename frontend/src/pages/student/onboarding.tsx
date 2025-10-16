@@ -15,6 +15,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Check, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS } from "@/lib/constants";
 
 // Constants
 const STATES = [
@@ -92,6 +93,7 @@ export default function StudentOnboarding() {
         graduationYear: "",
         culinaryClassYears: 0,
         transportation: "",
+        ccapConnection: "",
 
         // Step 4: Work Experience
         currentlyEmployed: "",
@@ -164,6 +166,7 @@ export default function StudentOnboarding() {
                         graduationYear: profile.graduation_year || "",
                         culinaryClassYears: profile.culinary_class_years || 0,
                         transportation: profile.transportation || "",
+                        ccapConnection: profile.ccap_connection || "",
                         currentlyEmployed: profile.currently_employed || "",
                         currentEmployer: profile.current_employer || "",
                         currentPosition: profile.current_position || "",
@@ -367,6 +370,7 @@ export default function StudentOnboarding() {
                 graduation_year: formData.graduationYear,
                 culinary_class_years: formData.culinaryClassYears,
                 transportation: formData.transportation,
+                ccap_connection: formData.ccapConnection,
                 currently_employed: formData.currentlyEmployed,
                 current_employer: formData.currentEmployer,
                 current_position: formData.currentPosition,
@@ -758,6 +762,20 @@ function Step3Education({ formData, handleInputChange }: any) {
                         <SelectContent>
                             {TRANSPORTATION_OPTIONS.map((option) => (
                                 <SelectItem key={option} value={option}>{option}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div>
+                    <Label htmlFor="ccapConnection" className="text-base mb-3 block">How are you connected to C-CAP? *</Label>
+                    <Select value={formData.ccapConnection} onValueChange={(value) => handleInputChange('ccapConnection', value)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select your connection" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {CCAP_CONNECTION_DROPDOWN_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
