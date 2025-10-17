@@ -19,15 +19,14 @@ import {
   Users,
   Shield,
   BookOpen,
-  Heart,
   Gift,
   Globe,
   Mail,
   MessageCircle,
-  MessageCircle as MessageIcon,
   MoreHorizontal,
   X,
   Loader2,
+  Utensils,
 } from "lucide-react";
 import Layout from "@/components/layout/StudentLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,19 +46,6 @@ interface Post {
   created_at: string;
   is_liked?: boolean;
   author?: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
-
-interface Comment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  user?: {
     id: string;
     username: string;
     email: string;
@@ -242,6 +228,8 @@ interface Announcement {
   target_bucket?: string | null;
   target_city?: string | null;
   target_state?: string | null;
+  target_program_stages?: string[] | null;
+  target_locations?: string[] | null;
   created_at: string;
   updated_at?: string | null;
 }
@@ -258,7 +246,6 @@ const lucideIconMap: Record<string, React.ReactNode> = {
   users: <Users className="h-5 w-5 text-white" />,
   shield: <Shield className="h-5 w-5 text-white" />,
   book: <BookOpen className="h-5 w-5 text-white" />,
-  heart: <Heart className="h-5 w-5 text-white" />,
   gift: <Gift className="h-5 w-5 text-white" />,
   globe: <Globe className="h-5 w-5 text-white" />,
   mail: <Mail className="h-5 w-5 text-white" />,
@@ -312,11 +299,6 @@ export default function Homepage() {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const POSTS_PER_PAGE = 10;
 
-  // Comments state
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
 
   // Fetch announcements (backend automatically filters for this student)
   useEffect(() => {
@@ -355,22 +337,10 @@ export default function Homepage() {
         params: { limit: POSTS_PER_PAGE, offset }
       });
 
-      // Check which posts are liked by current user
-      const postsWithLikeStatus = await Promise.all(
-        response.data.map(async (post: Post) => {
-          try {
-            const likeStatus = await api.get(`${API_ENDPOINTS.POSTS_CHECK_LIKED}${post.id}/liked`);
-            return { ...post, is_liked: likeStatus.data };
-          } catch {
-            return { ...post, is_liked: false };
-          }
-        })
-      );
-
       if (append) {
-        setPosts(prev => [...prev, ...postsWithLikeStatus]);
+        setPosts(prev => [...prev, ...response.data]);
       } else {
-        setPosts(postsWithLikeStatus);
+        setPosts(response.data);
       }
 
       setHasMorePosts(response.data.length === POSTS_PER_PAGE);
@@ -389,131 +359,13 @@ export default function Homepage() {
     fetchPosts(postsOffset, true);
   };
 
-  // Like/unlike handler
-  const handleLikeToggle = async (postId: string, isLiked: boolean, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening post dialog
-
-    try {
-      if (isLiked) {
-        await api.delete(`${API_ENDPOINTS.POSTS_UNLIKE}${postId}/like`);
-      } else {
-        await api.post(`${API_ENDPOINTS.POSTS_LIKE}${postId}/like`);
-      }
-
-      // Update local state
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            is_liked: !isLiked,
-            likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1
-          };
-        }
-        return post;
-      }));
-
-      // Update selected post if viewing it
-      if (selectedPost && selectedPost.id === postId) {
-        setSelectedPost({
-          ...selectedPost,
-          is_liked: !isLiked,
-          likes_count: isLiked ? selectedPost.likes_count - 1 : selectedPost.likes_count + 1
-        });
-      }
-    } catch (error: any) {
-      console.error('Failed to toggle like:', error);
-      toast.error(error.response?.data?.detail || 'Failed to update like');
-    }
-  };
-
-  // Open post modal and fetch comments
+  // Open post modal
   const handleOpenPost = async (post: Post) => {
     setSelectedPost(post);
     setIsPostDialogOpen(true);
-    setNewComment('');
-
-    // Fetch comments for this post
-    try {
-      setLoadingComments(true);
-      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_COMMENTS}${post.id}/comments`);
-      setComments(response.data);
-    } catch (error) {
-      console.error('Failed to load comments:', error);
-      setComments([]);
-    } finally {
-      setLoadingComments(false);
-    }
   };
 
-  // Add comment handler
-  const handleAddComment = async () => {
-    if (!selectedPost || !newComment.trim()) return;
 
-    try {
-      setSubmittingComment(true);
-      const response = await api.post(
-        `${API_ENDPOINTS.POSTS_ADD_COMMENT}${selectedPost.id}/comments`,
-        { content: newComment }
-      );
-
-      // Add new comment to list
-      setComments([...comments, response.data]);
-      setNewComment('');
-
-      // Update comments count in posts list
-      setPosts(posts.map(post => {
-        if (post.id === selectedPost.id) {
-          return { ...post, comments_count: post.comments_count + 1 };
-        }
-        return post;
-      }));
-
-      // Update selected post
-      setSelectedPost({
-        ...selectedPost,
-        comments_count: selectedPost.comments_count + 1
-      });
-
-      toast.success('Comment added!');
-    } catch (error: any) {
-      console.error('Failed to add comment:', error);
-      toast.error(error.response?.data?.detail || 'Failed to add comment');
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  // Delete comment handler
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Delete this comment?')) return;
-
-    try {
-      await api.delete(`${API_ENDPOINTS.POSTS_DELETE_COMMENT}${commentId}`);
-
-      // Remove comment from list
-      setComments(comments.filter(c => c.id !== commentId));
-
-      // Update comments count
-      if (selectedPost) {
-        setPosts(posts.map(post => {
-          if (post.id === selectedPost.id) {
-            return { ...post, comments_count: Math.max(0, post.comments_count - 1) };
-          }
-          return post;
-        }));
-
-        setSelectedPost({
-          ...selectedPost,
-          comments_count: Math.max(0, selectedPost.comments_count - 1)
-        });
-      }
-
-      toast.success('Comment deleted!');
-    } catch (error: any) {
-      console.error('Failed to delete comment:', error);
-      toast.error(error.response?.data?.detail || 'Failed to delete comment');
-    }
-  };
 
   // Navigate to portfolio (only if it's the current user)
   const handleNavigateToProfile = (userId: string, event?: React.MouseEvent) => {
@@ -551,7 +403,7 @@ export default function Homepage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <MessageIcon className="h-4 w-4 text-white" />
+                    <MessageCircle className="h-4 w-4 text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-black">Community Posts</h2>
                 </div>
@@ -567,14 +419,14 @@ export default function Homepage() {
                 {loadingPosts ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <MessageIcon className="h-8 w-8 text-gray-400" />
+                      <MessageCircle className="h-8 w-8 text-gray-400" />
                     </div>
                     <p className="text-gray-600">Loading posts...</p>
                   </div>
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageIcon className="h-8 w-8 text-gray-400" />
+                      <MessageCircle className="h-8 w-8 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No Posts</h3>
                     <p className="text-gray-600">No posts yet. Create your first post to get started!</p>
@@ -621,23 +473,13 @@ export default function Homepage() {
                         {/* Post Actions */}
                         <div className="flex items-center gap-4 mb-2">
                           <button
-                            onClick={(e) => handleLikeToggle(post.id, post.is_liked || false, e)}
-                            className="flex items-center gap-1 hover:opacity-70 transition-opacity"
-                          >
-                            <Heart
-                              className={`w-5 h-5 ${post.is_liked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
-                            />
-                            <span className="text-sm font-semibold">{post.likes_count}</span>
-                          </button>
-                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenPost(post);
                             }}
                             className="flex items-center gap-1 hover:opacity-70 transition-opacity"
                           >
-                            <MessageCircle className="w-5 h-5 text-gray-600" />
-                            <span className="text-sm font-semibold">{post.comments_count}</span>
+                            <span className="text-sm font-semibold">View Post</span>
                           </button>
                         </div>
 
@@ -746,7 +588,15 @@ export default function Homepage() {
                                 <Badge variant="outline" className="text-xs">
                                   {announcement.target_audience === 'bucket'
                                     ? `📦 ${announcement.target_bucket}`
-                                    : `📍 ${announcement.target_state}`
+                                    : announcement.target_audience === 'location'
+                                      ? `📍 ${announcement.target_state}`
+                                      : announcement.target_audience === 'program_stages'
+                                        ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
+                                        : announcement.target_audience === 'locations'
+                                          ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
+                                          : announcement.target_audience === 'both'
+                                            ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                            : `🎯 ${announcement.target_audience}`
                                   }
                                 </Badge>
                               )}
@@ -782,7 +632,7 @@ export default function Homepage() {
         </div>
       </footer>
 
-      {/* Post Dialog with Comments */}
+      {/* Post Dialog */}
       <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
         <DialogContent
           className="p-0 max-h-[95vh]"
@@ -799,149 +649,42 @@ export default function Homepage() {
                 />
               </div>
 
-              {/* Right Side - Comments */}
+              {/* Right Side - Post Info */}
               <div className="md:w-2/5 flex flex-col bg-white">
                 {/* Post Header */}
                 <div className="p-4 border-b flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold ${user && selectedPost.author?.id && String(user.id) === String(selectedPost.author.id) ? 'cursor-pointer hover:bg-blue-200 transition-colors' : ''
-                      }`}
-                    onClick={() => selectedPost.author?.id && handleNavigateToProfile(selectedPost.author.id)}
-                  >
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
                     {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                   </div>
                   <div className="flex-1">
-                    <span
-                      className={`font-semibold text-gray-900 block ${user && selectedPost.author?.id && String(user.id) === String(selectedPost.author.id) ? 'cursor-pointer hover:underline' : ''
-                        }`}
-                      onClick={() => selectedPost.author?.id && handleNavigateToProfile(selectedPost.author.id)}
-                    >
-                      {selectedPost.author?.username || 'Student'}
-                    </span>
+                    <span className="font-semibold text-gray-900 block">{selectedPost.author?.username || 'Student'}</span>
                     <span className="text-xs text-gray-500">{formatDate(selectedPost.created_at)}</span>
                   </div>
                 </div>
 
-                {/* Caption */}
-                <div className="p-4 border-b">
+                {/* Featured Dish */}
+                {selectedPost.featured_dish && (
+                  <div className="p-4 border-b">
+                    <div className="flex items-center gap-2">
+                      <Utensils className="w-4 h-4 text-orange-500" />
+                      <span className="font-semibold text-gray-900">Featured Dish:</span>
+                    </div>
+                    <Badge variant="outline" className="mt-2 border-orange-200 text-sm bg-orange-50 text-orange-700">
+                      {selectedPost.featured_dish}
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Chapter Reflection */}
+                <div className="p-4 flex-1">
                   <div className="flex gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0 ${user && selectedPost.author?.id && String(user.id) === String(selectedPost.author.id) ? 'cursor-pointer hover:bg-blue-200 transition-colors' : ''
-                        }`}
-                      onClick={() => selectedPost.author?.id && handleNavigateToProfile(selectedPost.author.id)}
-                    >
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
                       {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div className="flex-1">
-                      <span
-                        className={`font-semibold text-gray-900 ${user && selectedPost.author?.id && String(user.id) === String(selectedPost.author.id) ? 'cursor-pointer hover:underline' : ''
-                          }`}
-                        onClick={() => selectedPost.author?.id && handleNavigateToProfile(selectedPost.author.id)}
-                      >
-                        {selectedPost.author?.username || 'Student'}
-                      </span>
-                      <span className="text-gray-900"> {selectedPost.caption}</span>
-                      {selectedPost.featured_dish && (
-                        <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
-                          Featured: {selectedPost.featured_dish}
-                        </Badge>
-                      )}
+                      <span className="font-semibold text-gray-900">{selectedPost.author?.username || 'Student'} </span>
+                      <span className="text-gray-900">{selectedPost.caption}</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Comments List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
-                  {loadingComments ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                    </div>
-                  ) : comments.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm">No comments yet.</p>
-                      <p className="text-xs">Be the first to comment!</p>
-                    </div>
-                  ) : (
-                    comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-3 group">
-                        <div
-                          className={`w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 ${user && comment.user?.id && String(user.id) === String(comment.user.id) ? 'cursor-pointer hover:bg-blue-200 transition-colors' : ''
-                            }`}
-                          onClick={() => comment.user?.id && handleNavigateToProfile(comment.user.id)}
-                        >
-                          {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <span
-                              className={`font-semibold text-gray-900 text-sm ${user && comment.user?.id && String(user.id) === String(comment.user.id) ? 'cursor-pointer hover:underline' : ''
-                                }`}
-                              onClick={() => comment.user?.id && handleNavigateToProfile(comment.user.id)}
-                            >
-                              {comment.user?.username || 'Student'}
-                            </span>
-                            <p className="text-gray-900 text-sm break-words">{comment.content}</p>
-                          </div>
-                          <div className="flex items-center gap-3 mt-1 px-3">
-                            <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
-                            {comment.user_id === String(user?.id) && (
-                              <button
-                                onClick={() => handleDeleteComment(comment.id)}
-                                className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Actions & Comment Input */}
-                <div className="border-t p-4 space-y-3">
-                  {/* Like Button */}
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={(e) => handleLikeToggle(selectedPost.id, selectedPost.is_liked || false, e)}
-                      className="flex items-center gap-2 hover:opacity-70 transition-opacity"
-                    >
-                      <Heart
-                        className={`w-6 h-6 ${selectedPost.is_liked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
-                      />
-                      <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <MessageCircle className="w-6 h-6 text-gray-600" />
-                      <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
-                    </div>
-                  </div>
-
-                  {/* Add Comment */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add a comment..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAddComment();
-                        }
-                      }}
-                      disabled={submittingComment}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleAddComment}
-                      disabled={!newComment.trim() || submittingComment}
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {submittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
-                    </Button>
                   </div>
                 </div>
               </div>

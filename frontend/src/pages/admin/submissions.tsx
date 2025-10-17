@@ -20,7 +20,7 @@ import { useState as useReactState } from 'react';
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
-import { CCAP_CONNECTION_DROPDOWN_OPTIONS } from '@/lib/constants';
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS, PROGRAM_STAGE_DROPDOWN_OPTIONS } from '@/lib/constants';
 
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
@@ -274,14 +274,8 @@ export default function Submissions() {
   }, [data]);
 
   const uniqueBuckets = useMemo(() => {
-    // Hardcoded program stages for consistency
-    return [
-      { value: 'Pre-Apprentice', label: 'Pre-Apprentice' },
-      { value: 'Apprentice', label: 'Apprentice' },
-      { value: 'Completed Pre-Apprentice', label: 'Completed Pre-Apprentice' },
-      { value: 'Completed Apprentice', label: 'Completed Apprentice' },
-      { value: 'Not Active', label: 'Not Active' },
-    ];
+    // Use centralized program stage constants
+    return PROGRAM_STAGE_DROPDOWN_OPTIONS;
   }, []);
 
   const uniqueCcapConnections = useMemo(() => {
@@ -487,7 +481,11 @@ export default function Submissions() {
           </div>
           {item.willRelocate === "Yes" && item.relocationStates.length > 0 && (
             <div className="text-xs text-gray-500">
-              Will relocate to: {item.relocationStates.join(", ")}
+              Will relocate to: {
+                item.relocationStates.length <= 5
+                  ? item.relocationStates.join(", ")
+                  : `${item.relocationStates.slice(0, 5).join(", ")} +${item.relocationStates.length - 5} more`
+              }
             </div>
           )}
         </div>
@@ -547,8 +545,7 @@ export default function Submissions() {
               {item.hoursWanted} hrs/week
             </span>
           </div>
-          <div className="text-xs text-gray-500">
-            {/* <div className="text-xs max-w-[150px] break-words whitespace-pre-line text-gray-500 "> */}
+          <div className="text-xs text-gray-500 max-w-[150px] truncate" title={item.availableTimes}>
             {item.availableTimes}
           </div>
           <div className="text-xs text-gray-500">
@@ -626,11 +623,24 @@ export default function Submissions() {
       minWidth: '150px',
       render: (item) => (
         <div className="space-y-1">
-          {item.interestedOptions.map((option, index) => (
-            <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
-              {option}
-            </Badge>
-          ))}
+          {item.interestedOptions.length <= 3 ? (
+            item.interestedOptions.map((option, index) => (
+              <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
+                {option}
+              </Badge>
+            ))
+          ) : (
+            <>
+              {item.interestedOptions.slice(0, 3).map((option, index) => (
+                <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
+                  {option}
+                </Badge>
+              ))}
+              <Badge variant="outline" className="mr-1 mb-1 text-xs bg-gray-100 text-gray-600">
+                +{item.interestedOptions.length - 3} more
+              </Badge>
+            </>
+          )}
         </div>
       ),
       sortable: true,
@@ -1020,13 +1030,7 @@ function AssignBucketButton({ submission, onUpdate, currentBucket }: { submissio
   const [open, setOpen] = useReactState(false);
   const [selectedBucket, setSelectedBucket] = useReactState<string | null>(currentBucket || null);
   const [isAssigning, setIsAssigning] = useReactState(false);
-  const bucketOptions = [
-    'Pre-Apprentice',
-    'Apprentice',
-    'Completed Pre-Apprentice',
-    'Completed Apprentice',
-    'Not Active',
-  ];
+  const bucketOptions = PROGRAM_STAGE_DROPDOWN_OPTIONS.map(option => option.value);
 
   // Update selected bucket when dialog opens
   const handleOpenChange = (isOpen: boolean) => {
@@ -1064,11 +1068,12 @@ function AssignBucketButton({ submission, onUpdate, currentBucket }: { submissio
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className={`text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${currentBucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-              currentBucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                currentBucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                  currentBucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                    'bg-gray-50 text-gray-700 border-gray-200'
+            className={`text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${currentBucket === 'Pre-Apprentice Explorer' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+              currentBucket === 'Pre-Apprentice Candidate' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                currentBucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                  currentBucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
+                    currentBucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      'bg-gray-50 text-gray-700 border-gray-200'
               }`}
             onClick={() => setOpen(true)}
           >

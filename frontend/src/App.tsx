@@ -21,6 +21,7 @@ import StudentAnnouncements from "@/pages/student/anouncements";
 import StudentPortfolio from "@/pages/student/portfolio";
 import StudentEditPortfolio from "@/pages/student/editPortfolio";
 import StudentOnboarding from "@/pages/student/onboarding";
+import OnboardingComplete from "@/pages/student/onboarding-complete";
 
 // Separate component that uses useAuth - must be inside AuthProvider
 function AppRoutes() {
@@ -83,6 +84,13 @@ function AppRoutes() {
       <Route path="/student/onboarding">
         <ProtectedRoute requiredRole="student" skipOnboardingCheck={true}>
           <StudentOnboarding />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Onboarding completion route - skip onboarding check since this is the completion page */}
+      <Route path="/student/onboarding-complete">
+        <ProtectedRoute requiredRole="student" skipOnboardingCheck={true}>
+          <OnboardingComplete />
         </ProtectedRoute>
       </Route>
 

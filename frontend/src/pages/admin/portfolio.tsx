@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Heart, MessageCircle, Loader2 } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Loader2 } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
+import { PROGRAM_STAGE_OPTIONS } from '@/lib/constants';
 
 interface Post {
   id: string;
@@ -26,18 +27,25 @@ interface Post {
   };
 }
 
-interface Comment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
+// Helper function to get bucket styling
+const getBucketStyling = (bucket: string) => {
+  switch (bucket) {
+    case 'Pre-Apprentice Explorer':
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    case 'Pre-Apprentice Candidate':
+      return 'bg-orange-50 text-orange-700 border-orange-200';
+    case 'Apprentice':
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'Completed Pre-Apprentice':
+      return 'bg-green-50 text-green-700 border-green-200';
+    case 'Completed Apprentice':
+      return 'bg-purple-50 text-purple-700 border-purple-200';
+    case 'Not Active':
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+  }
+};
 
 export default function Portfolio() {
   const [match, params] = useRoute("/admin/portfolio/:id");
@@ -111,6 +119,7 @@ export default function Portfolio() {
             servsafeCredentials: profile.has_servsafe || "",
             culinaryYears: profile.culinary_class_years?.toString() || "0",
             ccapConnection: profile.ccap_connection || "",
+            bucket: profile.current_bucket || "Pre-Apprentice Explorer",
             bio: profile.bio || "",
           };
 
@@ -247,6 +256,15 @@ export default function Portfolio() {
                         </Badge>
                       ))}
                     </div>
+                    {/* Program Status */}
+                    <div className="flex justify-center md:justify-start mb-2">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs font-medium ${getBucketStyling(user.bucket)}`}
+                      >
+                        {user.bucket || 'Pre-Apprentice Explorer'}
+                      </Badge>
+                    </div>
                     {/* Bio Section */}
                     {user.bio && (
                       <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
@@ -347,17 +365,6 @@ export default function Portfolio() {
                         style={{ width: "100%" }}
                       >
                         <img src={post.image_url} alt="Post" className="object-cover w-full h-full hover:scale-105 transition-transform duration-200 cursor-pointer" />
-                        {/* Overlay with like and comment count on hover */}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                          <div className="flex items-center gap-2 text-white">
-                            <Heart className="w-5 h-5 fill-white" />
-                            <span className="font-semibold">{post.likes_count}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-white">
-                            <MessageCircle className="w-5 h-5 fill-white" />
-                            <span className="font-semibold">{post.comments_count}</span>
-                          </div>
-                        </div>
                       </button>
                     ))}
                   </div>
@@ -405,91 +412,29 @@ export default function Portfolio() {
                     </div>
                   </div>
 
-                  {/* Caption */}
-                  <div className="p-4 border-b">
+                  {/* Featured Dish */}
+                  {selectedPost.featured_dish && (
+                    <div className="p-4 border-b">
+                      <div className="flex items-center gap-2">
+                        <Utensils className="w-4 h-4 text-orange-500" />
+                        <span className="font-semibold text-gray-900">Featured Dish:</span>
+                      </div>
+                      <Badge variant="outline" className="mt-2 border-orange-200 text-sm bg-orange-50 text-orange-700">
+                        {selectedPost.featured_dish}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Chapter Reflection */}
+                  <div className="p-4 flex-1">
                     <div className="flex gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
-                        onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
-                      >
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
                         {selectedPost.author?.username?.substring(0, 2).toUpperCase() || user?.firstName?.charAt(0) || 'ST'}
                       </div>
                       <div className="flex-1">
-                        <span
-                          className="font-semibold text-gray-900 cursor-pointer hover:underline"
-                          onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
-                        >
-                          {selectedPost.author?.username || `${user?.firstName} ${user?.lastName}` || 'Student'}
-                        </span>
-                        <span className="text-gray-900"> {selectedPost.caption}</span>
-                        {selectedPost.featured_dish && (
-                          <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
-                            Featured: {selectedPost.featured_dish}
-                          </Badge>
-                        )}
+                        <span className="font-semibold text-gray-900">{selectedPost.author?.username || `${user?.firstName} ${user?.lastName}` || 'Student'} </span>
+                        <span className="text-gray-900">{selectedPost.caption}</span>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Comments List */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
-                    {loadingComments ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                      </div>
-                    ) : comments.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                        <p className="text-sm">No comments yet.</p>
-                        <p className="text-xs">Students can comment on posts</p>
-                      </div>
-                    ) : (
-                      comments.map((comment) => (
-                        <div key={comment.id} className="flex gap-3">
-                          <div
-                            className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
-                            onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
-                          >
-                            {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <span
-                                className="font-semibold text-gray-900 text-sm cursor-pointer hover:underline"
-                                onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
-                              >
-                                {comment.user?.username || 'Student'}
-                              </span>
-                              <p className="text-gray-900 text-sm break-words">{comment.content}</p>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 px-3">
-                              <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Actions & Admin Notice */}
-                  <div className="border-t p-4 space-y-3">
-                    {/* Like Button */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Heart className="w-6 h-6 text-gray-600" />
-                        <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-6 h-6 text-gray-600" />
-                        <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
-                      </div>
-                    </div>
-
-                    {/* Admin Notice */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm text-blue-700">
-                        <strong>Admin View:</strong> You can view comments but cannot comment as an admin.
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -544,5 +489,6 @@ interface Submission extends Record<string, unknown> {
   culinaryYears: string;
   bio: string;
   ccapConnection: string;
+  bucket: string;
   id?: string;
 }

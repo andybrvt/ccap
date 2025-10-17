@@ -15,7 +15,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Check, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { CCAP_CONNECTION_DROPDOWN_OPTIONS } from "@/lib/constants";
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS, CULINARY_INTEREST_OPTIONS } from "@/lib/constants";
 
 // Constants
 const STATES = [
@@ -45,20 +45,6 @@ const AVAILABILITY_OPTIONS = [
     "Flexible"
 ];
 
-const INTEREST_OPTIONS = [
-    "Line Cook",
-    "Prep Cook",
-    "Pastry Chef",
-    "Sous Chef",
-    "Kitchen Manager",
-    "Catering",
-    "Food Service",
-    "Restaurant Management",
-    "Culinary Instructor",
-    "Food Truck Operations",
-    "Private Chef",
-    "Other"
-];
 
 export default function StudentOnboarding() {
     const { user, refreshUser } = useAuth();
@@ -130,6 +116,9 @@ export default function StudentOnboarding() {
     const [isUploadingResume, setIsUploadingResume] = useState(false);
     const [isUploadingCredential, setIsUploadingCredential] = useState(false);
     const [isUploadingServSafe, setIsUploadingServSafe] = useState(false);
+
+    // Validation state
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
     // Fetch profile and onboarding step on mount
     useEffect(() => {
@@ -204,6 +193,235 @@ export default function StudentOnboarding() {
 
     const handleInputChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        // Clear validation error when user starts typing
+        if (validationErrors[field]) {
+            setValidationErrors(prev => ({ ...prev, [field]: '' }));
+        }
+    };
+
+    // Phone number formatting function
+    const formatPhoneNumber = (value: string) => {
+        // Remove all non-numeric characters
+        const phoneNumber = value.replace(/\D/g, '');
+
+        // Don't format if empty
+        if (!phoneNumber) return '';
+
+        // Format based on length
+        if (phoneNumber.length <= 3) {
+            return `(${phoneNumber}`;
+        } else if (phoneNumber.length <= 6) {
+            return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+        } else {
+            return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+        }
+    };
+
+    const handlePhoneChange = (value: string) => {
+        const formatted = formatPhoneNumber(value);
+        handleInputChange('phone', formatted);
+    };
+
+    // Validation functions for each step
+    const validateStep1 = () => {
+        const errors: Record<string, string> = {};
+
+        if (!formData.firstName.trim()) {
+            errors.firstName = 'First name is required';
+        }
+        if (!formData.lastName.trim()) {
+            errors.lastName = 'Last name is required';
+        }
+        if (!formData.dateOfBirth) {
+            errors.dateOfBirth = 'Date of birth is required';
+        }
+        if (!formData.phone.trim()) {
+            errors.phone = 'Phone number is required';
+        } else {
+            // Extract digits from formatted phone number
+            const phoneDigits = formData.phone.replace(/\D/g, '');
+            if (phoneDigits.length !== 10) {
+                errors.phone = 'Please enter a complete 10-digit phone number';
+            }
+        }
+
+        return errors;
+    };
+
+    const validateStep2 = () => {
+        const errors: Record<string, string> = {};
+
+        if (!formData.address.trim()) {
+            errors.address = 'Street address is required';
+        }
+        if (!formData.city.trim()) {
+            errors.city = 'City is required';
+        }
+        if (!formData.state) {
+            errors.state = 'State is required';
+        }
+        if (!formData.zipCode.trim()) {
+            errors.zipCode = 'Zip code is required';
+        }
+        if (!formData.willingToRelocate) {
+            errors.willingToRelocate = 'Please specify if you are willing to relocate';
+        }
+        // If they're willing to relocate, they must select at least one state
+        if (formData.willingToRelocate === "Yes" && formData.relocationStates.length === 0) {
+            errors.relocationStates = 'Please select at least one state you would consider relocating to';
+        }
+
+        return errors;
+    };
+
+    const validateStep3 = () => {
+        const errors: Record<string, string> = {};
+
+        if (!formData.highSchool.trim()) {
+            errors.highSchool = 'Name of high school/culinary school is required';
+        }
+        if (!formData.graduationYear) {
+            errors.graduationYear = 'Graduation year is required';
+        }
+        if (formData.culinaryClassYears === 0) {
+            errors.culinaryClassYears = 'Years in culinary program is required';
+        }
+        if (!formData.transportation) {
+            errors.transportation = 'Transportation method is required';
+        }
+        if (!formData.ccapConnection) {
+            errors.ccapConnection = 'CCAP connection is required';
+        }
+
+        return errors;
+    };
+
+    const validateStep4 = () => {
+        const errors: Record<string, string> = {};
+
+        if (!formData.currentlyEmployed) {
+            errors.currentlyEmployed = 'Please specify if you are currently employed';
+        }
+        if (!formData.previousEmployment) {
+            errors.previousEmployment = 'Please specify if you have had previous employment';
+        }
+
+        // If currently employed, validate employment details
+        if (formData.currentlyEmployed === "Yes") {
+            if (!formData.currentEmployer.trim()) {
+                errors.currentEmployer = 'Current employer is required';
+            }
+            if (!formData.currentPosition.trim()) {
+                errors.currentPosition = 'Current position is required';
+            }
+            if (formData.currentHoursPerWeek === 0) {
+                errors.currentHoursPerWeek = 'Current hours per week is required';
+            }
+        }
+
+        // If previously employed, validate previous employment details
+        if (formData.previousEmployment === "Yes") {
+            if (!formData.previousEmployer.trim()) {
+                errors.previousEmployer = 'Previous employer is required';
+            }
+            if (!formData.previousPosition.trim()) {
+                errors.previousPosition = 'Previous position is required';
+            }
+            if (formData.previousHoursPerWeek === 0) {
+                errors.previousHoursPerWeek = 'Previous hours per week is required';
+            }
+        }
+
+        return errors;
+    };
+
+    const validateStep5 = () => {
+        const errors: Record<string, string> = {};
+
+        if (formData.hoursPerWeek === 0) {
+            errors.hoursPerWeek = 'Desired hours per week is required';
+        }
+        if (formData.availability.length === 0) {
+            errors.availability = 'Please select at least one availability time';
+        }
+        if (!formData.weekendAvailability) {
+            errors.weekendAvailability = 'Please specify weekend availability';
+        }
+        if (!formData.readyToWork) {
+            errors.readyToWork = 'Please specify if you are ready to work immediately';
+        }
+
+        return errors;
+    };
+
+    const validateStep6 = () => {
+        const errors: Record<string, string> = {};
+
+        if (formData.interests.length === 0) {
+            errors.interests = 'Please select at least one culinary interest';
+        }
+        if (!formData.hasResume) {
+            errors.hasResume = 'Please specify if you have a resume';
+        }
+        if (!formData.hasFoodHandlersCard) {
+            errors.hasFoodHandlersCard = 'Please specify if you have a Food Handlers Card';
+        }
+        if (!formData.hasServSafe) {
+            errors.hasServSafe = 'Please specify if you have ServSafe certification';
+        }
+
+        // If they say they have a resume, validate that they've uploaded it
+        if (formData.hasResume === "Yes") {
+            if (!formData.existingResumeUrl && !formData.resumeUpload) {
+                errors.resumeUpload = 'Please upload your resume';
+            }
+        }
+
+        // If they say they have a Food Handlers Card, validate that they've uploaded it
+        if (formData.hasFoodHandlersCard === "Yes") {
+            if (!formData.existingFoodHandlersUrl && !formData.foodHandlersCardUpload) {
+                errors.foodHandlersCardUpload = 'Please upload your Food Handlers Card';
+            }
+        }
+
+        // If they say they have ServSafe certification, validate that they've uploaded it
+        if (formData.hasServSafe === "Yes") {
+            if (!formData.existingServSafeUrl && !formData.servSafeUpload) {
+                errors.servSafeUpload = 'Please upload your ServSafe certificate';
+            }
+        }
+
+        return errors;
+    };
+
+    const validateCurrentStep = () => {
+        let errors: Record<string, string> = {};
+
+        switch (currentStep) {
+            case 1:
+                errors = validateStep1();
+                break;
+            case 2:
+                errors = validateStep2();
+                break;
+            case 3:
+                errors = validateStep3();
+                break;
+            case 4:
+                errors = validateStep4();
+                break;
+            case 5:
+                errors = validateStep5();
+                break;
+            case 6:
+                errors = validateStep6();
+                break;
+            default:
+                break;
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     // File upload handlers (same as editPortfolio)
@@ -349,6 +567,12 @@ export default function StudentOnboarding() {
 
     // Save progress and move to next/previous step
     const saveAndContinue = async (nextStep: number) => {
+        // Validate current step before proceeding
+        if (!validateCurrentStep()) {
+            toast.error('Please fill in all required fields before continuing');
+            return;
+        }
+
         setIsSaving(true);
         try {
             // Prepare payload
@@ -399,7 +623,7 @@ export default function StudentOnboarding() {
                 toast.success('Onboarding complete! Welcome to C-CAP!');
                 // Small delay to ensure state updates
                 setTimeout(() => {
-                    setLocation('/student');
+                    setLocation('/student/onboarding-complete');
                 }, 100);
             } else {
                 setCurrentStep(nextStep);
@@ -454,12 +678,12 @@ export default function StudentOnboarding() {
 
                 {/* Step Content */}
                 <Card className="mb-6">
-                    {currentStep === 1 && <Step1Personal formData={formData} handleInputChange={handleInputChange} handleProfilePictureUpload={handleProfilePictureUpload} isUploadingProfilePic={isUploadingProfilePic} />}
-                    {currentStep === 2 && <Step2Address formData={formData} handleInputChange={handleInputChange} />}
-                    {currentStep === 3 && <Step3Education formData={formData} handleInputChange={handleInputChange} />}
-                    {currentStep === 4 && <Step4Experience formData={formData} handleInputChange={handleInputChange} />}
-                    {currentStep === 5 && <Step5Availability formData={formData} handleInputChange={handleInputChange} />}
-                    {currentStep === 6 && <Step6InterestsDocuments formData={formData} handleInputChange={handleInputChange} handleResumeUpload={handleResumeUpload} handleCredentialUpload={handleCredentialUpload} handleServSafeUpload={handleServSafeUpload} isUploadingResume={isUploadingResume} isUploadingCredential={isUploadingCredential} isUploadingServSafe={isUploadingServSafe} />}
+                    {currentStep === 1 && <Step1Personal formData={formData} handleInputChange={handleInputChange} handlePhoneChange={handlePhoneChange} handleProfilePictureUpload={handleProfilePictureUpload} isUploadingProfilePic={isUploadingProfilePic} validationErrors={validationErrors} />}
+                    {currentStep === 2 && <Step2Address formData={formData} handleInputChange={handleInputChange} validationErrors={validationErrors} />}
+                    {currentStep === 3 && <Step3Education formData={formData} handleInputChange={handleInputChange} validationErrors={validationErrors} />}
+                    {currentStep === 4 && <Step4Experience formData={formData} handleInputChange={handleInputChange} validationErrors={validationErrors} />}
+                    {currentStep === 5 && <Step5Availability formData={formData} handleInputChange={handleInputChange} validationErrors={validationErrors} />}
+                    {currentStep === 6 && <Step6InterestsDocuments formData={formData} handleInputChange={handleInputChange} handleResumeUpload={handleResumeUpload} handleCredentialUpload={handleCredentialUpload} handleServSafeUpload={handleServSafeUpload} isUploadingResume={isUploadingResume} isUploadingCredential={isUploadingCredential} isUploadingServSafe={isUploadingServSafe} validationErrors={validationErrors} />}
                 </Card>
 
                 {/* Navigation Buttons */}
@@ -497,7 +721,7 @@ export default function StudentOnboarding() {
 }
 
 // Step Components
-function Step1Personal({ formData, handleInputChange, handleProfilePictureUpload, isUploadingProfilePic }: any) {
+function Step1Personal({ formData, handleInputChange, handlePhoneChange, handleProfilePictureUpload, isUploadingProfilePic, validationErrors }: any) {
     return (
         <>
             <CardHeader>
@@ -555,7 +779,11 @@ function Step1Personal({ formData, handleInputChange, handleProfilePictureUpload
                             value={formData.firstName}
                             onChange={(e) => handleInputChange('firstName', e.target.value)}
                             required
+                            className={validationErrors.firstName ? 'border-red-500' : ''}
                         />
+                        {validationErrors.firstName && (
+                            <p className="text-red-500 text-sm mt-1">{validationErrors.firstName}</p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="lastName" className="text-base mb-3 block">Last Name *</Label>
@@ -564,7 +792,11 @@ function Step1Personal({ formData, handleInputChange, handleProfilePictureUpload
                             value={formData.lastName}
                             onChange={(e) => handleInputChange('lastName', e.target.value)}
                             required
+                            className={validationErrors.lastName ? 'border-red-500' : ''}
                         />
+                        {validationErrors.lastName && (
+                            <p className="text-red-500 text-sm mt-1">{validationErrors.lastName}</p>
+                        )}
                     </div>
                 </div>
 
@@ -585,7 +817,11 @@ function Step1Personal({ formData, handleInputChange, handleProfilePictureUpload
                         value={formData.dateOfBirth}
                         onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                         required
+                        className={validationErrors.dateOfBirth ? 'border-red-500' : ''}
                     />
+                    {validationErrors.dateOfBirth && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.dateOfBirth}</p>
+                    )}
                 </div>
 
                 <div>
@@ -594,10 +830,14 @@ function Step1Personal({ formData, handleInputChange, handleProfilePictureUpload
                         id="phone"
                         type="tel"
                         value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
                         placeholder="(123) 456-7890"
                         required
+                        className={validationErrors.phone ? 'border-red-500' : ''}
                     />
+                    {validationErrors.phone && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.phone}</p>
+                    )}
                 </div>
 
                 <div>
@@ -615,7 +855,7 @@ function Step1Personal({ formData, handleInputChange, handleProfilePictureUpload
     );
 }
 
-function Step2Address({ formData, handleInputChange }: any) {
+function Step2Address({ formData, handleInputChange, validationErrors }: any) {
     return (
         <>
             <CardHeader>
@@ -629,7 +869,11 @@ function Step2Address({ formData, handleInputChange }: any) {
                         value={formData.address}
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         required
+                        className={validationErrors.address ? 'border-red-500' : ''}
                     />
+                    {validationErrors.address && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
+                    )}
                 </div>
 
                 <div>
@@ -650,12 +894,16 @@ function Step2Address({ formData, handleInputChange }: any) {
                             value={formData.city}
                             onChange={(e) => handleInputChange('city', e.target.value)}
                             required
+                            className={validationErrors.city ? 'border-red-500' : ''}
                         />
+                        {validationErrors.city && (
+                            <p className="text-red-500 text-sm mt-1">{validationErrors.city}</p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="state" className="text-base mb-3 block">State *</Label>
                         <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                            <SelectTrigger>
+                            <SelectTrigger className={validationErrors.state ? 'border-red-500' : ''}>
                                 <SelectValue placeholder="Select State" />
                             </SelectTrigger>
                             <SelectContent>
@@ -664,6 +912,9 @@ function Step2Address({ formData, handleInputChange }: any) {
                                 ))}
                             </SelectContent>
                         </Select>
+                        {validationErrors.state && (
+                            <p className="text-red-500 text-sm mt-1">{validationErrors.state}</p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="zipCode" className="text-base mb-3 block">Zip Code *</Label>
@@ -672,7 +923,11 @@ function Step2Address({ formData, handleInputChange }: any) {
                             value={formData.zipCode}
                             onChange={(e) => handleInputChange('zipCode', e.target.value)}
                             required
+                            className={validationErrors.zipCode ? 'border-red-500' : ''}
                         />
+                        {validationErrors.zipCode && (
+                            <p className="text-red-500 text-sm mt-1">{validationErrors.zipCode}</p>
+                        )}
                     </div>
                 </div>
 
@@ -688,6 +943,9 @@ function Step2Address({ formData, handleInputChange }: any) {
                             <Label htmlFor="relocate-no">No</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.willingToRelocate && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.willingToRelocate}</p>
+                    )}
                 </div>
 
                 {formData.willingToRelocate === "Yes" && (
@@ -699,6 +957,9 @@ function Step2Address({ formData, handleInputChange }: any) {
                             defaultValue={formData.relocationStates}
                             placeholder="Select states..."
                         />
+                        {validationErrors.relocationStates && (
+                            <p className="text-red-500 text-sm mt-1">{validationErrors.relocationStates}</p>
+                        )}
                     </div>
                 )}
             </CardContent>
@@ -706,7 +967,7 @@ function Step2Address({ formData, handleInputChange }: any) {
     );
 }
 
-function Step3Education({ formData, handleInputChange }: any) {
+function Step3Education({ formData, handleInputChange, validationErrors }: any) {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 10 }, (_, i) => (currentYear + i).toString());
 
@@ -717,19 +978,23 @@ function Step3Education({ formData, handleInputChange }: any) {
             </CardHeader>
             <CardContent className="space-y-8">
                 <div>
-                    <Label htmlFor="highSchool" className="text-base mb-3 block">High School / Culinary School *</Label>
+                    <Label htmlFor="highSchool" className="text-base mb-3 block">Name of High School/Culinary School *</Label>
                     <Input
                         id="highSchool"
                         value={formData.highSchool}
                         onChange={(e) => handleInputChange('highSchool', e.target.value)}
                         required
+                        className={validationErrors.highSchool ? 'border-red-500' : ''}
                     />
+                    {validationErrors.highSchool && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.highSchool}</p>
+                    )}
                 </div>
 
                 <div>
                     <Label htmlFor="graduationYear" className="text-base mb-3 block">Expected Graduation Year *</Label>
                     <Select value={formData.graduationYear} onValueChange={(value) => handleInputChange('graduationYear', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className={validationErrors.graduationYear ? 'border-red-500' : ''}>
                             <SelectValue placeholder="Select Year" />
                         </SelectTrigger>
                         <SelectContent>
@@ -738,6 +1003,9 @@ function Step3Education({ formData, handleInputChange }: any) {
                             ))}
                         </SelectContent>
                     </Select>
+                    {validationErrors.graduationYear && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.graduationYear}</p>
+                    )}
                 </div>
 
                 <div>
@@ -750,13 +1018,17 @@ function Step3Education({ formData, handleInputChange }: any) {
                         value={formData.culinaryClassYears}
                         onChange={(e) => handleInputChange('culinaryClassYears', parseInt(e.target.value) || 0)}
                         required
+                        className={validationErrors.culinaryClassYears ? 'border-red-500' : ''}
                     />
+                    {validationErrors.culinaryClassYears && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.culinaryClassYears}</p>
+                    )}
                 </div>
 
                 <div>
                     <Label htmlFor="transportation" className="text-base mb-3 block">Transportation *</Label>
                     <Select value={formData.transportation} onValueChange={(value) => handleInputChange('transportation', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className={validationErrors.transportation ? 'border-red-500' : ''}>
                             <SelectValue placeholder="Select Transportation" />
                         </SelectTrigger>
                         <SelectContent>
@@ -765,12 +1037,15 @@ function Step3Education({ formData, handleInputChange }: any) {
                             ))}
                         </SelectContent>
                     </Select>
+                    {validationErrors.transportation && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.transportation}</p>
+                    )}
                 </div>
 
                 <div>
                     <Label htmlFor="ccapConnection" className="text-base mb-3 block">How are you connected to C-CAP? *</Label>
                     <Select value={formData.ccapConnection} onValueChange={(value) => handleInputChange('ccapConnection', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className={validationErrors.ccapConnection ? 'border-red-500' : ''}>
                             <SelectValue placeholder="Select your connection" />
                         </SelectTrigger>
                         <SelectContent>
@@ -779,13 +1054,16 @@ function Step3Education({ formData, handleInputChange }: any) {
                             ))}
                         </SelectContent>
                     </Select>
+                    {validationErrors.ccapConnection && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.ccapConnection}</p>
+                    )}
                 </div>
             </CardContent>
         </>
     );
 }
 
-function Step4Experience({ formData, handleInputChange }: any) {
+function Step4Experience({ formData, handleInputChange, validationErrors }: any) {
     return (
         <>
             <CardHeader>
@@ -794,7 +1072,7 @@ function Step4Experience({ formData, handleInputChange }: any) {
             <CardContent className="space-y-8">
                 {/* Current Employment */}
                 <div>
-                    <Label className="text-base mb-3 block">Are you currently employed? *</Label>
+                    <Label className="text-base mb-3 block">Are you currently employed full-time or part-time? *</Label>
                     <RadioGroup value={formData.currentlyEmployed} onValueChange={(value) => handleInputChange('currentlyEmployed', value)}>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Yes" id="employed-yes" />
@@ -805,28 +1083,39 @@ function Step4Experience({ formData, handleInputChange }: any) {
                             <Label htmlFor="employed-no">No</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.currentlyEmployed && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.currentlyEmployed}</p>
+                    )}
                 </div>
 
                 {formData.currentlyEmployed === "Yes" && (
                     <>
                         <div>
-                            <Label htmlFor="currentEmployer" className="text-base mb-3 block">Current Employer</Label>
+                            <Label htmlFor="currentEmployer" className="text-base mb-3 block">Current Employer *</Label>
                             <Input
                                 id="currentEmployer"
                                 value={formData.currentEmployer}
                                 onChange={(e) => handleInputChange('currentEmployer', e.target.value)}
+                                className={validationErrors.currentEmployer ? 'border-red-500' : ''}
                             />
+                            {validationErrors.currentEmployer && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.currentEmployer}</p>
+                            )}
                         </div>
                         <div>
-                            <Label htmlFor="currentPosition" className="text-base mb-3 block">Current Position</Label>
+                            <Label htmlFor="currentPosition" className="text-base mb-3 block">Current Position *</Label>
                             <Input
                                 id="currentPosition"
                                 value={formData.currentPosition}
                                 onChange={(e) => handleInputChange('currentPosition', e.target.value)}
+                                className={validationErrors.currentPosition ? 'border-red-500' : ''}
                             />
+                            {validationErrors.currentPosition && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.currentPosition}</p>
+                            )}
                         </div>
                         <div>
-                            <Label htmlFor="currentHoursPerWeek" className="text-base mb-3 block">Hours Per Week</Label>
+                            <Label htmlFor="currentHoursPerWeek" className="text-base mb-3 block">Hours Per Week *</Label>
                             <Input
                                 id="currentHoursPerWeek"
                                 type="number"
@@ -834,14 +1123,18 @@ function Step4Experience({ formData, handleInputChange }: any) {
                                 max="80"
                                 value={formData.currentHoursPerWeek}
                                 onChange={(e) => handleInputChange('currentHoursPerWeek', parseInt(e.target.value) || 0)}
+                                className={validationErrors.currentHoursPerWeek ? 'border-red-500' : ''}
                             />
+                            {validationErrors.currentHoursPerWeek && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.currentHoursPerWeek}</p>
+                            )}
                         </div>
                     </>
                 )}
 
                 {/* Previous Employment */}
                 <div className="pt-4 border-t">
-                    <Label className="text-base mb-3 block">Have you had previous employment? *</Label>
+                    <Label className="text-base mb-3 block">Have you had previous employment full-time or part-time? *</Label>
                     <RadioGroup value={formData.previousEmployment} onValueChange={(value) => handleInputChange('previousEmployment', value)}>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Yes" id="prev-employed-yes" />
@@ -852,28 +1145,39 @@ function Step4Experience({ formData, handleInputChange }: any) {
                             <Label htmlFor="prev-employed-no">No</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.previousEmployment && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.previousEmployment}</p>
+                    )}
                 </div>
 
                 {formData.previousEmployment === "Yes" && (
                     <>
                         <div>
-                            <Label htmlFor="previousEmployer" className="text-base mb-3 block">Previous Employer</Label>
+                            <Label htmlFor="previousEmployer" className="text-base mb-3 block">Previous Employer *</Label>
                             <Input
                                 id="previousEmployer"
                                 value={formData.previousEmployer}
                                 onChange={(e) => handleInputChange('previousEmployer', e.target.value)}
+                                className={validationErrors.previousEmployer ? 'border-red-500' : ''}
                             />
+                            {validationErrors.previousEmployer && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.previousEmployer}</p>
+                            )}
                         </div>
                         <div>
-                            <Label htmlFor="previousPosition" className="text-base mb-3 block">Previous Position</Label>
+                            <Label htmlFor="previousPosition" className="text-base mb-3 block">Previous Position *</Label>
                             <Input
                                 id="previousPosition"
                                 value={formData.previousPosition}
                                 onChange={(e) => handleInputChange('previousPosition', e.target.value)}
+                                className={validationErrors.previousPosition ? 'border-red-500' : ''}
                             />
+                            {validationErrors.previousPosition && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.previousPosition}</p>
+                            )}
                         </div>
                         <div>
-                            <Label htmlFor="previousHoursPerWeek" className="text-base mb-3 block">Hours Per Week</Label>
+                            <Label htmlFor="previousHoursPerWeek" className="text-base mb-3 block">Hours Per Week *</Label>
                             <Input
                                 id="previousHoursPerWeek"
                                 type="number"
@@ -881,7 +1185,11 @@ function Step4Experience({ formData, handleInputChange }: any) {
                                 max="80"
                                 value={formData.previousHoursPerWeek}
                                 onChange={(e) => handleInputChange('previousHoursPerWeek', parseInt(e.target.value) || 0)}
+                                className={validationErrors.previousHoursPerWeek ? 'border-red-500' : ''}
                             />
+                            {validationErrors.previousHoursPerWeek && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.previousHoursPerWeek}</p>
+                            )}
                         </div>
                     </>
                 )}
@@ -890,7 +1198,7 @@ function Step4Experience({ formData, handleInputChange }: any) {
     );
 }
 
-function Step5Availability({ formData, handleInputChange }: any) {
+function Step5Availability({ formData, handleInputChange, validationErrors }: any) {
     return (
         <>
             <CardHeader>
@@ -907,7 +1215,11 @@ function Step5Availability({ formData, handleInputChange }: any) {
                         value={formData.hoursPerWeek}
                         onChange={(e) => handleInputChange('hoursPerWeek', parseInt(e.target.value) || 0)}
                         required
+                        className={validationErrors.hoursPerWeek ? 'border-red-500' : ''}
                     />
+                    {validationErrors.hoursPerWeek && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.hoursPerWeek}</p>
+                    )}
                 </div>
 
                 <div>
@@ -930,6 +1242,9 @@ function Step5Availability({ formData, handleInputChange }: any) {
                             </div>
                         ))}
                     </div>
+                    {validationErrors.availability && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.availability}</p>
+                    )}
                 </div>
 
                 <div>
@@ -944,6 +1259,9 @@ function Step5Availability({ formData, handleInputChange }: any) {
                             <Label htmlFor="weekend-no">No</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.weekendAvailability && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.weekendAvailability}</p>
+                    )}
                 </div>
 
                 <div>
@@ -958,6 +1276,9 @@ function Step5Availability({ formData, handleInputChange }: any) {
                             <Label htmlFor="ready-no">No</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.readyToWork && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.readyToWork}</p>
+                    )}
                 </div>
 
                 {formData.readyToWork === "No" && (
@@ -976,7 +1297,7 @@ function Step5Availability({ formData, handleInputChange }: any) {
     );
 }
 
-function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUpload, handleCredentialUpload, handleServSafeUpload, isUploadingResume, isUploadingCredential, isUploadingServSafe }: any) {
+function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUpload, handleCredentialUpload, handleServSafeUpload, isUploadingResume, isUploadingCredential, isUploadingServSafe, validationErrors }: any) {
     return (
         <>
             <CardHeader>
@@ -986,8 +1307,8 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                 {/* Interests */}
                 <div>
                     <Label className="text-base mb-3 block">Culinary Interests * (Select all that apply)</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {INTEREST_OPTIONS.map((interest) => (
+                    <div className="grid grid-cols-1 gap-2">
+                        {CULINARY_INTEREST_OPTIONS.map((interest) => (
                             <div key={interest} className="flex items-center space-x-2">
                                 <Checkbox
                                     id={`interest-${interest}`}
@@ -1004,6 +1325,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                             </div>
                         ))}
                     </div>
+                    {validationErrors.interests && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.interests}</p>
+                    )}
                 </div>
 
                 {/* Resume */}
@@ -1019,6 +1343,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                             <Label htmlFor="resume-no">No</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.hasResume && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.hasResume}</p>
+                    )}
 
                     {formData.hasResume === "Yes" && (
                         <div className="mt-4">
@@ -1043,6 +1370,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                                 className="hidden"
                                 onChange={(e) => handleResumeUpload(e.target.files?.[0] || null)}
                             />
+                            {validationErrors.resumeUpload && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.resumeUpload}</p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -1064,6 +1394,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                             <Label htmlFor="food-progress">In Progress</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.hasFoodHandlersCard && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.hasFoodHandlersCard}</p>
+                    )}
 
                     {formData.hasFoodHandlersCard === "Yes" && (
                         <div className="mt-4">
@@ -1088,6 +1421,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                                 className="hidden"
                                 onChange={(e) => handleCredentialUpload(e.target.files?.[0] || null)}
                             />
+                            {validationErrors.foodHandlersCardUpload && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.foodHandlersCardUpload}</p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -1113,6 +1449,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                             <Label htmlFor="serv-progress">In Progress</Label>
                         </div>
                     </RadioGroup>
+                    {validationErrors.hasServSafe && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.hasServSafe}</p>
+                    )}
 
                     {formData.hasServSafe === "Yes" && (
                         <div className="mt-4">
@@ -1137,6 +1476,9 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                                 className="hidden"
                                 onChange={(e) => handleServSafeUpload(e.target.files?.[0] || null)}
                             />
+                            {validationErrors.servSafeUpload && (
+                                <p className="text-red-500 text-sm mt-1">{validationErrors.servSafeUpload}</p>
+                            )}
                         </div>
                     )}
                 </div>

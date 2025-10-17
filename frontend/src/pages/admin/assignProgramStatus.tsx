@@ -17,6 +17,7 @@ import { useLocation } from "wouter";
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
+import { PROGRAM_STAGE_DROPDOWN_OPTIONS } from '@/lib/constants';
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
 function useDynamicItemsPerPage() {
@@ -274,13 +275,8 @@ export default function BulkBucketAssignPage() {
   }, [data]);
 
   const uniqueBuckets = useMemo(() => {
-    return [
-      { value: 'Pre-Apprentice', label: 'Pre-Apprentice' },
-      { value: 'Apprentice', label: 'Apprentice' },
-      { value: 'Completed Pre-Apprentice', label: 'Completed Pre-Apprentice' },
-      { value: 'Completed Apprentice', label: 'Completed Apprentice' },
-      { value: 'Not Active', label: 'Not Active' },
-    ];
+    // Use centralized program stage constants
+    return PROGRAM_STAGE_DROPDOWN_OPTIONS;
   }, []);
 
   // Filter data based on search and filters

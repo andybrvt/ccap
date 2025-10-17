@@ -3,9 +3,10 @@ import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
+import { PROGRAM_STAGE_OPTIONS, CHAPTER_DISH_DROPDOWN_OPTIONS } from '@/lib/constants';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload, Heart, Loader2, Trash2, MessageCircle } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload, Loader2, Trash2 } from "lucide-react";
 import Layout from "@/components/layout/StudentLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,21 +33,48 @@ interface Post {
   };
 }
 
-interface Comment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
+// Helper function to get bucket styling
+const getBucketStyling = (bucket: string) => {
+  switch (bucket) {
+    case 'Pre-Apprentice Explorer':
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    case 'Pre-Apprentice Candidate':
+      return 'bg-orange-50 text-orange-700 border-orange-200';
+    case 'Apprentice':
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'Completed Pre-Apprentice':
+      return 'bg-green-50 text-green-700 border-green-200';
+    case 'Completed Apprentice':
+      return 'bg-purple-50 text-purple-700 border-purple-200';
+    case 'Not Active':
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+  }
+};
+
+// Helper function to get bucket dot color
+const getBucketDotColor = (bucket: string) => {
+  switch (bucket) {
+    case 'Pre-Apprentice Explorer':
+      return 'bg-yellow-400';
+    case 'Pre-Apprentice Candidate':
+      return 'bg-orange-400';
+    case 'Apprentice':
+      return 'bg-blue-400';
+    case 'Completed Pre-Apprentice':
+      return 'bg-green-400';
+    case 'Completed Apprentice':
+      return 'bg-purple-400';
+    case 'Not Active':
+      return 'bg-gray-400';
+    default:
+      return 'bg-gray-400';
+  }
+};
 
 export default function Portfolio() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +82,6 @@ export default function Portfolio() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [featuredDishes, setFeaturedDishes] = useState<string[]>([]);
 
   // Modal state for post popup
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -67,11 +94,6 @@ export default function Portfolio() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Comments state
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
 
   // Fetch student profile data
   useEffect(() => {
@@ -104,19 +126,7 @@ export default function Portfolio() {
         setLoadingPosts(true);
         const response = await api.get(`${API_ENDPOINTS.POSTS_GET_BY_USER}${user.id}`);
 
-        // Check which posts are liked by current user
-        const postsWithLikeStatus = await Promise.all(
-          response.data.map(async (post: Post) => {
-            try {
-              const likeStatus = await api.get(`${API_ENDPOINTS.POSTS_CHECK_LIKED}${post.id}/liked`);
-              return { ...post, is_liked: likeStatus.data };
-            } catch {
-              return { ...post, is_liked: false };
-            }
-          })
-        );
-
-        setPosts(postsWithLikeStatus);
+        setPosts(response.data);
       } catch (error) {
         console.error('Failed to load posts:', error);
       } finally {
@@ -127,20 +137,6 @@ export default function Portfolio() {
     fetchPosts();
   }, [user]);
 
-  // Fetch featured dishes
-  useEffect(() => {
-    const fetchDishes = async () => {
-      try {
-        const response = await api.get(API_ENDPOINTS.POSTS_GET_DISHES);
-        setFeaturedDishes(response.data);
-      } catch (error) {
-        console.error('Failed to load dishes:', error);
-      }
-    };
-
-    fetchDishes();
-  }, []);
-
   // Refresh posts
   const refreshPosts = async () => {
     if (!user) return;
@@ -148,18 +144,7 @@ export default function Portfolio() {
     try {
       const response = await api.get(`${API_ENDPOINTS.POSTS_GET_BY_USER}${user.id}`);
 
-      const postsWithLikeStatus = await Promise.all(
-        response.data.map(async (post: Post) => {
-          try {
-            const likeStatus = await api.get(`${API_ENDPOINTS.POSTS_CHECK_LIKED}${post.id}/liked`);
-            return { ...post, is_liked: likeStatus.data };
-          } catch {
-            return { ...post, is_liked: false };
-          }
-        })
-      );
-
-      setPosts(postsWithLikeStatus);
+      setPosts(response.data);
     } catch (error) {
       console.error('Failed to refresh posts:', error);
     }
@@ -200,41 +185,6 @@ export default function Portfolio() {
     }
   };
 
-  // Like/unlike handler
-  const handleLikeToggle = async (postId: string, isLiked: boolean) => {
-    try {
-      if (isLiked) {
-        await api.delete(`${API_ENDPOINTS.POSTS_UNLIKE}${postId}/like`);
-      } else {
-        await api.post(`${API_ENDPOINTS.POSTS_LIKE}${postId}/like`);
-      }
-
-      // Update local state
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            is_liked: !isLiked,
-            likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1
-          };
-        }
-        return post;
-      }));
-
-      // Update selected post if viewing it
-      if (selectedPost && selectedPost.id === postId) {
-        setSelectedPost({
-          ...selectedPost,
-          is_liked: !isLiked,
-          likes_count: isLiked ? selectedPost.likes_count - 1 : selectedPost.likes_count + 1
-        });
-      }
-    } catch (error: any) {
-      console.error('Failed to toggle like:', error);
-      toast.error(error.response?.data?.detail || 'Failed to update like');
-    }
-  };
-
   // Delete post handler
   const handleDeletePost = async (postId: string) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
@@ -256,92 +206,9 @@ export default function Portfolio() {
     }
   };
 
-  // Open post modal and fetch comments
+  // Open post modal
   const handleOpenPost = async (post: Post) => {
     setSelectedPost(post);
-    setNewComment('');
-
-    // Fetch comments for this post
-    try {
-      setLoadingComments(true);
-      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_COMMENTS}${post.id}/comments`);
-      setComments(response.data);
-    } catch (error) {
-      console.error('Failed to load comments:', error);
-      setComments([]);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
-
-  // Add comment handler
-  const handleAddComment = async () => {
-    if (!selectedPost || !newComment.trim()) return;
-
-    try {
-      setSubmittingComment(true);
-      const response = await api.post(
-        `${API_ENDPOINTS.POSTS_ADD_COMMENT}${selectedPost.id}/comments`,
-        { content: newComment }
-      );
-
-      // Add new comment to list
-      setComments([...comments, response.data]);
-      setNewComment('');
-
-      // Update comments count in posts list
-      setPosts(posts.map(post => {
-        if (post.id === selectedPost.id) {
-          return { ...post, comments_count: post.comments_count + 1 };
-        }
-        return post;
-      }));
-
-      // Update selected post
-      setSelectedPost({
-        ...selectedPost,
-        comments_count: selectedPost.comments_count + 1
-      });
-
-      toast.success('Comment added!');
-    } catch (error: any) {
-      console.error('Failed to add comment:', error);
-      toast.error(error.response?.data?.detail || 'Failed to add comment');
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  // Delete comment handler
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Delete this comment?')) return;
-
-    try {
-      await api.delete(`${API_ENDPOINTS.POSTS_DELETE_COMMENT}${commentId}`);
-
-      // Remove comment from list
-      setComments(comments.filter(c => c.id !== commentId));
-
-      // Update comments count
-      if (selectedPost) {
-        setPosts(posts.map(post => {
-          if (post.id === selectedPost.id) {
-            return { ...post, comments_count: Math.max(0, post.comments_count - 1) };
-          }
-          return post;
-        }));
-
-        setSelectedPost({
-          ...selectedPost,
-          comments_count: Math.max(0, selectedPost.comments_count - 1)
-        });
-      }
-
-      toast.success('Comment deleted!');
-    } catch (error: any) {
-      console.error('Failed to delete comment:', error);
-      toast.error(error.response?.data?.detail || 'Failed to delete comment');
-    }
   };
 
   // Navigate to portfolio (only if it's the current user)
@@ -493,14 +360,9 @@ export default function Portfolio() {
                 <div className="flex justify-center md:justify-start mb-2">
                   <Badge
                     variant="outline"
-                    className={`text-xs font-medium ${studentProfile.current_bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                      studentProfile.current_bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                        studentProfile.current_bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                          studentProfile.current_bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                            'bg-gray-50 text-gray-700 border-gray-200'
-                      }`}
+                    className={`text-xs font-medium ${getBucketStyling(studentProfile.current_bucket)}`}
                   >
-                    {studentProfile.current_bucket || 'Pre-Apprentice'}
+                    {studentProfile.current_bucket || 'Pre-Apprentice Explorer'}
                   </Badge>
                 </div>
                 {/* Bio Section */}
@@ -625,156 +487,6 @@ export default function Portfolio() {
           </CardContent>
         </Card>
 
-        {/* Bucket-based Content Section */}
-        <Card className="mb-8 shadow-lg border-blue-100">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-3 h-3 rounded-full ${studentProfile.current_bucket === 'Pre-Apprentice' ? 'bg-yellow-400' :
-                studentProfile.current_bucket === 'Apprentice' ? 'bg-blue-400' :
-                  studentProfile.current_bucket === 'Completed Pre-Apprentice' ? 'bg-green-400' :
-                    studentProfile.current_bucket === 'Completed Apprentice' ? 'bg-purple-400' :
-                      'bg-gray-400'
-                }`}></div>
-              <h2 className="text-xl font-semibold text-blue-700">Your Program Status</h2>
-            </div>
-
-            {studentProfile.current_bucket === 'Pre-Apprentice' && (
-              <div className="space-y-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-yellow-800 mb-2">Welcome to C-CAP Pre-Apprentice Program!</h3>
-                  <p className="text-yellow-700 text-sm mb-3">
-                    You're just starting your culinary journey. Here's what you need to know:
-                  </p>
-                  <ul className="text-yellow-700 text-sm space-y-1">
-                    <li>• Complete your basic culinary foundation courses</li>
-                    <li>• Attend mandatory safety and food handling workshops</li>
-                    <li>• Build your portfolio with 5+ culinary projects</li>
-                    <li>• Network with industry professionals</li>
-                  </ul>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-yellow-200 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 mb-2">Next Steps</h4>
-                    <p className="text-sm text-gray-600">Complete your food handler certification and attend your first workshop by the end of this month.</p>
-                  </div>
-                  <div className="bg-white border border-yellow-200 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 mb-2">Resources</h4>
-                    <p className="text-sm text-gray-600">Access your pre-apprentice handbook and safety guidelines in your student portal.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {studentProfile.current_bucket === 'Apprentice' && (
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-blue-800 mb-2">C-CAP Apprentice Program</h3>
-                  <p className="text-blue-700 text-sm mb-3">
-                    You're actively building your culinary skills. Here's your current focus:
-                  </p>
-                  <ul className="text-blue-700 text-sm space-y-1">
-                    <li>• Advanced cooking techniques and recipe development</li>
-                    <li>• Kitchen management and leadership skills</li>
-                    <li>• Industry externships and real-world experience</li>
-                    <li>• Professional networking and mentorship</li>
-                  </ul>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-2">Current Projects</h4>
-                    <p className="text-sm text-gray-600">Working on advanced plating techniques and menu development for your final portfolio.</p>
-                  </div>
-                  <div className="bg-white border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-2">Mentorship</h4>
-                    <p className="text-sm text-gray-600">You've been paired with Chef Sarah Johnson for weekly mentoring sessions.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {studentProfile.current_bucket === 'Completed Pre-Apprentice' && (
-              <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-green-800 mb-2">Congratulations! Pre-Apprentice Complete</h3>
-                  <p className="text-green-700 text-sm mb-3">
-                    You've successfully completed the foundational phase. Here's what you've achieved:
-                  </p>
-                  <ul className="text-green-700 text-sm space-y-1">
-                    <li>✓ Completed all safety and food handling certifications</li>
-                    <li>✓ Built a strong foundation portfolio with 8+ projects</li>
-                    <li>✓ Established industry connections and references</li>
-                    <li>✓ Ready to advance to the Apprentice program</li>
-                  </ul>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-green-200 rounded-lg p-4">
-                    <h4 className="font-medium text-green-800 mb-2">Achievements</h4>
-                    <p className="text-sm text-gray-600">Earned your ServSafe certification and completed 12 culinary projects.</p>
-                  </div>
-                  <div className="bg-white border border-green-200 rounded-lg p-4">
-                    <h4 className="font-medium text-green-800 mb-2">Next Phase</h4>
-                    <p className="text-sm text-gray-600">You're eligible to apply for the Apprentice program starting next semester.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {studentProfile.current_bucket === 'Completed Apprentice' && (
-              <div className="space-y-4">
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-purple-800 mb-2">C-CAP Graduate - Apprentice Complete</h3>
-                  <p className="text-purple-700 text-sm mb-3">
-                    You've successfully completed the full C-CAP program! Here's your status:
-                  </p>
-                  <ul className="text-purple-700 text-sm space-y-1">
-                    <li>✓ Completed advanced culinary training and externships</li>
-                    <li>✓ Built a professional portfolio with 15+ projects</li>
-                    <li>✓ Established strong industry connections and references</li>
-                    <li>✓ Ready for professional culinary opportunities</li>
-                  </ul>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-purple-200 rounded-lg p-4">
-                    <h4 className="font-medium text-purple-800 mb-2">Career Ready</h4>
-                    <p className="text-sm text-gray-600">You have access to exclusive job placement services and industry networking events.</p>
-                  </div>
-                  <div className="bg-white border border-purple-200 rounded-lg p-4">
-                    <h4 className="font-medium text-purple-800 mb-2">Alumni Benefits</h4>
-                    <p className="text-sm text-gray-600">Access to ongoing professional development and mentorship opportunities.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {studentProfile.current_bucket === 'Not Active' && (
-              <div className="space-y-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-800 mb-2">Account Status: Not Active</h3>
-                  <p className="text-gray-700 text-sm mb-3">
-                    Your C-CAP account is currently inactive. Here's what you need to know:
-                  </p>
-                  <ul className="text-gray-700 text-sm space-y-1">
-                    <li>• Your account has been temporarily suspended</li>
-                    <li>• Contact your program coordinator for reactivation</li>
-                    <li>• Complete any outstanding requirements</li>
-                    <li>• Update your contact information if needed</li>
-                  </ul>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-800 mb-2">Contact Support</h4>
-                    <p className="text-sm text-gray-600">Reach out to your program coordinator to discuss reactivation options.</p>
-                  </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-800 mb-2">Requirements</h4>
-                    <p className="text-sm text-gray-600">Review any outstanding requirements that need to be completed for reactivation.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Instagram-style Posts Grid */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-blue-700">Posts</h2>
@@ -812,22 +524,11 @@ export default function Portfolio() {
                 style={{ width: "100%" }}
               >
                 <img src={post.image_url} alt="Post" className="object-cover w-full h-full hover:scale-105 transition-transform duration-200 cursor-pointer" />
-                {/* Overlay with like and comment count on hover */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                  <div className="flex items-center gap-2 text-white">
-                    <Heart className="w-5 h-5 fill-white" />
-                    <span className="font-semibold">{post.likes_count}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-white">
-                    <MessageCircle className="w-5 h-5 fill-white" />
-                    <span className="font-semibold">{post.comments_count}</span>
-                  </div>
-                </div>
               </button>
             ))}
           </div>
         )}
-        {/* Post Modal with Comments */}
+        {/* Post Modal */}
         {selectedPost && (
           <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
             <DialogContent
@@ -844,7 +545,7 @@ export default function Portfolio() {
                   />
                 </div>
 
-                {/* Right Side - Comments */}
+                {/* Right Side - Post Info */}
                 <div className="md:w-2/5 flex flex-col bg-white">
                   {/* Post Header with Delete Button */}
                   <div className="p-4 border-b flex items-center gap-3">
@@ -865,8 +566,21 @@ export default function Portfolio() {
                     </Button>
                   </div>
 
-                  {/* Caption */}
-                  <div className="p-4 border-b">
+                  {/* Featured Dish */}
+                  {selectedPost.featured_dish && (
+                    <div className="p-4 border-b">
+                      <div className="flex items-center gap-2">
+                        <Utensils className="w-4 h-4 text-orange-500" />
+                        <span className="font-semibold text-gray-900">Featured Dish:</span>
+                      </div>
+                      <Badge variant="outline" className="mt-2 border-orange-200 text-sm bg-orange-50 text-orange-700">
+                        {selectedPost.featured_dish}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Chapter Reflection */}
+                  <div className="p-4 flex-1">
                     <div className="flex gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
                         {user?.username?.substring(0, 2).toUpperCase() || 'ST'}
@@ -874,110 +588,7 @@ export default function Portfolio() {
                       <div className="flex-1">
                         <span className="font-semibold text-gray-900">{user?.username || 'Student'} </span>
                         <span className="text-gray-900">{selectedPost.caption}</span>
-                        {selectedPost.featured_dish && (
-                          <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
-                            Featured: {selectedPost.featured_dish}
-                          </Badge>
-                        )}
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Comments List */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
-                    {loadingComments ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                      </div>
-                    ) : comments.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                        <p className="text-sm">No comments yet.</p>
-                        <p className="text-xs">Be the first to comment!</p>
-                      </div>
-                    ) : (
-                      comments.map((comment) => (
-                        <div key={comment.id} className="flex gap-3 group">
-                          <div
-                            className={`w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 ${user && comment.user?.id && String(user.id) === String(comment.user.id) ? 'cursor-pointer hover:bg-blue-200 transition-colors' : ''
-                              }`}
-                            onClick={() => comment.user?.id && handleNavigateToProfile(comment.user.id)}
-                          >
-                            {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <span
-                                className={`font-semibold text-gray-900 text-sm ${user && comment.user?.id && String(user.id) === String(comment.user.id) ? 'cursor-pointer hover:underline' : ''
-                                  }`}
-                                onClick={() => comment.user?.id && handleNavigateToProfile(comment.user.id)}
-                              >
-                                {comment.user?.username || 'Student'}
-                              </span>
-                              <p className="text-gray-900 text-sm break-words">{comment.content}</p>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 px-3">
-                              <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
-                              {comment.user_id === String(user?.id) && (
-                                <button
-                                  onClick={() => handleDeleteComment(comment.id)}
-                                  className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  Delete
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Actions & Comment Input */}
-                  <div className="border-t p-4 space-y-3">
-                    {/* Like Button */}
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLikeToggle(selectedPost.id, selectedPost.is_liked || false);
-                        }}
-                        className="flex items-center gap-2 hover:opacity-70 transition-opacity"
-                      >
-                        <Heart
-                          className={`w-6 h-6 ${selectedPost.is_liked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
-                        />
-                        <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-6 h-6 text-gray-600" />
-                        <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
-                      </div>
-                    </div>
-
-                    {/* Add Comment */}
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleAddComment();
-                          }
-                        }}
-                        disabled={submittingComment}
-                        className="flex-1"
-                      />
-                      <Button
-                        onClick={handleAddComment}
-                        disabled={!newComment.trim() || submittingComment}
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        {submittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1036,20 +647,6 @@ export default function Portfolio() {
                 </div>
               </div>
 
-              {/* Caption Input */}
-              <div className="space-y-2">
-                <Label htmlFor="caption" className="text-sm font-medium">
-                  Caption
-                </Label>
-                <Textarea
-                  id="caption"
-                  placeholder="Write a caption for your post..."
-                  value={newPostCaption}
-                  onChange={(e) => setNewPostCaption(e.target.value)}
-                  className="min-h-[100px] resize-none"
-                />
-              </div>
-
               {/* Dish Selection */}
               <div className="space-y-2">
                 <Label htmlFor="dish-select" className="text-sm font-medium">
@@ -1057,18 +654,28 @@ export default function Portfolio() {
                 </Label>
                 <Select value={newPostDish} onValueChange={setNewPostDish}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a dish featured in this post" />
+                    <SelectValue placeholder="Select a chapter dish featured in this post" />
                   </SelectTrigger>
                   <SelectContent>
-                    {featuredDishes.length > 0 ? (
-                      featuredDishes.map(dish => (
-                        <SelectItem key={dish} value={dish}>{dish}</SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>Loading dishes...</SelectItem>
-                    )}
+                    {CHAPTER_DISH_DROPDOWN_OPTIONS.map(dish => (
+                      <SelectItem key={dish.value} value={dish.value}>{dish.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Chapter Reflection Input */}
+              <div className="space-y-2">
+                <Label htmlFor="caption" className="text-sm font-medium">
+                  Chapter Reflection
+                </Label>
+                <Textarea
+                  id="caption"
+                  placeholder="Write your reflection on this chapter..."
+                  value={newPostCaption}
+                  onChange={(e) => setNewPostCaption(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                />
               </div>
 
               {/* Action Buttons */}

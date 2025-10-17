@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowLeft, Save, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { CCAP_CONNECTION_DROPDOWN_OPTIONS } from "@/lib/constants";
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS, CULINARY_INTEREST_OPTIONS } from "@/lib/constants";
 
 // Form data interface based on the schema
 interface PortfolioFormData {
@@ -102,21 +102,6 @@ const AVAILABILITY_OPTIONS = [
   "Flexible"
 ];
 
-// Interest options
-const INTEREST_OPTIONS = [
-  "Line Cook",
-  "Prep Cook",
-  "Pastry Chef",
-  "Sous Chef",
-  "Kitchen Manager",
-  "Catering",
-  "Food Service",
-  "Restaurant Management",
-  "Culinary Instructor",
-  "Food Truck Operations",
-  "Private Chef",
-  "Other"
-];
 
 // Example data (same as in portfolio.tsx)
 const exampleData = [
@@ -1062,7 +1047,7 @@ export default function EditPortfolio() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="culinarySchool">High School/College where Culinary Classes were taken *</Label>
+                  <Label htmlFor="culinarySchool">Name of High School/Culinary School *</Label>
                   <Input
                     id="culinarySchool"
                     value={formData.culinarySchool}
@@ -1200,7 +1185,7 @@ export default function EditPortfolio() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Label>Do you currently have a job? *</Label>
+                <Label>Are you currently employed full-time or part-time? *</Label>
                 <RadioGroup value={formData.currentlyEmployed} onValueChange={(value) => handleInputChange('currentlyEmployed', value)}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Yes" id="current-yes" />
@@ -1256,7 +1241,7 @@ export default function EditPortfolio() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Label>Have you had a job in the past? *</Label>
+                <Label>Have you had previous employment full-time or part-time? *</Label>
                 <RadioGroup value={formData.previousEmployment} onValueChange={(value) => handleInputChange('previousEmployment', value)}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="Yes" id="previous-yes" />
@@ -1638,8 +1623,8 @@ export default function EditPortfolio() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>Select the option(s) that you are interested in</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {INTEREST_OPTIONS.map((option) => (
+                <div className="grid grid-cols-1 gap-2">
+                  {CULINARY_INTEREST_OPTIONS.map((option) => (
                     <div key={option} className="flex items-center space-x-2">
                       <Checkbox
                         id={`interest-${option}`}

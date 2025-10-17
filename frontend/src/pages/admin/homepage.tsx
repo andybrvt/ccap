@@ -17,12 +17,12 @@ import {
   Users,
   Shield,
   BookOpen,
-  Heart,
   Gift,
   Globe,
   Mail,
-  MessageCircle,
   Loader2,
+  Utensils,
+  MessageCircle,
 } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,19 +49,6 @@ interface Post {
   };
 }
 
-interface Comment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
-
 // Types
 interface Announcement {
   id: string;
@@ -74,6 +61,8 @@ interface Announcement {
   target_bucket?: string | null;
   target_city?: string | null;
   target_state?: string | null;
+  target_program_stages?: string[] | null;
+  target_locations?: string[] | null;
   created_at: string;
   updated_at?: string | null;
 }
@@ -254,7 +243,6 @@ const lucideIconMap: Record<string, React.ReactNode> = {
   users: <Users className="h-5 w-5 text-white" />,
   shield: <Shield className="h-5 w-5 text-white" />,
   book: <BookOpen className="h-5 w-5 text-white" />,
-  heart: <Heart className="h-5 w-5 text-white" />,
   gift: <Gift className="h-5 w-5 text-white" />,
   globe: <Globe className="h-5 w-5 text-white" />,
   mail: <Mail className="h-5 w-5 text-white" />,
@@ -307,9 +295,6 @@ export default function Homepage() {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [postsOffset, setPostsOffset] = useState(0);
 
-  // Comments state
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
 
   // Fetch announcements
   useEffect(() => {
@@ -371,22 +356,10 @@ export default function Homepage() {
     }
   };
 
-  // Open post modal and fetch comments
+  // Open post modal
   const handleOpenPost = async (post: Post) => {
     setSelectedPost(post);
     setIsPostDialogOpen(true);
-
-    // Fetch comments for this post
-    try {
-      setLoadingComments(true);
-      const response = await api.get(`${API_ENDPOINTS.POSTS_GET_COMMENTS}${post.id}/comments`);
-      setComments(response.data);
-    } catch (error) {
-      console.error('Failed to load comments:', error);
-      setComments([]);
-    } finally {
-      setLoadingComments(false);
-    }
   };
 
   // Navigate to student portfolio
@@ -542,14 +515,16 @@ export default function Homepage() {
 
                         {/* Post Actions */}
                         <div className="flex items-center gap-4 mb-2">
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-5 h-5 text-gray-600" />
-                            <span className="text-sm font-semibold">{post.likes_count}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenPost(post);
+                            }}
+                            className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                          >
                             <MessageCircle className="w-5 h-5 text-gray-600" />
-                            <span className="text-sm font-semibold">{post.comments_count}</span>
-                          </div>
+                            <span className="text-sm font-semibold">View Post</span>
+                          </button>
                         </div>
 
                         {/* Post Caption */}
@@ -657,7 +632,15 @@ export default function Homepage() {
                                 <Badge variant="outline" className="text-xs">
                                   {announcement.target_audience === 'bucket'
                                     ? `📦 ${announcement.target_bucket}`
-                                    : `📍 ${announcement.target_state}`
+                                    : announcement.target_audience === 'location'
+                                      ? `📍 ${announcement.target_state}`
+                                      : announcement.target_audience === 'program_stages'
+                                        ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
+                                        : announcement.target_audience === 'locations'
+                                          ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
+                                          : announcement.target_audience === 'both'
+                                            ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                            : `🎯 ${announcement.target_audience}`
                                   }
                                 </Badge>
                               )}
@@ -673,7 +656,7 @@ export default function Homepage() {
           </div>
         </div>
       </section>
-      {/* Post Dialog with Comments */}
+      {/* Post Dialog */}
       <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
         <DialogContent
           className="p-0 max-h-[95vh]"
@@ -690,112 +673,42 @@ export default function Homepage() {
                 />
               </div>
 
-              {/* Right Side - Comments */}
+              {/* Right Side - Post Info */}
               <div className="md:w-2/5 flex flex-col bg-white">
                 {/* Post Header */}
                 <div className="p-4 border-b flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
-                    onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
-                  >
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
                     {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                   </div>
                   <div className="flex-1">
-                    <span
-                      className="font-semibold text-gray-900 block cursor-pointer hover:underline"
-                      onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
-                    >
-                      {selectedPost.author?.username || 'Student'}
-                    </span>
+                    <span className="font-semibold text-gray-900 block">{selectedPost.author?.username || 'Student'}</span>
                     <span className="text-xs text-gray-500">{formatDate(selectedPost.created_at)}</span>
                   </div>
                 </div>
 
-                {/* Caption */}
-                <div className="p-4 border-b">
+                {/* Featured Dish */}
+                {selectedPost.featured_dish && (
+                  <div className="p-4 border-b">
+                    <div className="flex items-center gap-2">
+                      <Utensils className="w-4 h-4 text-orange-500" />
+                      <span className="font-semibold text-gray-900">Featured Dish:</span>
+                    </div>
+                    <Badge variant="outline" className="mt-2 border-orange-200 text-sm bg-orange-50 text-orange-700">
+                      {selectedPost.featured_dish}
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Chapter Reflection */}
+                <div className="p-4 flex-1">
                   <div className="flex gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
-                      onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
-                    >
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
                       {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div className="flex-1">
-                      <span
-                        className="font-semibold text-gray-900 cursor-pointer hover:underline"
-                        onClick={() => selectedPost.author?.id && handleNavigateToPortfolio(selectedPost.author.id)}
-                      >
-                        {selectedPost.author?.username || 'Student'}
-                      </span>
-                      <span className="text-gray-900"> {selectedPost.caption}</span>
-                      {selectedPost.featured_dish && (
-                        <Badge variant="outline" className="mt-2 border-orange-50 border text-xs bg-orange-200 text-orange-700">
-                          Featured: {selectedPost.featured_dish}
-                        </Badge>
-                      )}
+                      <span className="font-semibold text-gray-900">{selectedPost.author?.username || 'Student'} </span>
+                      <span className="text-gray-900">{selectedPost.caption}</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Comments List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(95vh - 280px)' }}>
-                  {loadingComments ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                    </div>
-                  ) : comments.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm">No comments yet.</p>
-                      <p className="text-xs">Students can comment on posts</p>
-                    </div>
-                  ) : (
-                    comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
-                          onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
-                        >
-                          {comment.user?.username?.substring(0, 2).toUpperCase() || 'ST'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <span
-                              className="font-semibold text-gray-900 text-sm cursor-pointer hover:underline"
-                              onClick={() => comment.user?.id && handleNavigateToPortfolio(comment.user.id)}
-                            >
-                              {comment.user?.username || 'Student'}
-                            </span>
-                            <p className="text-gray-900 text-sm break-words">{comment.content}</p>
-                          </div>
-                          <div className="flex items-center gap-3 mt-1 px-3">
-                            <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Actions & Admin Notice */}
-                <div className="border-t p-4 space-y-3">
-                  {/* Like Button */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Heart className="w-6 h-6 text-gray-600" />
-                      <span className="text-sm font-semibold">{selectedPost.likes_count} likes</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MessageCircle className="w-6 h-6 text-gray-600" />
-                      <span className="text-sm font-semibold">{selectedPost.comments_count} comments</span>
-                    </div>
-                  </div>
-
-                  {/* Admin Notice */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-700">
-                      <strong>Admin View:</strong> You can view comments but cannot comment as an admin.
-                    </p>
                   </div>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import Layout from "@/components/layout/AdminLayout";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
+import { PROGRAM_STAGE_OPTIONS } from '@/lib/constants';
 import {
   Megaphone,
   Search,
@@ -49,6 +51,8 @@ interface Announcement {
   target_bucket?: string | null;
   target_city?: string | null;
   target_state?: string | null;
+  target_program_stages?: string[] | null;
+  target_locations?: string[] | null;
   created_at: string;
   updated_at?: string | null;
   created_by?: string | null;
@@ -109,13 +113,7 @@ const US_STATES = [
   "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
 ];
 
-const BUCKETS = [
-  "Pre-Apprentice",
-  "Apprentice",
-  "Completed Pre-Apprentice",
-  "Completed Apprentice",
-  "Not Active"
-];
+const BUCKETS = PROGRAM_STAGE_OPTIONS;
 
 function renderAnnouncementIcon(icon: string): React.ReactNode {
   if (icon in lucideIconMap) {
@@ -171,6 +169,8 @@ export default function Announcements() {
     target_bucket: '',
     target_city: '',
     target_state: '',
+    target_program_stages: [] as string[],
+    target_locations: [] as string[],
   });
 
   // Fetch announcements
@@ -224,6 +224,8 @@ export default function Announcements() {
       target_bucket: '',
       target_city: '',
       target_state: '',
+      target_program_stages: [],
+      target_locations: [],
     });
   };
 
@@ -240,14 +242,9 @@ export default function Announcements() {
         category: announcementForm.category,
         icon: announcementForm.icon,
         target_audience: announcementForm.target_audience,
+        target_program_stages: announcementForm.target_program_stages,
+        target_locations: announcementForm.target_locations,
       };
-
-      // Add conditional fields
-      if (announcementForm.target_audience === 'bucket') {
-        payload.target_bucket = announcementForm.target_bucket;
-      } else if (announcementForm.target_audience === 'location') {
-        payload.target_state = announcementForm.target_state;
-      }
 
       await api.post(API_ENDPOINTS.ANNOUNCEMENTS_CREATE, payload);
       toast.success('Announcement created successfully!');
@@ -277,6 +274,8 @@ export default function Announcements() {
       target_bucket: announcement.target_bucket || '',
       target_city: announcement.target_city || '',
       target_state: announcement.target_state || '',
+      target_program_stages: announcement.target_program_stages || [],
+      target_locations: announcement.target_locations || [],
     });
     setIsEditDialogOpen(true);
   };
@@ -295,19 +294,9 @@ export default function Announcements() {
         category: announcementForm.category,
         icon: announcementForm.icon,
         target_audience: announcementForm.target_audience,
+        target_program_stages: announcementForm.target_program_stages,
+        target_locations: announcementForm.target_locations,
       };
-
-      // Add conditional fields
-      if (announcementForm.target_audience === 'bucket') {
-        payload.target_bucket = announcementForm.target_bucket;
-        payload.target_state = null;
-      } else if (announcementForm.target_audience === 'location') {
-        payload.target_state = announcementForm.target_state;
-        payload.target_bucket = null;
-      } else {
-        payload.target_bucket = null;
-        payload.target_state = null;
-      }
 
       await api.put(`${API_ENDPOINTS.ANNOUNCEMENTS_UPDATE}${selectedAnnouncement.id}`, payload);
       toast.success('Announcement updated successfully!');
@@ -348,7 +337,7 @@ export default function Announcements() {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | string[]) => {
     setAnnouncementForm(prev => ({
       ...prev,
       [field]: value
@@ -357,8 +346,9 @@ export default function Announcements() {
 
   const isFormValid = announcementForm.title.trim() && announcementForm.content.trim() &&
     (announcementForm.target_audience === 'all' ||
-      (announcementForm.target_audience === 'bucket' && announcementForm.target_bucket) ||
-      (announcementForm.target_audience === 'location' && announcementForm.target_state));
+      (announcementForm.target_audience === 'program_stages' && announcementForm.target_program_stages.length > 0) ||
+      (announcementForm.target_audience === 'locations' && announcementForm.target_locations.length > 0) ||
+      (announcementForm.target_audience === 'both' && (announcementForm.target_program_stages.length > 0 || announcementForm.target_locations.length > 0)));
 
   // Render announcement form fields
   const renderAnnouncementForm = () => (
@@ -446,42 +436,65 @@ export default function Announcements() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Students (Global)</SelectItem>
-            <SelectItem value="bucket">Specific Program Stage</SelectItem>
-            <SelectItem value="location">Specific Location</SelectItem>
+            <SelectItem value="program_stages">Multiple Program Stages</SelectItem>
+            <SelectItem value="locations">Multiple Locations</SelectItem>
+            <SelectItem value="both">Both Program Stages & Locations</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Conditional fields based on target audience */}
-      {announcementForm.target_audience === 'bucket' && (
+      {announcementForm.target_audience === 'program_stages' && (
         <div className="grid gap-2">
-          <Label htmlFor="target_bucket">Program Stage *</Label>
-          <Select value={announcementForm.target_bucket} onValueChange={(value) => handleInputChange('target_bucket', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select program stage" />
-            </SelectTrigger>
-            <SelectContent>
-              {BUCKETS.map(bucket => (
-                <SelectItem key={bucket} value={bucket}>{bucket}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="target_program_stages">Program Stages *</Label>
+          <MultiSelect
+            options={BUCKETS.map(bucket => ({ value: bucket, label: bucket }))}
+            onValueChange={(values) => handleInputChange('target_program_stages', values)}
+            defaultValue={announcementForm.target_program_stages}
+            placeholder="Select program stages"
+            maxCount={3}
+          />
         </div>
       )}
 
-      {announcementForm.target_audience === 'location' && (
+      {announcementForm.target_audience === 'locations' && (
         <div className="grid gap-2">
-          <Label htmlFor="target_state">State *</Label>
-          <Select value={announcementForm.target_state} onValueChange={(value) => handleInputChange('target_state', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select state" />
-            </SelectTrigger>
-            <SelectContent>
-              {US_STATES.map(state => (
-                <SelectItem key={state} value={state}>{state}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="target_locations">States *</Label>
+          <MultiSelect
+            options={US_STATES.map(state => ({ value: state, label: state }))}
+            onValueChange={(values) => handleInputChange('target_locations', values)}
+            defaultValue={announcementForm.target_locations}
+            placeholder="Select states"
+            maxCount={5}
+          />
+        </div>
+      )}
+
+      {announcementForm.target_audience === 'both' && (
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="target_program_stages">Program Stages</Label>
+            <MultiSelect
+              options={BUCKETS.map(bucket => ({ value: bucket, label: bucket }))}
+              onValueChange={(values) => handleInputChange('target_program_stages', values)}
+              defaultValue={announcementForm.target_program_stages}
+              placeholder="Select program stages (optional)"
+              maxCount={3}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="target_locations">States</Label>
+            <MultiSelect
+              options={US_STATES.map(state => ({ value: state, label: state }))}
+              onValueChange={(values) => handleInputChange('target_locations', values)}
+              defaultValue={announcementForm.target_locations}
+              placeholder="Select states (optional)"
+              maxCount={5}
+            />
+          </div>
+          <p className="text-sm text-gray-600">
+            Students will see this announcement if they match ANY of the selected program stages OR ANY of the selected states.
+          </p>
         </div>
       )}
     </div>
@@ -643,9 +656,13 @@ export default function Announcements() {
                             </Badge>
                             {announcement.target_audience !== 'all' && (
                               <Badge variant="outline" className="text-xs">
-                                {announcement.target_audience === 'bucket'
-                                  ? `📦 ${announcement.target_bucket}`
-                                  : `📍 ${announcement.target_state}`
+                                {announcement.target_audience === 'program_stages'
+                                  ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
+                                  : announcement.target_audience === 'locations'
+                                    ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
+                                    : announcement.target_audience === 'both'
+                                      ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                      : `🎯 ${announcement.target_audience}`
                                 }
                               </Badge>
                             )}

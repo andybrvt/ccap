@@ -39,6 +39,8 @@ interface Announcement {
   target_bucket?: string | null;
   target_city?: string | null;
   target_state?: string | null;
+  target_program_stages?: string[] | null;
+  target_locations?: string[] | null;
   created_at: string;
   updated_at?: string | null;
 }
@@ -249,7 +251,15 @@ export default function Announcements() {
                             <Badge variant="outline" className="text-xs">
                               {announcement.target_audience === 'bucket'
                                 ? `📦 ${announcement.target_bucket}`
-                                : `📍 ${announcement.target_state}`
+                                : announcement.target_audience === 'location'
+                                  ? `📍 ${announcement.target_state}`
+                                  : announcement.target_audience === 'program_stages'
+                                    ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
+                                    : announcement.target_audience === 'locations'
+                                      ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
+                                      : announcement.target_audience === 'both'
+                                        ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                        : `🎯 ${announcement.target_audience}`
                               }
                             </Badge>
                           )}
