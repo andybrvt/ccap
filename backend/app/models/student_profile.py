@@ -69,7 +69,7 @@ class StudentProfile(Base):
     interests = Column(ARRAY(String), nullable=True)  # Array of culinary interests
     
     # Program Status
-    current_bucket = Column(String, default="Pre-Apprentice", nullable=False)
+    current_bucket = Column(String, default="Pre-Apprentice Explorer", nullable=False)
     
     # Onboarding Status
     # 0 = onboarding complete

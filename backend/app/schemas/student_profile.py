@@ -62,7 +62,7 @@ class StudentProfileBase(BaseModel):
     interests: Optional[List[str]] = None
     
     # Program Status
-    current_bucket: str = "Pre-Apprentice"
+    current_bucket: str = "Pre-Apprentice Explorer"
     
     # Onboarding Status (0 = complete, 1-6 = current step)
     onboarding_step: int = 1
