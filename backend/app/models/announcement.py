@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -23,6 +23,10 @@ class Announcement(Base):
     target_bucket = Column(String, nullable=True)  # Specific bucket if target_audience = "bucket"
     target_city = Column(String, nullable=True)  # Specific city if target_audience = "location"
     target_state = Column(String, nullable=True)  # Specific state if target_audience = "location"
+    
+    # New multi-selection fields
+    target_program_stages = Column(ARRAY(String), nullable=True)  # Array of program stages
+    target_locations = Column(ARRAY(String), nullable=True)       # Array of state codes
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

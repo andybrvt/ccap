@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 # Base schema
@@ -14,6 +14,10 @@ class AnnouncementBase(BaseModel):
     target_bucket: Optional[str] = None
     target_city: Optional[str] = None
     target_state: Optional[str] = None
+    
+    # New multi-selection fields
+    target_program_stages: Optional[List[str]] = None
+    target_locations: Optional[List[str]] = None
 
 # Schema for creating announcement
 class AnnouncementCreate(AnnouncementBase):
@@ -30,6 +34,10 @@ class AnnouncementUpdate(BaseModel):
     target_bucket: Optional[str] = None
     target_city: Optional[str] = None
     target_state: Optional[str] = None
+    
+    # New multi-selection fields
+    target_program_stages: Optional[List[str]] = None
+    target_locations: Optional[List[str]] = None
 
 # Schema for response
 class AnnouncementResponse(AnnouncementBase):

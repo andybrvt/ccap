@@ -98,17 +98,25 @@ def create_announcement(
     
     try:
         # Validate target audience logic
-        if announcement_data.target_audience == "bucket" and not announcement_data.target_bucket:
+        if announcement_data.target_audience == "program_stages" and (not announcement_data.target_program_stages or len(announcement_data.target_program_stages) == 0):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="target_bucket is required when target_audience is 'bucket'"
+                detail="target_program_stages is required when target_audience is 'program_stages'"
             )
         
-        if announcement_data.target_audience == "location":
-            if not announcement_data.target_state:
+        if announcement_data.target_audience == "locations" and (not announcement_data.target_locations or len(announcement_data.target_locations) == 0):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="target_locations is required when target_audience is 'locations'"
+            )
+        
+        if announcement_data.target_audience == "both":
+            program_stages_empty = not announcement_data.target_program_stages or len(announcement_data.target_program_stages) == 0
+            locations_empty = not announcement_data.target_locations or len(announcement_data.target_locations) == 0
+            if program_stages_empty and locations_empty:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="target_state is required when target_audience is 'location'"
+                    detail="At least one of target_program_stages or target_locations is required when target_audience is 'both'"
                 )
         
         # Create the announcement
@@ -158,24 +166,34 @@ def update_announcement(
         update_data = announcement_data.model_dump(exclude_unset=True)
         
         # Validate target audience logic if being updated
-        if 'target_audience' in update_data or 'target_bucket' in update_data:
-            target_audience = update_data.get('target_audience', existing_announcement.target_audience)
-            target_bucket = update_data.get('target_bucket', existing_announcement.target_bucket)
-            
-            if target_audience == "bucket" and not target_bucket:
+        target_audience = update_data.get('target_audience', existing_announcement.target_audience)
+        
+        # Validate multi-selection fields
+        if target_audience == "program_stages":
+            target_program_stages = update_data.get('target_program_stages', existing_announcement.target_program_stages)
+            if not target_program_stages or len(target_program_stages) == 0:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="target_bucket is required when target_audience is 'bucket'"
+                    detail="target_program_stages is required when target_audience is 'program_stages'"
                 )
         
-        if 'target_audience' in update_data or 'target_state' in update_data:
-            target_audience = update_data.get('target_audience', existing_announcement.target_audience)
-            target_state = update_data.get('target_state', existing_announcement.target_state)
-            
-            if target_audience == "location" and not target_state:
+        if target_audience == "locations":
+            target_locations = update_data.get('target_locations', existing_announcement.target_locations)
+            if not target_locations or len(target_locations) == 0:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="target_state is required when target_audience is 'location'"
+                    detail="target_locations is required when target_audience is 'locations'"
+                )
+        
+        if target_audience == "both":
+            target_program_stages = update_data.get('target_program_stages', existing_announcement.target_program_stages)
+            target_locations = update_data.get('target_locations', existing_announcement.target_locations)
+            program_stages_empty = not target_program_stages or len(target_program_stages) == 0
+            locations_empty = not target_locations or len(target_locations) == 0
+            if program_stages_empty and locations_empty:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="At least one of target_program_stages or target_locations is required when target_audience is 'both'"
                 )
         
         # Update the announcement

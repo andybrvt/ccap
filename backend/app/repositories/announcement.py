@@ -51,7 +51,7 @@ class AnnouncementRepository(BaseRepository[Announcement]):
             Announcement.target_audience == "all"
         ]
         
-        # 2. Bucket-specific announcements
+        # 2. Bucket-specific announcements (legacy)
         if student_profile.current_bucket:
             filters.append(
                 and_(
@@ -60,12 +60,59 @@ class AnnouncementRepository(BaseRepository[Announcement]):
                 )
             )
         
-        # 3. Location-specific announcements (state-level only)
+        # 3. Location-specific announcements (legacy)
         if student_profile.state:
             filters.append(
                 and_(
                     Announcement.target_audience == "location",
                     Announcement.target_state == student_profile.state
+                )
+            )
+        
+        # 4. New multi-selection program stages
+        if student_profile.current_bucket:
+            filters.append(
+                and_(
+                    Announcement.target_audience == "program_stages",
+                    Announcement.target_program_stages.any(student_profile.current_bucket)
+                )
+            )
+        
+        # 5. New multi-selection locations
+        if student_profile.state:
+            filters.append(
+                and_(
+                    Announcement.target_audience == "locations",
+                    Announcement.target_locations.any(student_profile.state)
+                )
+            )
+        
+        # 6. Both program stages and locations
+        if student_profile.current_bucket and student_profile.state:
+            # Check if student matches either program stages OR locations
+            filters.append(
+                and_(
+                    Announcement.target_audience == "both",
+                    or_(
+                        Announcement.target_program_stages.any(student_profile.current_bucket),
+                        Announcement.target_locations.any(student_profile.state)
+                    )
+                )
+            )
+        elif student_profile.current_bucket:
+            # Only check program stages
+            filters.append(
+                and_(
+                    Announcement.target_audience == "both",
+                    Announcement.target_program_stages.any(student_profile.current_bucket)
+                )
+            )
+        elif student_profile.state:
+            # Only check locations
+            filters.append(
+                and_(
+                    Announcement.target_audience == "both",
+                    Announcement.target_locations.any(student_profile.state)
                 )
             )
         
