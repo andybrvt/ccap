@@ -737,12 +737,12 @@ def bulk_update_program_status(
     Request body:
     {
         "student_ids": ["uuid1", "uuid2", ...],
-        "program_status": "Pre-Apprentice" | "Apprentice" | "Completed Pre-Apprentice" | "Completed Apprentice" | "Not Active"
+        "program_status": "Pre-Apprentice Explorer" | "Pre-Apprentice Candidate" | "Apprentice" | "Completed Pre-Apprentice" | "Completed Apprentice" | "Not Active"
     }
     """
     try:
         # Validate program status
-        valid_statuses = ["Pre-Apprentice", "Apprentice", "Completed Pre-Apprentice", "Completed Apprentice", "Not Active"]
+        valid_statuses = ["Pre-Apprentice Explorer", "Pre-Apprentice Candidate", "Apprentice", "Completed Pre-Apprentice", "Completed Apprentice", "Not Active"]
         if update_data.program_status not in valid_statuses:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
