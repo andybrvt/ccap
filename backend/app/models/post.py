@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Integer
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Integer, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -15,6 +15,7 @@ class Post(Base):
     image_url = Column(String, nullable=False)
     caption = Column(Text, nullable=True)
     featured_dish = Column(String, nullable=True)
+    is_private = Column(Boolean, nullable=True)
     
     # Engagement counts (denormalized for performance)
     likes_count = Column(Integer, default=0, nullable=False)

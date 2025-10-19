@@ -13,26 +13,36 @@ class PostRepository(BaseRepository[Post]):
     def __init__(self, db: Session):
         super().__init__(db, Post)
 
-    def get_all_posts(self, limit: Optional[int] = None, offset: int = 0) -> List[Post]:
+    def get_all_posts(self, limit: Optional[int] = None, offset: int = 0, user_role: str = "student") -> List[Post]:
         """
         Get all posts (community feed)
-        Everyone can view all posts
+        Students see only public posts, admins see all posts
         """
-        query = self.db.query(Post).order_by(Post.created_at.desc())
+        query = self.db.query(Post)
+        
+        # Filter based on user role
+        if user_role == "student":
+            query = query.filter(Post.is_private == False)
+        
+        query = query.order_by(Post.created_at.desc())
         
         if limit:
             query = query.limit(limit).offset(offset)
         
         return query.all()
 
-    def get_posts_by_user(self, user_id: UUID, limit: Optional[int] = None, offset: int = 0) -> List[Post]:
+    def get_posts_by_user(self, user_id: UUID, limit: Optional[int] = None, offset: int = 0, user_role: str = "student") -> List[Post]:
         """
         Get all posts by a specific user
-        Everyone can view any user's posts
+        Students see only public posts, admins see all posts
         """
-        query = self.db.query(Post).filter(
-            Post.user_id == user_id
-        ).order_by(Post.created_at.desc())
+        query = self.db.query(Post).filter(Post.user_id == user_id)
+        
+        # Filter based on user role
+        if user_role == "student":
+            query = query.filter(Post.is_private == False)
+        
+        query = query.order_by(Post.created_at.desc())
         
         if limit:
             query = query.limit(limit).offset(offset)
@@ -40,7 +50,7 @@ class PostRepository(BaseRepository[Post]):
         return query.all()
 
     def create_post(self, user: User, image_url: str, caption: Optional[str] = None, 
-                    featured_dish: Optional[str] = None) -> Post:
+                    featured_dish: Optional[str] = None, is_private: bool = False) -> Post:
         """
         Create a new post
         Only students can create posts (for themselves)
@@ -53,7 +63,8 @@ class PostRepository(BaseRepository[Post]):
             user_id=user.id,
             image_url=image_url,
             caption=caption,
-            featured_dish=featured_dish
+            featured_dish=featured_dish,
+            is_private=is_private
         )
         
         return post

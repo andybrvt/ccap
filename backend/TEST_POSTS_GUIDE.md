@@ -55,7 +55,7 @@ python create_test_posts.py
 **Expected output:**
 ```
 ============================================================
-CCAP Test Posts Generator
+C-CAP Test Posts Generator
 ============================================================
 
 Found 7 test student(s)

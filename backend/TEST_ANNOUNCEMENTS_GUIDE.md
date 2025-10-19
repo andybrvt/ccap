@@ -45,7 +45,7 @@ python create_test_announcements.py
 You should see output like:
 ```
 ============================================================
-CCAP Test Announcements Generator
+C-CAP Test Announcements Generator
 ============================================================
 
 Step 1: Admin Authentication
@@ -54,7 +54,7 @@ Step 1: Admin Authentication
 
 Step 2: Creating Global Announcements
 ------------------------------------------------------------
-✓ Created global announcement: Welcome to CCAP Culinary Program! - 1
+✓ Created global announcement: Welcome to C-CAP Culinary Program! - 1
 ✓ Created global announcement: Important Program Update - 2
 ...
 

@@ -53,12 +53,12 @@ def get_all_posts(
 ):
     """
     Get all posts (community feed)
-    Everyone can view all posts
+    Students see only public posts, admins see all posts
     """
     repo = PostRepository(db)
     
     try:
-        posts = repo.get_all_posts(limit=limit, offset=offset)
+        posts = repo.get_all_posts(limit=limit, offset=offset, user_role=current_user.role)
         return posts
     except Exception as e:
         raise HTTPException(
@@ -77,12 +77,12 @@ def get_user_posts(
 ):
     """
     Get all posts by a specific user
-    Everyone can view any user's posts
+    Students see only public posts, admins see all posts
     """
     repo = PostRepository(db)
     
     try:
-        posts = repo.get_posts_by_user(user_id, limit=limit, offset=offset)
+        posts = repo.get_posts_by_user(user_id, limit=limit, offset=offset, user_role=current_user.role)
         return posts
     except Exception as e:
         raise HTTPException(
@@ -119,6 +119,7 @@ async def create_post(
     image: UploadFile = File(...),
     caption: Optional[str] = Form(None),
     featured_dish: Optional[str] = Form(None),
+    is_private: Optional[bool] = Form(False),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -144,7 +145,8 @@ async def create_post(
             current_user,
             image_url=image_url,
             caption=caption,
-            featured_dish=featured_dish
+            featured_dish=featured_dish,
+            is_private=is_private or False
         )
         
         return post
