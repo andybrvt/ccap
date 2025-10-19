@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -39,6 +39,12 @@ class PostResponse(PostBase):
     created_at: datetime
     updated_at: Optional[datetime]
     author: Optional[PostAuthor] = None  # Include author info
+    
+    @field_validator('is_private', mode='before')
+    @classmethod
+    def validate_is_private(cls, v):
+        # Convert None to False for existing posts
+        return v if v is not None else False
     
     class Config:
         from_attributes = True

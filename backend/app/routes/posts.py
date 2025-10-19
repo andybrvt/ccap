@@ -53,12 +53,12 @@ def get_all_posts(
 ):
     """
     Get all posts (community feed)
-    Students see only public posts, admins see all posts
+    Students see only public posts from everyone (including NULL values), admins see all posts
     """
     repo = PostRepository(db)
     
     try:
-        posts = repo.get_all_posts(limit=limit, offset=offset, user_role=current_user.role)
+        posts = repo.get_all_posts(limit=limit, offset=offset, user_role=current_user.role, current_user_id=current_user.id)
         return posts
     except Exception as e:
         raise HTTPException(
@@ -77,12 +77,12 @@ def get_user_posts(
 ):
     """
     Get all posts by a specific user
-    Students see only public posts, admins see all posts
+    Students see public posts + their own private posts from that user (including NULL values), admins see all posts
     """
     repo = PostRepository(db)
     
     try:
-        posts = repo.get_posts_by_user(user_id, limit=limit, offset=offset, user_role=current_user.role)
+        posts = repo.get_posts_by_user(user_id, limit=limit, offset=offset, user_role=current_user.role, current_user_id=current_user.id)
         return posts
     except Exception as e:
         raise HTTPException(

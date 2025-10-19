@@ -13,16 +13,22 @@ class PostRepository(BaseRepository[Post]):
     def __init__(self, db: Session):
         super().__init__(db, Post)
 
-    def get_all_posts(self, limit: Optional[int] = None, offset: int = 0, user_role: str = "student") -> List[Post]:
+    def get_all_posts(self, limit: Optional[int] = None, offset: int = 0, user_role: str = "student", current_user_id: Optional[UUID] = None) -> List[Post]:
         """
         Get all posts (community feed)
-        Students see only public posts, admins see all posts
+        Students see only public posts from everyone (including NULL values), admins see all posts
         """
         query = self.db.query(Post)
         
         # Filter based on user role
         if user_role == "student":
-            query = query.filter(Post.is_private == False)
+            # Students see only public posts in community feed (is_private = False OR is_private = NULL)
+            query = query.filter(
+                or_(
+                    Post.is_private == False,  # Public posts
+                    Post.is_private.is_(None)  # Existing posts with NULL values (treated as public)
+                )
+            )
         
         query = query.order_by(Post.created_at.desc())
         
@@ -31,16 +37,23 @@ class PostRepository(BaseRepository[Post]):
         
         return query.all()
 
-    def get_posts_by_user(self, user_id: UUID, limit: Optional[int] = None, offset: int = 0, user_role: str = "student") -> List[Post]:
+    def get_posts_by_user(self, user_id: UUID, limit: Optional[int] = None, offset: int = 0, user_role: str = "student", current_user_id: Optional[UUID] = None) -> List[Post]:
         """
         Get all posts by a specific user
-        Students see only public posts, admins see all posts
+        Students see public posts + their own private posts from that user (including NULL values), admins see all posts
         """
         query = self.db.query(Post).filter(Post.user_id == user_id)
         
         # Filter based on user role
         if user_role == "student":
-            query = query.filter(Post.is_private == False)
+            # Students see public posts OR their own private posts
+            query = query.filter(
+                or_(
+                    Post.is_private == False,  # Public posts
+                    Post.is_private.is_(None),  # Existing posts with NULL values (treated as public)
+                    Post.user_id == current_user_id  # Own private posts
+                )
+            )
         
         query = query.order_by(Post.created_at.desc())
         
