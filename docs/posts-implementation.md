@@ -1,7 +1,7 @@
 # Posts Feature Implementation
 
 ## Overview
-This document describes the implementation of the posts feature for the CCAP platform. Students can create posts with images, captions, and featured dishes. All users can view, like, and comment on posts.
+This document describes the implementation of the posts feature for the C-CAP platform. Students can create posts with images, captions, and featured dishes. All users can view, like, and comment on posts.
 
 ## Features
 - **Student-only creation**: Only students can create posts (for themselves)

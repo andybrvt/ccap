@@ -8,6 +8,8 @@ create_test_announcements.py
 cleanup_test_announcements.py
 cleanup_test_posts.py
 create_test_posts.py
+cleanup_all_test_data.py
+cleanup_students_and_posts.py
 
 # Python
 __pycache__/

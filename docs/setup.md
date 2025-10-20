@@ -39,8 +39,7 @@ alembic upgrade head
 
 5. Start server:
 ```bash
-uvicorn app.main:app --reload
-```
+uvicorn app.main:app --reload --port 8001```
 
 ## Frontend Setup
 
