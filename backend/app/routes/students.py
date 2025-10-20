@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 from pydantic import BaseModel
+import os
 
 from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
@@ -182,18 +183,15 @@ async def update_my_profile(
                 db_session=db
             )
             
-            # Send notification email to admin(s)
-            email_repo = EmailNotificationRepository(db)
-            admin_emails = email_repo.get_active_emails()
-            
-            if admin_emails:
-                await email_service.send_admin_notification_email(
-                    admin_emails=admin_emails,
-                    student_name=student_name,
-                    student_email=current_user.email,
-                    student_school=updated_profile.high_school or "Not specified",
-                    db_session=db
-                )
+            # Send notification email to admin(s) - hardcoded to MAIL_FROM for testing
+            admin_email = os.getenv("MAIL_FROM", "andybrvt@gmail.com")
+            await email_service.send_admin_notification_email(
+                admin_emails=[admin_email],
+                student_name=student_name,
+                student_email=current_user.email,
+                student_school=updated_profile.high_school or "Not specified",
+                db_session=db
+            )
             
             logger.info(f"Onboarding completion emails sent for student: {current_user.email}")
             
