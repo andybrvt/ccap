@@ -156,7 +156,7 @@ async def update_my_profile(
     was_onboarding_completed = False
     if hasattr(profile_data, 'onboarding_step') and profile_data.onboarding_step == 0:
         # Check if student was previously in onboarding (step > 0)
-        current_profile = student_repo.get_student_profile(current_user.id)
+        current_profile = student_repo.get_profile_by_user_id(current_user.id)
         if current_profile and current_profile.onboarding_step > 0:
             was_onboarding_completed = True
     
