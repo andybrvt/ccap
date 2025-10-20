@@ -51,6 +51,13 @@ class EmailService:
             if db_session:
                 await self._log_email_attempt(db_session, to, subject, body, False, "SendGrid not configured")
             return False
+        
+        # Check if there are any recipients
+        if not to or len(to) == 0:
+            logger.warning("No recipients provided for email")
+            if db_session:
+                await self._log_email_attempt(db_session, to, subject, body, False, "No recipients provided")
+            return False
             
         try:
             # Create the email
