@@ -1,7 +1,7 @@
 import os
-from typing import List
+from typing import List, Optional, Dict
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment
 import logging
 from datetime import datetime
 import ssl
@@ -32,7 +32,8 @@ class EmailService:
         to: List[str],
         subject: str,
         body: str,
-        db_session=None
+        db_session=None,
+        attachments: Optional[List[Dict]] = None
     ) -> bool:
         """
         Send an email using SendGrid and log the attempt
@@ -70,6 +71,18 @@ class EmailService:
             
             # Create the mail object
             mail = Mail(from_email, to_emails, subject, content)
+            
+            # Add attachments if provided
+            if attachments:
+                for attachment_data in attachments:
+                    attachment = Attachment(
+                        file_content=attachment_data["content"],
+                        file_type=attachment_data["type"],
+                        file_name=attachment_data["filename"],
+                        disposition=attachment_data.get("disposition", "attachment"),
+                        content_id=attachment_data.get("content_id")
+                    )
+                    mail.add_attachment(attachment)
             
             # Send the email
             response = self.sg.send(mail)
@@ -119,26 +132,63 @@ class EmailService:
         self,
         student_email: str,
         student_name: str,
-        db_session=None
+        db_session=None,
+        attachments: Optional[List[Dict]] = None
     ) -> bool:
         """Send welcome email to student after onboarding completion"""
-        subject = "Welcome to C-CAP Apprentice Program!"
+        subject = "Welcome to the C•CAP Pre-Apprenticeship Program!"
         
         body = f"""
-        <h2>Welcome to C-CAP, {student_name}!</h2>
-        <p>Congratulations on completing your enrollment in the C-CAP Apprentice Program!</p>
-        <p>You're now officially part of our community and can start exploring opportunities in the culinary world.</p>
-        <p>We're excited to have you on board!</p>
-        <br>
-        <p>Best regards,<br>
-        The C-CAP Team</p>
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <p>Hello,</p>
+            <p>Welcome to the C•CAP Pre-Apprenticeship Program! You are receiving this email because you have submitted your information by using the Pre-Apprentice Registration platform provided to you via your culinary teacher or a C•CAP representative. Please read to the bottom of this email for next steps.</p>
+            
+            <p>All participants are required to take part in our Cook the Book program. This year, we will be reading <strong>The Apprentice: My Life in the Kitchen by Jacques Pépin</strong>.</p>
+            
+            <p><strong>Cook the Book requirements include:</strong></p>
+            <ul>
+                <li>Reading at least two chapters of the book each month</li>
+                <li>Preparing the recipe found at the end of each chapter (some chapters include multiple recipes—you may choose which one to cook, see attachment with Chapter Guidelines)</li>
+                <li>Using the attached Recipe Schedule and Substitutions (some recipes call for alcohol, you are required to use a substitution)</li>
+                <li>Taking pictures of each chapter's final, plated recipe and uploading photos to your C•CAP /newly created profile</li>
+            </ul>
+            
+            <p><strong>Other program requirements include:</strong></p>
+            <ul>
+                <li>Enrolling in the Rouxbe Online Culinary Program - ask your Culinary Teacher for your login</li>
+                <li>Attending live, virtual cooking demonstrations (see attached schedule, attendance is optional but highly recommended)</li>
+                <li>Informing C•CAP when you are eligible and ready to work</li>
+                <li>Attending video calls with C•CAP when you are eligible and ready to work</li>
+            </ul>
+            
+            <p><strong>Next steps:</strong></p>
+            <ol>
+                <li>Obtain a copy of the book The Apprentice: My Life in the Kitchen by Jacques Pépin. If you do not have a copy of the book, send me an email at jsmith@culinarycareers.org and include your home address (Street, City, State, Zip Code) - a book will be mailed to you at the address you provide so please review for accuracy</li>
+                <li>Enroll in the Rouxbe Online Culinary Program - ask your Culinary Teacher for access.</li>
+                <li>Read and cook Chapter 1 recipe, Eggs Jeannette and Chapter 2 Maman's Cheese Souffle recipe within the first month of enrolling in C•CAP Pre-Apprentice Program. (see Chapter Guidelines document attached for Rouxbe lessons, videos, and recipe cost and ingredient information.)</li>
+            </ol>
+            
+            <p>C•CAP will be tracking your progress throughout the program, so it's important that you meet all deadlines. This helps us assess your readiness for job opportunities.</p>
+            
+            <p>We are excited to guide you on your culinary journey.</p>
+            
+            <p>Best regards,<br>
+            Lori Wright<br>
+            Apprenticeship Coordinator</p>
+            
+            <!-- Signature image placeholder -->
+            <img src="cid:lori_wright_signature" alt="Lori Wright Signature" style="max-width: 200px; height: auto; margin-top: 20px;">
+        </body>
+        </html>
         """
         
         return await self.send_email(
             to=[student_email],
             subject=subject,
             body=body,
-            db_session=db_session
+            db_session=db_session,
+            attachments=attachments
         )
 
     async def send_admin_notification_email(
@@ -150,19 +200,21 @@ class EmailService:
         db_session=None
     ) -> bool:
         """Send notification email to admins when student completes onboarding"""
+        from datetime import datetime
+        
         subject = f"New Student Enrollment: {student_name}"
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         body = f"""
-        <h2>New Student Enrollment Notification</h2>
-        <p>A new student has completed their enrollment in the C-CAP Apprentice Program:</p>
-        <ul>
-            <li><strong>Name:</strong> {student_name}</li>
-            <li><strong>Email:</strong> {student_email}</li>
-            <li><strong>School:</strong> {student_school}</li>
-        </ul>
-        <p>Please review their profile and assign them to the appropriate program stage.</p>
-        <br>
-        <p>C-CAP System</p>
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2>New Student Completed Onboarding</h2>
+            <p><strong>Name:</strong> {student_name}</p>
+            <p><strong>Email:</strong> {student_email}</p>
+            <p><strong>School:</strong> {student_school}</p>
+            <p><strong>Completed:</strong> {current_time}</p>
+        </body>
+        </html>
         """
         
         return await self.send_email(

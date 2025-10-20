@@ -4,6 +4,8 @@ from typing import List
 from uuid import UUID
 from pydantic import BaseModel
 import os
+import base64
+from pathlib import Path
 
 from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
@@ -177,10 +179,73 @@ async def update_my_profile(
             if not student_name:
                 student_name = current_user.username  # Fallback to username
             
+            # Load attachments for student welcome email
+            attachments_dir = Path("app/static/attachments")
+            student_attachments = []
+            
+            try:
+                # Load Chapter Guidelines (Excel file)
+                chapter_guidelines_path = attachments_dir / "The Apprentice Chapter Guidelines.xlsx"
+                if chapter_guidelines_path.exists():
+                    with open(chapter_guidelines_path, "rb") as f:
+                        student_attachments.append({
+                            "content": base64.b64encode(f.read()).decode(),
+                            "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            "filename": "The Apprentice Chapter Guidelines.xlsx",
+                            "disposition": "attachment"
+                        })
+                else:
+                    logger.warning(f"Attachment not found: {chapter_guidelines_path}")
+
+                # Load Recipe Schedule and Substitutions
+                recipe_schedule_path = attachments_dir / "The Apprentice Recipe Schedule.docx (1).pdf"
+                if recipe_schedule_path.exists():
+                    with open(recipe_schedule_path, "rb") as f:
+                        student_attachments.append({
+                            "content": base64.b64encode(f.read()).decode(),
+                            "type": "application/pdf",
+                            "filename": "The Apprentice Recipe Schedule.pdf",
+                            "disposition": "attachment"
+                        })
+                else:
+                    logger.warning(f"Attachment not found: {recipe_schedule_path}")
+
+                # Load Live Virtual Cooking Demonstrations Schedule
+                cooking_schedule_path = attachments_dir / "Cook The Book Demonstation Schedule.pdf"
+                if cooking_schedule_path.exists():
+                    with open(cooking_schedule_path, "rb") as f:
+                        student_attachments.append({
+                            "content": base64.b64encode(f.read()).decode(),
+                            "type": "application/pdf",
+                            "filename": "Cook The Book Demonstration Schedule.pdf",
+                            "disposition": "attachment"
+                        })
+                else:
+                    logger.warning(f"Attachment not found: {cooking_schedule_path}")
+
+                # Load Lori Wright Signature Image (for embedding)
+                signature_image_path = attachments_dir / "Outlook-2cgc1pcy.png"
+                if signature_image_path.exists():
+                    with open(signature_image_path, "rb") as f:
+                        student_attachments.append({
+                            "content": base64.b64encode(f.read()).decode(),
+                            "type": "image/png",
+                            "filename": "lori_wright_signature.png",
+                            "disposition": "inline",
+                            "content_id": "lori_wright_signature"
+                        })
+                else:
+                    logger.warning(f"Signature image not found: {signature_image_path}")
+
+            except Exception as e:
+                logger.error(f"Failed to load email attachments: {str(e)}")
+                student_attachments = []
+
             await email_service.send_student_welcome_email(
                 student_email=current_user.email,
                 student_name=student_name,
-                db_session=db
+                db_session=db,
+                attachments=student_attachments
             )
             
             # Send notification email to admin(s) - use database email notifications
