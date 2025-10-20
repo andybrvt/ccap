@@ -108,6 +108,63 @@ class EmailService:
             logger.error(f"Failed to log email attempt: {str(e)}")
             db_session.rollback()
 
+    async def send_student_welcome_email(
+        self,
+        student_email: str,
+        student_name: str,
+        db_session=None
+    ) -> bool:
+        """Send welcome email to student after onboarding completion"""
+        subject = "Welcome to C-CAP Apprentice Program!"
+        
+        body = f"""
+        <h2>Welcome to C-CAP, {student_name}!</h2>
+        <p>Congratulations on completing your enrollment in the C-CAP Apprentice Program!</p>
+        <p>You're now officially part of our community and can start exploring opportunities in the culinary world.</p>
+        <p>We're excited to have you on board!</p>
+        <br>
+        <p>Best regards,<br>
+        The C-CAP Team</p>
+        """
+        
+        return await self.send_email(
+            to=[student_email],
+            subject=subject,
+            body=body,
+            db_session=db_session
+        )
+
+    async def send_admin_notification_email(
+        self,
+        admin_emails: List[str],
+        student_name: str,
+        student_email: str,
+        student_school: str,
+        db_session=None
+    ) -> bool:
+        """Send notification email to admins when student completes onboarding"""
+        subject = f"New Student Enrollment: {student_name}"
+        
+        body = f"""
+        <h2>New Student Enrollment Notification</h2>
+        <p>A new student has completed their enrollment in the C-CAP Apprentice Program:</p>
+        <ul>
+            <li><strong>Name:</strong> {student_name}</li>
+            <li><strong>Email:</strong> {student_email}</li>
+            <li><strong>School:</strong> {student_school}</li>
+        </ul>
+        <p>Please review their profile and assign them to the appropriate program stage.</p>
+        <br>
+        <p>C-CAP System</p>
+        """
+        
+        return await self.send_email(
+            to=admin_emails,
+            subject=subject,
+            body=body,
+            db_session=db_session
+        )
+
 
 # Global email service instance
 email_service = EmailService()

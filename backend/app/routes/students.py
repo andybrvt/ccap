@@ -178,7 +178,8 @@ async def update_my_profile(
             
             await email_service.send_student_welcome_email(
                 student_email=current_user.email,
-                student_name=student_name
+                student_name=student_name,
+                db_session=db
             )
             
             # Send notification email to admin(s)
@@ -190,7 +191,8 @@ async def update_my_profile(
                     admin_emails=admin_emails,
                     student_name=student_name,
                     student_email=current_user.email,
-                    student_school=updated_profile.high_school or "Not specified"
+                    student_school=updated_profile.high_school or "Not specified",
+                    db_session=db
                 )
             
             logger.info(f"Onboarding completion emails sent for student: {current_user.email}")
