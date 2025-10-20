@@ -15,6 +15,7 @@ import AdminPortfolio from "@/pages/admin/portfolio";
 import AdminPortfolioLookup from "@/pages/admin/portfolioLookup";
 import AdminBulkBucketAssign from "@/pages/admin/assignProgramStatus";
 import AdminManagement from "@/pages/admin/adminManagement";
+import EmailNotifications from "@/pages/admin/email-notifications";
 
 import StudentHomepage from "@/pages/student/homepage";
 import StudentAnnouncements from "@/pages/student/anouncements";
@@ -76,6 +77,11 @@ function AppRoutes() {
       <Route path="/admin/admin-management">
         <ProtectedRoute requiredRole="admin">
           <AdminManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/email-notifications">
+        <ProtectedRoute requiredRole="admin">
+          <EmailNotifications />
         </ProtectedRoute>
       </Route>
 

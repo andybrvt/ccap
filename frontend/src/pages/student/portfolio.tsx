@@ -6,7 +6,7 @@ import { API_ENDPOINTS } from "@/lib/endpoints";
 import { PROGRAM_STAGE_OPTIONS, CHAPTER_DISH_DROPDOWN_OPTIONS } from '@/lib/constants';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload, Loader2, Trash2 } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload, Loader2, Trash2, Lock } from "lucide-react";
 import Layout from "@/components/layout/StudentLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface Post {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  is_private: boolean;
   is_liked?: boolean;
   author?: {
     id: string;
@@ -91,6 +92,7 @@ export default function Portfolio() {
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostCaption, setNewPostCaption] = useState('');
   const [newPostDish, setNewPostDish] = useState('');
+  const [newPostPrivate, setNewPostPrivate] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -161,6 +163,7 @@ export default function Portfolio() {
       formData.append('image', newPostImage);
       formData.append('caption', newPostCaption);
       formData.append('featured_dish', newPostDish);
+      formData.append('is_private', newPostPrivate.toString());
 
       await api.post(API_ENDPOINTS.POSTS_CREATE, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -173,6 +176,7 @@ export default function Portfolio() {
       setNewPostImage(null);
       setNewPostCaption('');
       setNewPostDish('');
+      setNewPostPrivate(false);
       setImagePreview(null);
 
       // Refresh posts
@@ -390,7 +394,7 @@ export default function Portfolio() {
                   </span>
                   {studentProfile.ccap_connection && (
                     <span className="ml-7 text-blue-800 text-sm">
-                      <span className="font-semibold text-blue-700">CCAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>
+                      <span className="font-semibold text-blue-700">C-CAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>
                     </span>
                   )}
                 </div>
@@ -524,6 +528,11 @@ export default function Portfolio() {
                 style={{ width: "100%" }}
               >
                 <img src={post.image_url} alt="Post" className="object-cover w-full h-full hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                {post.is_private && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full">
+                    <Lock className="h-3 w-3" />
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -553,7 +562,15 @@ export default function Portfolio() {
                       {user?.username?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div className="flex-1">
-                      <span className="font-semibold text-gray-900 block">{user?.username || 'Student'}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-900">{user?.username || 'Student'}</span>
+                        {selectedPost.is_private && (
+                          <div className="flex items-center gap-1 bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs">
+                            <Lock className="h-3 w-3" />
+                            <span>Private</span>
+                          </div>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-500">{formatDate(selectedPost.created_at)}</span>
                     </div>
                     <Button
@@ -678,6 +695,25 @@ export default function Portfolio() {
                 />
               </div>
 
+              {/* Private Post Checkbox */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="private-post"
+                    checked={newPostPrivate}
+                    onChange={(e) => setNewPostPrivate(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor="private-post" className="text-sm font-medium">
+                    Make this post private (visible only to admins)
+                  </Label>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Private posts will only be visible to administrators and will not appear in the community feed.
+                </p>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">
                 <Button
@@ -687,6 +723,7 @@ export default function Portfolio() {
                     setNewPostImage(null);
                     setNewPostCaption('');
                     setNewPostDish('');
+                    setNewPostPrivate(false);
                     setImagePreview(null);
                   }}
                   className="flex-1"

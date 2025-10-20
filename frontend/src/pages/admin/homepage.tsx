@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
+import { renderTextWithLinks } from "@/lib/linkUtils";
 
 interface Post {
   id: string;
@@ -377,7 +378,7 @@ export default function Homepage() {
         <div className="max-w-7xl w-full mx-auto">
           <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center mb-6">
             <p className="text-3xl font-bold text-black">
-              CCAP Application Management System
+              C-CAP Application Management System
             </p>
             <p className="text-xl font-medium text-gray-800">
               Welcome back, {user?.full_name}
@@ -609,7 +610,7 @@ export default function Homepage() {
                               {announcement.title}
                             </h4>
                             <p className="text-sm text-gray-600 mb-2 leading-relaxed">
-                              {announcement.content}
+                              {renderTextWithLinks(announcement.content)}
                             </p>
                             <p className="text-xs text-gray-500 mb-2">
                               {formatDate(announcement.created_at)}
@@ -725,11 +726,11 @@ export default function Homepage() {
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg font-semibold text-black">
-                Sinatra - CCAP
+                C-CAP
               </span>
             </div>
             <div className="text-sm text-gray-600">
-              © 2025 Sinatra Insurance Group. All rights reserved.
+              © 2025 C-CAP. All rights reserved.
             </div>
           </div>
         </div>

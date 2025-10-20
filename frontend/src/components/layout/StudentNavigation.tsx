@@ -59,14 +59,13 @@ export function Navigation() {
           <div className="flex items-center">
             <div
               onClick={() => setLocation("/student")}
-              className="cursor-pointer flex items-center space-x-3"
+              className="cursor-pointer flex items-center"
             >
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-gray-900 font-serif text-lg sm:text-xl lg:text-2xl xl:text-3xl font-medium tracking-tight">
-                Sinatra - CCAP
-              </h1>
+              <img
+                src="/ccap-logo.png"
+                alt="C-CAP Logo"
+                className="h-8 w-auto"
+              />
             </div>
           </div>
 

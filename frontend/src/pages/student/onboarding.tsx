@@ -244,6 +244,9 @@ export default function StudentOnboarding() {
                 errors.phone = 'Please enter a complete 10-digit phone number';
             }
         }
+        if (!formData.ccapConnection) {
+            errors.ccapConnection = 'C-CAP connection is required';
+        }
 
         return errors;
     };
@@ -283,14 +286,13 @@ export default function StudentOnboarding() {
         if (!formData.graduationYear) {
             errors.graduationYear = 'Graduation year is required';
         }
-        if (formData.culinaryClassYears === 0) {
+        if (!formData.culinaryClassYears || formData.culinaryClassYears === 0) {
             errors.culinaryClassYears = 'Years in culinary program is required';
+        } else if (isNaN(Number(formData.culinaryClassYears)) || Number(formData.culinaryClassYears) < 0) {
+            errors.culinaryClassYears = 'Please enter a valid number of years';
         }
         if (!formData.transportation) {
             errors.transportation = 'Transportation method is required';
-        }
-        if (!formData.ccapConnection) {
-            errors.ccapConnection = 'CCAP connection is required';
         }
 
         return errors;
@@ -314,8 +316,10 @@ export default function StudentOnboarding() {
             if (!formData.currentPosition.trim()) {
                 errors.currentPosition = 'Current position is required';
             }
-            if (formData.currentHoursPerWeek === 0) {
+            if (!formData.currentHoursPerWeek || formData.currentHoursPerWeek === 0) {
                 errors.currentHoursPerWeek = 'Current hours per week is required';
+            } else if (isNaN(Number(formData.currentHoursPerWeek)) || Number(formData.currentHoursPerWeek) < 0) {
+                errors.currentHoursPerWeek = 'Please enter a valid number of hours';
             }
         }
 
@@ -327,8 +331,10 @@ export default function StudentOnboarding() {
             if (!formData.previousPosition.trim()) {
                 errors.previousPosition = 'Previous position is required';
             }
-            if (formData.previousHoursPerWeek === 0) {
+            if (!formData.previousHoursPerWeek || formData.previousHoursPerWeek === 0) {
                 errors.previousHoursPerWeek = 'Previous hours per week is required';
+            } else if (isNaN(Number(formData.previousHoursPerWeek)) || Number(formData.previousHoursPerWeek) < 0) {
+                errors.previousHoursPerWeek = 'Please enter a valid number of hours';
             }
         }
 
@@ -338,8 +344,10 @@ export default function StudentOnboarding() {
     const validateStep5 = () => {
         const errors: Record<string, string> = {};
 
-        if (formData.hoursPerWeek === 0) {
+        if (!formData.hoursPerWeek || formData.hoursPerWeek === 0) {
             errors.hoursPerWeek = 'Desired hours per week is required';
+        } else if (isNaN(Number(formData.hoursPerWeek)) || Number(formData.hoursPerWeek) < 0) {
+            errors.hoursPerWeek = 'Please enter a valid number of hours';
         }
         if (formData.availability.length === 0) {
             errors.availability = 'Please select at least one availability time';
@@ -664,7 +672,7 @@ export default function StudentOnboarding() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to C-CAP!</h1>
-                    <p className="text-gray-600">Let's get your profile set up. You can save and continue later anytime.</p>
+                    <p className="text-gray-600">Let's get your profile set up.</p>
                 </div>
 
                 {/* Progress Bar */}
@@ -705,7 +713,7 @@ export default function StudentOnboarding() {
                         {isSaving ? 'Saving...' : currentStep === 6 ? (
                             <>
                                 <Check className="h-4 w-4 mr-2" />
-                                Complete Onboarding
+                                Complete Enrollment
                             </>
                         ) : (
                             <>
@@ -841,14 +849,20 @@ function Step1Personal({ formData, handleInputChange, handlePhoneChange, handleP
                 </div>
 
                 <div>
-                    <Label htmlFor="bio" className="text-base mb-3 block">Tell us about yourself (Optional)</Label>
-                    <Textarea
-                        id="bio"
-                        value={formData.bio}
-                        onChange={(e) => handleInputChange('bio', e.target.value)}
-                        rows={4}
-                        placeholder="Share your passion for culinary arts, goals, or anything you'd like us to know..."
-                    />
+                    <Label htmlFor="ccapConnection" className="text-base mb-3 block">How are you connected to C-CAP? *</Label>
+                    <Select value={formData.ccapConnection} onValueChange={(value) => handleInputChange('ccapConnection', value)}>
+                        <SelectTrigger className={validationErrors.ccapConnection ? 'border-red-500' : ''}>
+                            <SelectValue placeholder="Select your connection" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {CCAP_CONNECTION_DROPDOWN_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {validationErrors.ccapConnection && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.ccapConnection}</p>
+                    )}
                 </div>
             </CardContent>
         </>
@@ -969,7 +983,7 @@ function Step2Address({ formData, handleInputChange, validationErrors }: any) {
 
 function Step3Education({ formData, handleInputChange, validationErrors }: any) {
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 10 }, (_, i) => (currentYear + i).toString());
+    const years = Array.from({ length: 10 }, (_, i) => (currentYear - 5 + i).toString());
 
     return (
         <>
@@ -1012,11 +1026,16 @@ function Step3Education({ formData, handleInputChange, validationErrors }: any) 
                     <Label htmlFor="culinaryClassYears" className="text-base mb-3 block">Years in Culinary Program *</Label>
                     <Input
                         id="culinaryClassYears"
-                        type="number"
-                        min="0"
-                        max="10"
+                        type="text"
                         value={formData.culinaryClassYears}
-                        onChange={(e) => handleInputChange('culinaryClassYears', parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            // Only allow numbers
+                            if (value === '' || /^\d+$/.test(value)) {
+                                handleInputChange('culinaryClassYears', parseInt(value) || 0);
+                            }
+                        }}
+                        placeholder="Enter number of years"
                         required
                         className={validationErrors.culinaryClassYears ? 'border-red-500' : ''}
                     />
@@ -1026,7 +1045,7 @@ function Step3Education({ formData, handleInputChange, validationErrors }: any) 
                 </div>
 
                 <div>
-                    <Label htmlFor="transportation" className="text-base mb-3 block">Transportation *</Label>
+                    <Label htmlFor="transportation" className="text-base mb-3 block">Method of transportation to a job. *</Label>
                     <Select value={formData.transportation} onValueChange={(value) => handleInputChange('transportation', value)}>
                         <SelectTrigger className={validationErrors.transportation ? 'border-red-500' : ''}>
                             <SelectValue placeholder="Select Transportation" />
@@ -1039,23 +1058,6 @@ function Step3Education({ formData, handleInputChange, validationErrors }: any) 
                     </Select>
                     {validationErrors.transportation && (
                         <p className="text-red-500 text-sm mt-1">{validationErrors.transportation}</p>
-                    )}
-                </div>
-
-                <div>
-                    <Label htmlFor="ccapConnection" className="text-base mb-3 block">How are you connected to C-CAP? *</Label>
-                    <Select value={formData.ccapConnection} onValueChange={(value) => handleInputChange('ccapConnection', value)}>
-                        <SelectTrigger className={validationErrors.ccapConnection ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="Select your connection" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {CCAP_CONNECTION_DROPDOWN_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {validationErrors.ccapConnection && (
-                        <p className="text-red-500 text-sm mt-1">{validationErrors.ccapConnection}</p>
                     )}
                 </div>
             </CardContent>
@@ -1118,11 +1120,16 @@ function Step4Experience({ formData, handleInputChange, validationErrors }: any)
                             <Label htmlFor="currentHoursPerWeek" className="text-base mb-3 block">Hours Per Week *</Label>
                             <Input
                                 id="currentHoursPerWeek"
-                                type="number"
-                                min="0"
-                                max="80"
+                                type="text"
                                 value={formData.currentHoursPerWeek}
-                                onChange={(e) => handleInputChange('currentHoursPerWeek', parseInt(e.target.value) || 0)}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Only allow numbers
+                                    if (value === '' || /^\d+$/.test(value)) {
+                                        handleInputChange('currentHoursPerWeek', parseInt(value) || 0);
+                                    }
+                                }}
+                                placeholder="Enter hours per week"
                                 className={validationErrors.currentHoursPerWeek ? 'border-red-500' : ''}
                             />
                             {validationErrors.currentHoursPerWeek && (
@@ -1180,11 +1187,16 @@ function Step4Experience({ formData, handleInputChange, validationErrors }: any)
                             <Label htmlFor="previousHoursPerWeek" className="text-base mb-3 block">Hours Per Week *</Label>
                             <Input
                                 id="previousHoursPerWeek"
-                                type="number"
-                                min="0"
-                                max="80"
+                                type="text"
                                 value={formData.previousHoursPerWeek}
-                                onChange={(e) => handleInputChange('previousHoursPerWeek', parseInt(e.target.value) || 0)}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Only allow numbers
+                                    if (value === '' || /^\d+$/.test(value)) {
+                                        handleInputChange('previousHoursPerWeek', parseInt(value) || 0);
+                                    }
+                                }}
+                                placeholder="Enter hours per week"
                                 className={validationErrors.previousHoursPerWeek ? 'border-red-500' : ''}
                             />
                             {validationErrors.previousHoursPerWeek && (
@@ -1209,11 +1221,16 @@ function Step5Availability({ formData, handleInputChange, validationErrors }: an
                     <Label htmlFor="hoursPerWeek" className="text-base mb-3 block">Desired Hours Per Week *</Label>
                     <Input
                         id="hoursPerWeek"
-                        type="number"
-                        min="0"
-                        max="60"
+                        type="text"
                         value={formData.hoursPerWeek}
-                        onChange={(e) => handleInputChange('hoursPerWeek', parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            // Only allow numbers
+                            if (value === '' || /^\d+$/.test(value)) {
+                                handleInputChange('hoursPerWeek', parseInt(value) || 0);
+                            }
+                        }}
+                        placeholder="Enter desired hours per week"
                         required
                         className={validationErrors.hoursPerWeek ? 'border-red-500' : ''}
                     />
@@ -1332,7 +1349,7 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
 
                 {/* Resume */}
                 <div className="pt-4 border-t">
-                    <Label className="text-base mb-3 block">Do you have a resume?</Label>
+                    <Label className="text-base mb-3 block">Do you have a resume? *</Label>
                     <RadioGroup value={formData.hasResume} onValueChange={(value) => handleInputChange('hasResume', value)}>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Yes" id="resume-yes" />
@@ -1379,7 +1396,7 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
 
                 {/* Food Handlers Card */}
                 <div className="pt-4 border-t">
-                    <Label className="text-base mb-3 block">Do you have a Food Handlers Card?</Label>
+                    <Label className="text-base mb-3 block">Do you have a Food Handlers Card? *</Label>
                     <RadioGroup value={formData.hasFoodHandlersCard} onValueChange={(value) => handleInputChange('hasFoodHandlersCard', value)}>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Yes" id="food-yes" />
@@ -1430,7 +1447,7 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
 
                 {/* ServSafe */}
                 <div className="pt-4 border-t">
-                    <Label className="text-base mb-3 block">Do you have ServSafe certification?</Label>
+                    <Label className="text-base mb-3 block">Do you have ServSafe certification? *</Label>
                     <RadioGroup value={formData.hasServSafe} onValueChange={(value) => handleInputChange('hasServSafe', value)}>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Yes" id="serv-yes" />

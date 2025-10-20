@@ -34,6 +34,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
 import { toast } from "sonner";
+import { renderTextWithLinks } from "@/lib/linkUtils";
 
 interface Post {
   id: string;
@@ -52,169 +53,7 @@ interface Post {
   };
 }
 
-// Dummy posts data - WILL BE REPLACED WITH API
-const dummyPosts = [
-  {
-    id: 1,
-    user: {
-      name: "Jordan Lee",
-      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
-      handle: "@jordan_chef",
-      bucket: "Pre-Apprentice"
-    },
-    content: "Culinary competition day! The pressure is real but so is the excitement. Learning to work under pressure is crucial in this industry. 💪 #Competition #Culinary",
-    image: "https://images.unsplash.com/photo-1571805529673-0f56b922b359?auto=format&fit=crop&w=600&q=80",
-    likes: 38,
-    comments: 14,
-    shares: 6,
-    timestamp: "2 days ago",
-    dish: "Competition Entry"
-  },
-  {
-    id: 2,
-    user: {
-      name: "Marcus Chen",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      handle: "@marcus_cooks",
-      bucket: "Apprentice"
-    },
-    content: "Today's lesson: The perfect risotto. It's all about patience and constant stirring. Chef says it should flow like lava! 🍚 #Risotto #CookingBasics",
-    image: "https://images.unsplash.com/photo-1556909172-54557c7e4fb7?auto=format&fit=crop&w=600&q=80",
-    likes: 18,
-    comments: 5,
-    shares: 2,
-    timestamp: "4 hours ago",
-    dish: "Risotto Milanese"
-  },
-  {
-    id: 3,
-    user: {
-      name: "Emma Rodriguez",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      handle: "@emma_bakes",
-      bucket: "Pre-Apprentice"
-    },
-    content: "First time making croissants from scratch! The lamination process is so therapeutic. Can't wait to perfect this technique. 🥐 #Baking #Pastry",
-    image: "https://images.unsplash.com/photo-1607631568010-a87245c0daf8?auto=format&fit=crop&w=600&q=80",
-    likes: 31,
-    comments: 12,
-    shares: 7,
-    timestamp: "6 hours ago",
-    dish: "Croissants"
-  },
-  {
-    id: 4,
-    user: {
-      name: "David Kim",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      handle: "@david_kitchen",
-      bucket: "Completed Pre-Apprentice"
-    },
-    content: "Kitchen teamwork makes the dream work! Nothing beats the energy of a busy service. Everyone has their role and we move like a well-oiled machine. 👨‍🍳 #Teamwork #KitchenLife",
-    image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=600&q=80",
-    likes: 42,
-    comments: 15,
-    shares: 9,
-    timestamp: "8 hours ago",
-    dish: "Team Service"
-  },
-  {
-    id: 5,
-    user: {
-      name: "Lisa Thompson",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
-      handle: "@lisa_culinary",
-      bucket: "Apprentice"
-    },
-    content: "Today's challenge: Plating with precision. Every element has its place, every sauce has its purpose. The art of presentation is just as important as taste. 🎨 #Plating #CulinaryArts",
-    image: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80",
-    likes: 28,
-    comments: 9,
-    shares: 4,
-    timestamp: "1 day ago",
-    dish: "Plating Practice"
-  },
-  {
-    id: 6,
-    user: {
-      name: "Alex Rivera",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-      handle: "@alex_pastry",
-      bucket: "Completed Apprentice"
-    },
-    content: "Pastry perfection achieved! The key is temperature control and timing. These macarons took 3 attempts but finally got the perfect feet. 🍪 #Pastry #Macarons",
-    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80",
-    likes: 56,
-    comments: 23,
-    shares: 12,
-    timestamp: "1 day ago",
-    dish: "Macarons"
-  },
-  {
-    id: 7,
-    user: {
-      name: "Sarah Johnson",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      handle: "@sarah_chef",
-      bucket: "Completed Apprentice"
-    },
-    content: "Just finished plating my final project for the semester! The attention to detail in French cuisine is incredible. #CulinaryArts #Plating",
-    image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80",
-    likes: 24,
-    comments: 8,
-    shares: 3,
-    timestamp: "2 hours ago",
-    dish: "Beef Wellington"
-  },
-  {
-    id: 8,
-    user: {
-      name: "Maya Patel",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
-      handle: "@maya_cooks",
-      bucket: "Apprentice"
-    },
-    content: "Learning from the best! Chef's demonstration on knife skills today was incredible. Speed comes with practice, but precision comes with focus. 🔪 #KnifeSkills #CulinaryBasics",
-    image: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=600&q=80",
-    likes: 22,
-    comments: 7,
-    shares: 3,
-    timestamp: "2 days ago",
-    dish: "Knife Skills"
-  },
-  {
-    id: 9,
-    user: {
-      name: "Ryan Foster",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      handle: "@ryan_kitchen",
-      bucket: "Completed Pre-Apprentice"
-    },
-    content: "Group project success! Our team nailed the menu planning and execution. Collaboration is everything in the kitchen. Everyone brought their A-game today! 👨‍🍳👩‍🍳 #Teamwork #Success",
-    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80",
-    likes: 45,
-    comments: 18,
-    shares: 8,
-    timestamp: "3 days ago",
-    dish: "Group Menu"
-  },
-  {
-    id: 10,
-    user: {
-      name: "Sophie Williams",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      handle: "@sophie_final",
-      bucket: "Completed Apprentice"
-    },
-    content: "Final presentation complete! Four years of hard work, late nights, and countless hours in the kitchen have led to this moment. Proud to be a C-CAP graduate! 🎓 #Graduation #CulinaryArts",
-    image: "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=600&q=80",
-    likes: 89,
-    comments: 34,
-    shares: 21,
-    timestamp: "3 days ago",
-    dish: "Final Presentation"
-  }
-];
+
 
 // Types
 interface Announcement {
@@ -385,7 +224,7 @@ export default function Homepage() {
         <div className="max-w-7xl w-full mx-auto">
           <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center">
             <p className="text-3xl font-bold text-black">
-              CCAP Student Dashboard
+              C-CAP Student Dashboard
             </p>
             <p className="text-xl font-medium text-gray-800">
               Welcome back, {user?.full_name}
@@ -566,7 +405,7 @@ export default function Homepage() {
                               {announcement.title}
                             </h4>
                             <p className="text-sm text-gray-600 mb-2 leading-relaxed">
-                              {announcement.content}
+                              {renderTextWithLinks(announcement.content)}
                             </p>
                             <p className="text-xs text-gray-500 mb-2">
                               {formatDate(announcement.created_at)}
@@ -622,11 +461,11 @@ export default function Homepage() {
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg font-semibold text-black">
-                Sinatra - CCAP
+                C-CAP
               </span>
             </div>
             <div className="text-sm text-gray-600">
-              © 2025 Sinatra Insurance Group. All rights reserved.
+              © 2025 C-CAP. All rights reserved.
             </div>
           </div>
         </div>

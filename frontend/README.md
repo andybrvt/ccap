@@ -1,4 +1,4 @@
-# CCAP Frontend - Quick Start
+# C-CAP Frontend - Quick Start
 
 Vite + React + TypeScript + Tailwind v4 (shadcn/ui). Minimal steps to run locally on macOS.
 

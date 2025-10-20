@@ -73,4 +73,19 @@ export const API_ENDPOINTS = {
   ADMIN_GET_ALL_ADMINS: '/admin/admins',                 // GET all admins (super admin only)
   ADMIN_CREATE_ADMIN: '/admin/admins',                   // POST create new admin (super admin only)
   ADMIN_RESET_PASSWORD: '/admin/admins/',                // POST reset admin password (append {id}/reset-password)
+
+  // Email notification endpoints
+  EMAIL_NOTIFICATIONS_GET_ALL: '/admin/email-notifications/',     // GET all email notifications (admin only)
+  EMAIL_NOTIFICATIONS_CREATE: '/admin/email-notifications/',      // POST create email notification (admin only)
+  EMAIL_NOTIFICATIONS_UPDATE: '/admin/email-notifications/',       // PUT update email notification (admin only)
+  EMAIL_NOTIFICATIONS_DELETE: '/admin/email-notifications/',       // DELETE email notification (admin only)
+  EMAIL_NOTIFICATIONS_TOGGLE: '/admin/email-notifications/',      // PATCH toggle active status (admin only)
+  EMAIL_NOTIFICATIONS_GET_ACTIVE: '/admin/email-notifications/active', // GET active emails (admin only)
+
+  // Email logs endpoints
+  EMAIL_LOGS_GET_ALL: '/admin/email-logs',                        // GET email logs with pagination (admin only)
+  EMAIL_LOGS_GET_STATS: '/admin/email-logs/stats',               // GET email statistics (admin only)
+
+  // Test email endpoint
+  EMAIL_TEST_SEND: '/admin/test-email',                           // POST send test email (admin only)
 };

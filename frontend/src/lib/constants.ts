@@ -1,13 +1,13 @@
-// CCAP Connection Options
+// C-CAP Connection Options
 export const CCAP_CONNECTION_OPTIONS = [
-    "Arizona - CCAP",
-    "Chicago - CCAP",
-    "Los Angeles - CCAP",
-    "New York/New Jersey - CCAP",
-    "Philadelphia - CCAP",
-    "Washington DC - CCAP",
-    "Miami - CCAP",
-    "Houston - CCAP",
+    "Arizona - C-CAP",
+    "Chicago - C-CAP",
+    "Los Angeles - C-CAP",
+    "New York/New Jersey - C-CAP",
+    "Philadelphia - C-CAP",
+    "Washington DC - C-CAP",
+    "Miami - C-CAP",
+    "Houston - C-CAP",
     "Other"
 ];
 
@@ -20,7 +20,7 @@ export const CCAP_CONNECTION_DROPDOWN_OPTIONS = CCAP_CONNECTION_OPTIONS.map(opti
 // Culinary Interest Options
 export const CULINARY_INTEREST_OPTIONS = [
     "Cook",
-    "Bakers",
+    "Baker",
     "Front of the house"
 ];
 

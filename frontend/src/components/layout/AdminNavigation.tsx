@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Building2, ChevronDown, Home, FileText, User, Settings, LogOut, Calculator, Search } from "lucide-react";
+import { Building2, ChevronDown, Home, FileText, User, Settings, LogOut, Calculator, Search, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -59,14 +59,13 @@ export function Navigation() {
           <div className="flex items-center">
             <div
               onClick={() => setLocation("/admin")}
-              className="cursor-pointer flex items-center space-x-3"
+              className="cursor-pointer flex items-center"
             >
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-gray-900 font-serif text-lg sm:text-xl lg:text-2xl xl:text-3xl font-medium tracking-tight">
-                Sinatra - CCAP
-              </h1>
+              <img
+                src="/ccap-logo.png"
+                alt="C-CAP Logo"
+                className="h-8 w-auto"
+              />
             </div>
           </div>
 
@@ -203,6 +202,12 @@ export function Navigation() {
                       <Link href="/admin/admin-management" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
                         <Settings className="w-4 h-4 text-gray-500" />
                         <span className="text-sm text-gray-700">Admin Management</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/email-notifications" className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50">
+                        <Mail className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">Email Notifications</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-100" />

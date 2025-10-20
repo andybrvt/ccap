@@ -26,6 +26,7 @@ import Layout from "@/components/layout/StudentLayout";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
 import { toast } from "sonner";
+import { renderTextWithLinks } from "@/lib/linkUtils";
 
 // Types
 interface Announcement {
@@ -232,7 +233,7 @@ export default function Announcements() {
                           {announcement.title}
                         </h3>
                         <p className="text-gray-600 mb-3 leading-relaxed">
-                          {announcement.content}
+                          {renderTextWithLinks(announcement.content)}
                         </p>
                         <p className="text-sm text-gray-500 mb-3">
                           {formatDate(announcement.created_at)}

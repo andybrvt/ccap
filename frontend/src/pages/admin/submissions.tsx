@@ -313,7 +313,7 @@ export default function Submissions() {
       const matchesBucket = selectedBuckets.length === 0 ||
         (item.bucket && selectedBuckets.includes(item.bucket));
 
-      // CCAP Connection filtering
+      // C-CAP Connection filtering
       const matchesCcapConnection = selectedCcapConnections.length === 0 ||
         (item.ccapConnection && selectedCcapConnections.includes(item.ccapConnection));
 
@@ -438,7 +438,7 @@ export default function Submissions() {
   const columns: Column<Submission>[] = [
     {
       key: 'name',
-      header: 'Candidate',
+      header: 'Name',
       minWidth: '280px',
       render: (item) => (
         <div className="space-y-1">
@@ -469,49 +469,16 @@ export default function Submissions() {
     },
     {
       key: 'location',
-      header: 'Location',
+      header: 'C-CAP Connection',
       minWidth: '200px',
       render: (item) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <Building className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <span className="text-gray-700 text-sm">
-              {item.city}, {item.state}
+              {item.ccapConnection || 'Not specified'}
             </span>
           </div>
-          {item.willRelocate === "Yes" && item.relocationStates.length > 0 && (
-            <div className="text-xs text-gray-500">
-              Will relocate to: {
-                item.relocationStates.length <= 5
-                  ? item.relocationStates.join(", ")
-                  : `${item.relocationStates.slice(0, 5).join(", ")} +${item.relocationStates.length - 5} more`
-              }
-            </div>
-          )}
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'education',
-      header: 'Education',
-      minWidth: '180px',
-      render: (item) => (
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            <span className="text-gray-700 text-sm">
-              {item.highSchool}
-            </span>
-          </div>
-          <div className="text-xs text-gray-500">
-            Graduates: {item.graduationYear}
-          </div>
-          {item.ccapConnection && (
-            <div className="text-xs text-gray-500">
-              CCAP Connection: {item.ccapConnection}
-            </div>
-          )}
         </div>
       ),
       sortable: true,
@@ -534,120 +501,27 @@ export default function Submissions() {
       sortable: true,
     },
     {
-      key: 'availability',
-      header: 'Availability',
-      minWidth: '200px',
+      key: 'education',
+      header: 'Education',
+      minWidth: '180px',
       render: (item) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+            <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <span className="text-gray-700 text-sm">
-              {item.hoursWanted} hrs/week
+              {item.highSchool}
             </span>
           </div>
-          <div className="text-xs text-gray-500 max-w-[150px] truncate" title={item.availableTimes}>
-            {item.availableTimes}
-          </div>
           <div className="text-xs text-gray-500">
-            Weekends: {item.availableWeekends}
+            Graduates: {item.graduationYear}
           </div>
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'experience',
-      header: 'Experience',
-      minWidth: '150px',
-      render: (item) => (
-        <div className="space-y-1">
-          {item.currentJob === "Yes" ? (
-            <div className="flex items-center">
-              <Briefcase className="w-4 h-4 text-gray-700 mr-2 flex-shrink-0" />
-              <Badge variant="default" className="bg-blue-100 text-blue-800">
-                Currently Working
-              </Badge>
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 text-gray-600 mr-2 flex-shrink-0" />
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                No Current Job
-              </Badge>
-            </div>
-          )}
-          <div className="text-xs text-gray-500">
-            {item.culinaryYears} years culinary
-          </div>
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'credentials',
-      header: 'Credentials',
-      minWidth: '150px',
-      render: (item) => (
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            {item.foodHandlersCard === "Yes" ? (
-              <Utensils className="w-4 h-4 text-green-600" />
-            ) : (
-              <Utensils className="w-4 h-4 text-gray-400" />
-            )}
-            <span className="text-xs text-gray-600">Food Handler</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            {item.servsafeCredentials === "Yes" ? (
-              <Shield className="w-4 h-4 text-green-600" />
-            ) : (
-              <Shield className="w-4 h-4 text-gray-400" />
-            )}
-            <span className="text-xs text-gray-600">ServSafe</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            {item.hasResume === "Yes" ? (
-              <FileCheck className="w-4 h-4 text-green-600" />
-            ) : (
-              <FileCheck className="w-4 h-4 text-gray-400" />
-            )}
-            <span className="text-xs text-gray-600">Resume</span>
-          </div>
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'interests',
-      header: 'Interests',
-      minWidth: '150px',
-      render: (item) => (
-        <div className="space-y-1">
-          {item.interestedOptions.length <= 3 ? (
-            item.interestedOptions.map((option, index) => (
-              <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
-                {option}
-              </Badge>
-            ))
-          ) : (
-            <>
-              {item.interestedOptions.slice(0, 3).map((option, index) => (
-                <Badge key={index} variant="outline" className="mr-1 mb-1 text-xs">
-                  {option}
-                </Badge>
-              ))}
-              <Badge variant="outline" className="mr-1 mb-1 text-xs bg-gray-100 text-gray-600">
-                +{item.interestedOptions.length - 3} more
-              </Badge>
-            </>
-          )}
         </div>
       ),
       sortable: true,
     },
     {
       key: 'submissionDate',
-      header: 'Submitted',
+      header: 'Submitted Date',
       minWidth: '120px',
       render: (item) => (
         <div className="flex items-center space-x-2">
@@ -661,13 +535,13 @@ export default function Submissions() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'View',
       minWidth: '120px',
       align: 'right',
       render: (item) => (
         <div className="flex items-center justify-end space-x-2">
           <Button size="sm" className="bg-black text-white hover:bg-gray-800 hover:cursor-pointer" onClick={() => handleViewDetails(item)}>
-            View Details
+            View
           </Button>
         </div>
       ),
@@ -769,17 +643,17 @@ export default function Submissions() {
                   />
                 </div>
 
-                {/* CCAP Connection Filter */}
+                {/* C-CAP Connection Filter */}
                 <div className="min-w-[180px]">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    CCAP Connection
+                    C-CAP Connection
                   </label>
                   <MultiSelect
                     key={`ccap-connections-${selectedCcapConnections.length}`}
                     options={uniqueCcapConnections}
                     onValueChange={setSelectedCcapConnections}
                     defaultValue={selectedCcapConnections}
-                    placeholder="Select CCAP Connection"
+                    placeholder="Select C-CAP Connection"
                     maxCount={3}
                   />
                 </div>

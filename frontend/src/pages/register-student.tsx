@@ -124,11 +124,14 @@ export default function RegisterStudentPage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        placeholder="Enter your email"
+                                        placeholder="personal email address"
                                         className="pl-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
                                         {...form.register("email")}
                                     />
                                 </div>
+                                <p className="text-yellow-400 text-sm font-medium">
+                                    **Do not use your school email address**
+                                </p>
                                 {form.formState.errors.email && (
                                     <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
                                         {form.formState.errors.email.message}

@@ -35,7 +35,7 @@ export default function OnboardingComplete() {
                             🎉 Congratulations!
                         </CardTitle>
                         <p className="text-xl text-gray-600 mb-4">
-                            Welcome to C-CAP!
+                            Welcome to the C-CAP Apprentice Program.
                         </p>
                         <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-green-500 mx-auto rounded-full"></div>
                     </CardHeader>
@@ -73,10 +73,6 @@ export default function OnboardingComplete() {
                                 <li className="flex items-start gap-3">
                                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                                     <span>Start building your culinary portfolio</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                                    <span>Connect with mentors and peers</span>
                                 </li>
                             </ul>
                         </div>
