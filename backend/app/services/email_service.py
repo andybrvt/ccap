@@ -16,7 +16,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class EmailService:
     def __init__(self):
         self.api_key = os.getenv("SENDGRID_API_KEY")
-        self.from_email = os.getenv("MAIL_FROM", "andybrvt@gmail.com")
+        self.from_email = os.getenv("MAIL_FROM", "admin@c-cap-platform.com")
         self.from_name = os.getenv("MAIL_FROM_NAME", "C-CAP Apprentice Program")
         
         if not self.api_key:
@@ -174,11 +174,11 @@ class EmailService:
             <p>We are excited to guide you on your culinary journey.</p>
             
             <p>Best regards,<br>
-            Lori Wright<br>
-            Apprenticeship Coordinator</p>
+            Jill Smith<br>
+            Director of Apprenticeships</p>
             
             <!-- Signature image placeholder -->
-            <img src="cid:lori_wright_signature" alt="Lori Wright Signature" style="max-width: 200px; height: auto; margin-top: 20px;">
+            <img src="cid:jill_smith_signature" alt="Jill Smith Signature" style="max-width: 200px; height: auto; margin-top: 20px;">
         </body>
         </html>
         """

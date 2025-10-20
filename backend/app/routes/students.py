@@ -223,16 +223,16 @@ async def update_my_profile(
                 else:
                     logger.warning(f"Attachment not found: {cooking_schedule_path}")
 
-                # Load Lori Wright Signature Image (for embedding)
-                signature_image_path = attachments_dir / "Outlook-2cgc1pcy.png"
+                # Load Jill Smith Signature Image (for embedding)
+                signature_image_path = attachments_dir / "jill_smith_signature.png"
                 if signature_image_path.exists():
                     with open(signature_image_path, "rb") as f:
                         student_attachments.append({
                             "content": base64.b64encode(f.read()).decode(),
                             "type": "image/png",
-                            "filename": "lori_wright_signature.png",
+                            "filename": "jill_smith_signature.png",
                             "disposition": "inline",
-                            "content_id": "lori_wright_signature"
+                            "content_id": "jill_smith_signature"
                         })
                 else:
                     logger.warning(f"Signature image not found: {signature_image_path}")
