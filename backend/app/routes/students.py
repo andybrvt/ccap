@@ -12,6 +12,11 @@ from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile, Bulk
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
 from app.models.student_profile import StudentProfile
 from app.utils.s3 import S3Service
+from app.repositories.email_notification import EmailNotificationRepository
+from app.services.email_service import email_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -132,7 +137,7 @@ def get_my_profile(
     return profile
 
 @router.put("/me/profile", response_model=StudentProfileResponse)
-def update_my_profile(
+async def update_my_profile(
     profile_data: StudentProfileUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
@@ -147,6 +152,14 @@ def update_my_profile(
     
     student_repo = StudentRepository(db)
     
+    # Check if this is onboarding completion (onboarding_step being set to 0)
+    was_onboarding_completed = False
+    if hasattr(profile_data, 'onboarding_step') and profile_data.onboarding_step == 0:
+        # Check if student was previously in onboarding (step > 0)
+        current_profile = student_repo.get_student_profile(current_user.id)
+        if current_profile and current_profile.onboarding_step > 0:
+            was_onboarding_completed = True
+    
     # Update the student's own profile
     updated_profile = student_repo.update_student_profile(current_user.id, profile_data)
     if not updated_profile:
@@ -154,6 +167,37 @@ def update_my_profile(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Student profile not found"
         )
+    
+    # Send emails if onboarding was just completed
+    if was_onboarding_completed:
+        try:
+            # Send welcome email to student
+            student_name = f"{updated_profile.first_name} {updated_profile.last_name}".strip()
+            if not student_name:
+                student_name = current_user.username  # Fallback to username
+            
+            await email_service.send_student_welcome_email(
+                student_email=current_user.email,
+                student_name=student_name
+            )
+            
+            # Send notification email to admin(s)
+            email_repo = EmailNotificationRepository(db)
+            admin_emails = email_repo.get_active_emails()
+            
+            if admin_emails:
+                await email_service.send_admin_notification_email(
+                    admin_emails=admin_emails,
+                    student_name=student_name,
+                    student_email=current_user.email,
+                    student_school=updated_profile.high_school or "Not specified"
+                )
+            
+            logger.info(f"Onboarding completion emails sent for student: {current_user.email}")
+            
+        except Exception as e:
+            # Log error but don't fail the profile update
+            logger.error(f"Failed to send onboarding completion emails for {current_user.email}: {str(e)}")
     
     return updated_profile
 

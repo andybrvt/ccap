@@ -7,6 +7,8 @@ from .like import Like
 from .announcement import Announcement
 from .program_status import ProgramStatus
 from .certification import Certification
+from .email_notification import EmailNotification
+from .email_log import EmailLog
 
 # Make models available for imports
 __all__ = [
@@ -19,4 +21,6 @@ __all__ = [
     "Announcement",
     "ProgramStatus",
     "Certification",
+    "EmailNotification",
+    "EmailLog",
 ]

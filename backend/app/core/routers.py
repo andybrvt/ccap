@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, students, announcements, posts, admin
+from app.routes import auth, students, announcements, posts, admin, email_notifications, test_email, email_logs
 
 def setup_routers(app: FastAPI):
     """
@@ -38,5 +38,26 @@ def setup_routers(app: FastAPI):
         admin.router,
         prefix="/api/admin",
         tags=["Admin Management"]
+    )
+    
+    # Email notification routes
+    app.include_router(
+        email_notifications.router,
+        prefix="/api/admin/email-notifications",
+        tags=["Email Notifications"]
+    )
+    
+    # Test email route (for development)
+    app.include_router(
+        test_email.router,
+        prefix="/api/admin",
+        tags=["Email Testing"]
+    )
+    
+    # Email logs route
+    app.include_router(
+        email_logs.router,
+        prefix="/api/admin",
+        tags=["Email Logs"]
     )
 
