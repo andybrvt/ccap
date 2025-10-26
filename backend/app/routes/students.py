@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel
 import os
 import base64
 from pathlib import Path
+from app.core.security import get_password_hash
 
 from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
@@ -900,4 +901,131 @@ def bulk_update_program_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to bulk update program status: {str(e)}"
+        )
+
+
+class StudentBulkCreateRequest(BaseModel):
+    email: str
+    first_name: str
+    last_name: str
+    high_school: Optional[str] = ""
+    graduation_year: Optional[str] = ""
+    preferred_name: Optional[str] = ""
+    phone: Optional[str] = ""
+    city: Optional[str] = ""
+    state: Optional[str] = ""
+    zip_code: Optional[str] = ""
+
+
+class BulkCreateRequest(BaseModel):
+    students: List[StudentBulkCreateRequest]
+
+
+@router.post("/bulk-create")
+def bulk_create_students(
+    request: BulkCreateRequest,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk create students - Admin only
+    """
+    try:
+        students_created = []
+        students_failed = []
+        
+        for student_data in request.students:
+            try:
+                # Validate required fields
+                if not student_data.email or not student_data.first_name or not student_data.last_name:
+                    students_failed.append({
+                        'email': student_data.email or 'Unknown',
+                        'error': 'Missing required fields'
+                    })
+                    continue
+                
+                # Check if user already exists
+                existing_user = db.query(User).filter(User.email == student_data.email).first()
+                if existing_user:
+                    students_failed.append({
+                        'email': student_data.email,
+                        'error': 'User already exists'
+                    })
+                    continue
+                
+                # Create username from email
+                username = student_data.email.split('@')[0]
+                
+                # Generate a random temporary password
+                import secrets
+                import string
+                password_characters = string.ascii_letters + string.digits
+                temp_password = ''.join(secrets.choice(password_characters) for _ in range(12))
+                
+                # Create user
+                hashed_password = get_password_hash(temp_password)
+                new_user = User(
+                    email=student_data.email,
+                    username=username,
+                    hashed_password=hashed_password,
+                    role='student'
+                )
+                
+                db.add(new_user)
+                db.flush()  # Flush to get the user ID
+                
+                # Create student profile
+                profile_data = {
+                    'user_id': new_user.id,
+                    'first_name': student_data.first_name,
+                    'last_name': student_data.last_name,
+                }
+                
+                # Add optional fields
+                if student_data.high_school:
+                    profile_data['high_school'] = student_data.high_school
+                if student_data.graduation_year:
+                    profile_data['graduation_year'] = student_data.graduation_year
+                if student_data.preferred_name:
+                    profile_data['preferred_name'] = student_data.preferred_name
+                if student_data.phone:
+                    profile_data['phone'] = student_data.phone
+                if student_data.city:
+                    profile_data['city'] = student_data.city
+                if student_data.state:
+                    profile_data['state'] = student_data.state
+                if student_data.zip_code:
+                    profile_data['zip_code'] = student_data.zip_code
+                
+                new_profile = StudentProfile(**profile_data)
+                db.add(new_profile)
+                
+                students_created.append({
+                    'email': student_data.email,
+                    'name': f'{student_data.first_name} {student_data.last_name}',
+                    'temp_password': temp_password
+                })
+            
+            except Exception as e:
+                students_failed.append({
+                    'email': student_data.email,
+                    'error': str(e)
+                })
+                continue
+        
+        # Commit all successful creations
+        db.commit()
+        
+        return {
+            'message': f'Created {len(students_created)} student(s)',
+            'created': students_created,
+            'failed': students_failed,
+            'total': len(students_created) + len(students_failed)
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Failed to bulk create students: {str(e)}'
         )
