@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner"
 
 import AdminHomepage from "@/pages/admin/homepage";
 import Login from "@/pages/login";
+import ResetPassword from "@/pages/reset-password";
 import RegisterStudent from "@/pages/register-student";
 import NotFound from "@/pages/not-found";
 import AdminAnnouncements from "@/pages/admin/anouncements";
@@ -41,6 +42,7 @@ function AppRoutes() {
     <Switch>
       {/* Public routes - always accessible */}
       <Route path="/login" component={Login} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/register-student" component={RegisterStudent} />
 
       {/* Admin routes - require admin role */}

@@ -4,6 +4,8 @@ export const API_ENDPOINTS = {
   AUTH_LOGIN: '/auth/login',
   AUTH_ME: '/auth/me',
   AUTH_REGISTER_STUDENT: '/auth/register/student',
+  AUTH_FORGOT_PASSWORD: '/auth/forgot-password',
+  AUTH_RESET_PASSWORD: '/auth/reset-password',
 
   // Student endpoints
   STUDENT_GET_PROFILE: '/students/me/profile',    // GET full profile
