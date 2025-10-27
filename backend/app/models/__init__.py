@@ -9,6 +9,7 @@ from .program_status import ProgramStatus
 from .certification import Certification
 from .email_notification import EmailNotification
 from .email_log import EmailLog
+from .password_reset import PasswordResetToken
 
 # Make models available for imports
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "Certification",
     "EmailNotification",
     "EmailLog",
+    "PasswordResetToken",
 ]

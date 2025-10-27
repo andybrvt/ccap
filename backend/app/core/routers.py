@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, students, announcements, posts, admin, email_notifications, test_email, email_logs
+from app.routes import auth, students, announcements, posts, admin, email_notifications, test_email, email_logs, auth_reset
 
 def setup_routers(app: FastAPI):
     """
@@ -10,6 +10,13 @@ def setup_routers(app: FastAPI):
         auth.router,
         prefix="/api/auth",
         tags=["Authentication"]
+    )
+    
+    # Password reset routes
+    app.include_router(
+        auth_reset.router,
+        prefix="/api/auth",
+        tags=["Password Reset"]
     )
     
     # Student management routes

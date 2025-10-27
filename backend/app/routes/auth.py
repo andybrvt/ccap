@@ -5,8 +5,12 @@ from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.user import User
 from app.models.student_profile import StudentProfile
+from app.models.password_reset import PasswordResetToken
 from app.schemas.user import UserCreate, UserResponse, Token, UserLogin
 from app.deps.auth import get_current_active_user, require_admin
+from datetime import datetime, timedelta
+import secrets
+from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
 

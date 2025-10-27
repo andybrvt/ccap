@@ -30,4 +30,5 @@ class User(Base):
     likes = relationship("Like", back_populates="user", cascade="all, delete-orphan")
     announcements = relationship("Announcement", back_populates="author")
     program_status_changes = relationship("ProgramStatus", back_populates="admin")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
 
