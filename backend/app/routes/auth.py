@@ -11,10 +11,14 @@ from app.deps.auth import get_current_active_user, require_admin
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user_data: UserCreate, 
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(require_admin)
+):
     """
-    Public registration endpoint - FOR DEVELOPMENT/TESTING ONLY
-    TODO: Disable this in production! Use /admin/register instead
+    Admin-only registration endpoint
+    Only admins can create new user accounts (for testing/admin purposes)
     """
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -52,7 +56,12 @@ def register_student(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     Public student registration endpoint
     Creates a student account with an empty profile
+    IMPORTANT: This endpoint ONLY creates users with role "student"
     """
+    # SECURITY: Explicitly override any role that might be sent in user_data
+    # Even if someone tries to set role="admin", it will be overwritten to "student"
+    user_data.role = "student"
+    
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -69,13 +78,13 @@ def register_student(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Username already taken"
         )
     
-    # Force role to be student
+    # Force role to be student (explicit override for security)
     hashed_password = get_password_hash(user_data.password)
     new_user = User(
         email=user_data.email,
         username=user_data.username,
         hashed_password=hashed_password,
-        role="student"  # Force student role
+        role="student"  # Always "student" - cannot create admin through this endpoint
     )
     
     db.add(new_user)

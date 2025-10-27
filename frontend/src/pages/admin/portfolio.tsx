@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Loader2 } from "lucide-react";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Loader2, ArrowLeft } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { api } from '@/lib/apiService';
@@ -50,6 +50,11 @@ const getBucketStyling = (bucket: string) => {
 export default function Portfolio() {
   const [match, params] = useRoute("/admin/portfolio/:id");
   const [, setLocation] = useLocation();
+
+  // Get query parameters from the actual browser URL (not the location route)
+  const currentUrl = window.location.href;
+  const urlObj = new URL(currentUrl);
+  const searchParams = urlObj.searchParams;
   const [user, setUser] = useState<Submission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -228,6 +233,12 @@ export default function Portfolio() {
       </Layout>
     );
   }
+
+  const handleBackToSubmissions = () => {
+    // Reconstruct URL with query params (just page parameter)
+    const queryString = searchParams.toString();
+    setLocation(`/admin/submissions${queryString ? `?${queryString}` : ''}`);
+  };
 
   return (
     <Layout>

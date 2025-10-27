@@ -8,7 +8,10 @@ from sqlalchemy import pool
 from alembic import context
 
 # Load environment variables
-load_dotenv()
+# Load .env.local for local development, but not on Railway
+if not os.getenv("RAILWAY_ENVIRONMENT"):
+    load_dotenv(".env.local")
+load_dotenv(".env")
 
 # Import your models and database
 from app.core.database import Base

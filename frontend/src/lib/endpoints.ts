@@ -13,7 +13,9 @@ export const API_ENDPOINTS = {
   ADMIN_GET_ALL_STUDENTS: '/students/',          // GET all students (admin only)
   ADMIN_SEARCH_STUDENTS: '/students/search',     // GET search students (admin only, requires ?q=query)
   ADMIN_GET_STUDENT: '/students/',               // GET single student by ID (admin only)
+  ADMIN_DELETE_STUDENT: '/students/',            // DELETE student by ID (admin only)
   ADMIN_BULK_UPDATE_PROGRAM_STATUS: '/students/bulk-update-program-status', // POST bulk update program status (admin only)
+  ADMIN_BULK_CREATE_STUDENTS: '/students/bulk-create', // POST bulk create students (admin only)
 
   // Student file uploads
   STUDENT_UPLOAD_PROFILE_PICTURE: '/students/profile/picture', // POST upload profile picture

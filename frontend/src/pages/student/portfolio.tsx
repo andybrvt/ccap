@@ -684,11 +684,11 @@ export default function Portfolio() {
               {/* Chapter Reflection Input */}
               <div className="space-y-2">
                 <Label htmlFor="caption" className="text-sm font-medium">
-                  Chapter Reflection
+                  Technique, Plating & Taste
                 </Label>
                 <Textarea
                   id="caption"
-                  placeholder="Write your reflection on this chapter..."
+                  placeholder="Describe the technique, plating, and taste..."
                   value={newPostCaption}
                   onChange={(e) => setNewPostCaption(e.target.value)}
                   className="min-h-[100px] resize-none"

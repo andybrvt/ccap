@@ -6,7 +6,12 @@ from app.core.routers import setup_routers
 import logging
 
 # Load environment variables
-load_dotenv()
+# Load .env.local only in local development (not in production)
+if not os.getenv("RAILWAY_ENVIRONMENT"):
+    load_dotenv(".env.local")  # Local development with test database
+
+# Always load .env as fallback
+load_dotenv(".env")
 
 # Configure logging
 logging.basicConfig(

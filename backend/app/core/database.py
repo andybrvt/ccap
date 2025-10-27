@@ -4,10 +4,20 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env.local only in local development (not in production)
+# Railway sets DATABASE_URL, so if it's not set, we're in local dev
+if not os.getenv("RAILWAY_ENVIRONMENT"):
+    load_dotenv(".env.local")  # Local development with test database
+
+# Always load .env as fallback
+load_dotenv(".env")
 
 # Database URL from environment
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ccap.db")
+
+# Log which database is being used (safe - only shows hostname)
+if "railway" in DATABASE_URL or "localhost" in DATABASE_URL:
+    print(f"[DEBUG] Using database: {DATABASE_URL.split('@')[1].split('/')[0] if '@' in DATABASE_URL else DATABASE_URL}")
 
 # Create SQLAlchemy engine
 engine = create_engine(

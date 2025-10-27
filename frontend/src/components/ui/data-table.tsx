@@ -78,7 +78,7 @@ export default function Table<T extends Record<string, unknown>>({
   const filteredData = useMemo(() => {
     const filtered = data.filter((item) => {
       // Search filtering
-      const matchesSearch = searchKeys.length === 0 || searchTerm === "" || 
+      const matchesSearch = searchKeys.length === 0 || searchTerm === "" ||
         searchKeys.some(key => {
           const value = item[key];
           return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
@@ -99,9 +99,9 @@ export default function Table<T extends Record<string, unknown>>({
       filtered.sort((a, b) => {
         const aValue = a[sortKey];
         const bValue = b[sortKey];
-        
+
         if (aValue === bValue) return 0;
-        
+
         let comparison = 0;
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           comparison = aValue.localeCompare(bValue);
@@ -112,7 +112,7 @@ export default function Table<T extends Record<string, unknown>>({
         } else {
           comparison = String(aValue).localeCompare(String(bValue));
         }
-        
+
         return sortOrder === 'asc' ? comparison : -comparison;
       });
     }
@@ -129,7 +129,7 @@ export default function Table<T extends Record<string, unknown>>({
 
   const handleSort = (key: string) => {
     if (!sortable) return;
-    
+
     if (sortKey === key) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -152,7 +152,7 @@ export default function Table<T extends Record<string, unknown>>({
 
   const renderSortIcon = (columnKey: string) => {
     if (!sortable || sortKey !== columnKey) return null;
-    
+
     return (
       <span className="ml-1">
         {sortOrder === 'asc' ? '↑' : '↓'}
@@ -228,11 +228,9 @@ export default function Table<T extends Record<string, unknown>>({
                 {columns.map((column) => (
                   <TableHead
                     key={column.key}
-                    className={`font-semibold text-gray-900 border-gray-200 ${
-                      column.minWidth ? `min-w-[${column.minWidth}]` : ''
-                    } ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''} ${
-                      sortable && column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
-                    }`}
+                    className={`font-semibold text-gray-900 border-gray-200 ${column.minWidth ? `min-w-[${column.minWidth}]` : ''
+                      } ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''} ${sortable && column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                      }`}
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
                     <div className="flex items-center">
@@ -253,12 +251,11 @@ export default function Table<T extends Record<string, unknown>>({
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}
-                      className={`border-gray-200 ${
-                        column.minWidth ? `min-w-[${column.minWidth}]` : ''
-                      } ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}
-                                         >
-                       {column.render ? column.render(item) : String(item[column.key] || '')}
-                     </TableCell>
+                      className={`border-gray-200 ${column.minWidth ? `min-w-[${column.minWidth}]` : ''
+                        } ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}
+                    >
+                      {column.render ? column.render(item) : String(item[column.key] || '')}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))}
@@ -293,7 +290,7 @@ export default function Table<T extends Record<string, unknown>>({
                 {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-center space-x-2">
               <Button
                 variant="outline"
@@ -304,18 +301,18 @@ export default function Table<T extends Record<string, unknown>>({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              
+
               <div className="flex items-center space-x-1">
                 {(() => {
                   const pages = [];
                   const showPages = 3;
                   let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
                   const endPage = Math.min(totalPages, startPage + showPages - 1);
-                  
+
                   if (endPage - startPage + 1 < showPages) {
                     startPage = Math.max(1, endPage - showPages + 1);
                   }
-                  
+
                   for (let i = startPage; i <= endPage; i++) {
                     pages.push(
                       <Button
@@ -336,7 +333,7 @@ export default function Table<T extends Record<string, unknown>>({
                   return pages;
                 })()}
               </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -348,72 +345,72 @@ export default function Table<T extends Record<string, unknown>>({
               </Button>
             </div>
           </div>
-          
+
           {/* Desktop Layout */}
           <div className="hidden sm:flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-900 font-medium">
-              Page {currentPage} of {totalPages}
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-900 font-medium">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="text-xs text-gray-600">
+                Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} items
+              </div>
             </div>
-            <div className="text-xs text-gray-600">
-              Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} items
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            
-            <div className="flex items-center space-x-1">
-              {(() => {
-                const pages = [];
-                const showPages = 3;
-                let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-                const endPage = Math.min(totalPages, startPage + showPages - 1);
-                
-                if (endPage - startPage + 1 < showPages) {
-                  startPage = Math.max(1, endPage - showPages + 1);
-                }
-                
-                for (let i = startPage; i <= endPage; i++) {
-                  pages.push(
-                    <Button
-                      key={i}
-                      variant={currentPage === i ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setCurrentPage(i)}
-                      className={
-                        currentPage === i
-                          ? "bg-black hover:bg-gray-800 text-white border-black min-w-[36px] h-9 shadow-sm"
-                          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent min-w-[36px] h-9 transition-all duration-200"
-                      }
-                    >
-                      {i}
-                    </Button>
-                  );
-                }
-                return pages;
-              })()}
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const showPages = 3;
+                  let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                  const endPage = Math.min(totalPages, startPage + showPages - 1);
+
+                  if (endPage - startPage + 1 < showPages) {
+                    startPage = Math.max(1, endPage - showPages + 1);
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <Button
+                        key={i}
+                        variant={currentPage === i ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCurrentPage(i)}
+                        className={
+                          currentPage === i
+                            ? "bg-black hover:bg-gray-800 text-white border-black min-w-[36px] h-9 shadow-sm"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent min-w-[36px] h-9 transition-all duration-200"
+                        }
+                      >
+                        {i}
+                      </Button>
+                    );
+                  }
+                  return pages;
+                })()}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
             </div>
           </div>
         </div>
