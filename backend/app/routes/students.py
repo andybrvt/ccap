@@ -487,6 +487,31 @@ async def get_resume_url(
     return {"download_url": signed_url}
 
 
+@router.get("/{student_id}/profile/resume")
+async def admin_get_resume_url(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Admin: Get signed URL for a student's resume download"""
+    student_repo = StudentRepository(db)
+    profile = student_repo.get_profile_by_user_id(student_id)
+
+    if not profile or not profile.resume_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No resume found"
+        )
+
+    signed_url = S3Service.generate_signed_url(profile.resume_url)
+    if not signed_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate download link"
+        )
+
+    return {"download_url": signed_url}
+
 @router.get("/profile/credential")
 async def get_credential_url(
     current_user: User = Depends(get_current_active_user),
@@ -517,6 +542,32 @@ async def get_credential_url(
             detail="Failed to generate download link"
         )
     
+    return {"download_url": signed_url}
+
+
+@router.get("/{student_id}/profile/credential")
+async def admin_get_credential_url(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Admin: Get signed URL for a student's credential download"""
+    student_repo = StudentRepository(db)
+    profile = student_repo.get_profile_by_user_id(student_id)
+
+    if not profile or not profile.food_handlers_card_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No credential found"
+        )
+
+    signed_url = S3Service.generate_signed_url(profile.food_handlers_card_url)
+    if not signed_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate download link"
+        )
+
     return {"download_url": signed_url}
 
 
@@ -599,6 +650,32 @@ async def get_servsafe_url(
             detail="Failed to generate download link"
         )
     
+    return {"download_url": signed_url}
+
+
+@router.get("/{student_id}/profile/servsafe")
+async def admin_get_servsafe_url(
+    student_id: UUID,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Admin: Get signed URL for a student's ServSafe certificate download"""
+    student_repo = StudentRepository(db)
+    profile = student_repo.get_profile_by_user_id(student_id)
+
+    if not profile or not profile.servsafe_certificate_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No ServSafe certificate found"
+        )
+
+    signed_url = S3Service.generate_signed_url(profile.servsafe_certificate_url)
+    if not signed_url:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate download link"
+        )
+
     return {"download_url": signed_url}
 
 
