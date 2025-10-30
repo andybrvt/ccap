@@ -32,6 +32,11 @@ export const API_ENDPOINTS = {
   STUDENT_DELETE_CREDENTIAL: '/students/profile/credential',  // DELETE food handlers card
   STUDENT_DELETE_SERVSAFE: '/students/profile/servsafe',      // DELETE servsafe certificate
 
+  // Admin file access (signed URLs)
+  ADMIN_GET_RESUME_URL: '/students/',               // GET {id}/profile/resume -> signed URL
+  ADMIN_GET_CREDENTIAL_URL: '/students/',           // GET {id}/profile/credential -> signed URL
+  ADMIN_GET_SERVSAFE_URL: '/students/',             // GET {id}/profile/servsafe -> signed URL
+
   // Calendar
   CALENDAR_EVENTS: '/calendar/events',
   CALENDAR_EVENTS_PUBLIC: '/calendar/events/public',

@@ -289,6 +289,55 @@ export default function Submissions() {
     setShowPostModal(true);
   };
 
+  // Admin: view student documents via signed URLs
+  const handleAdminViewResume = async () => {
+    if (!selectedStudent) return;
+    try {
+      const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_RESUME_URL}${selectedStudent.id}/profile/resume`);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get resume URL:', error);
+      toast.error('Failed to view resume', {
+        description: error?.response?.data?.detail || 'Could not generate download link',
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleAdminViewCredential = async () => {
+    if (!selectedStudent) return;
+    try {
+      const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_CREDENTIAL_URL}${selectedStudent.id}/profile/credential`);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get credential URL:', error);
+      toast.error('Failed to view credential', {
+        description: error?.response?.data?.detail || 'Could not generate download link',
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleAdminViewServSafe = async () => {
+    if (!selectedStudent) return;
+    try {
+      const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_SERVSAFE_URL}${selectedStudent.id}/profile/servsafe`);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get ServSafe URL:', error);
+      toast.error('Failed to view ServSafe certificate', {
+        description: error?.response?.data?.detail || 'Could not generate download link',
+        duration: 5000,
+      });
+    }
+  };
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Submission | null>(null);
 
@@ -910,15 +959,29 @@ export default function Submissions() {
                           <div className="flex flex-col gap-1 mt-2">
                             <span className="font-semibold text-purple-700 flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-purple-500" />Credentials</span>
                             <div className="ml-7 flex flex-col gap-2 text-purple-900 text-sm">
-                              <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">{
-                                portfolioData.student_profile?.has_resume === "Yes"
-                                  ? (portfolioData.student_profile?.resume_url && portfolioData.student_profile.resume_url.trim() !== ""
-                                    ? <a href={portfolioData.student_profile.resume_url} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
-                                    : "Not Available")
-                                  : "Not Provided"
-                              }</span></span>
-                              <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">{portfolioData.student_profile?.has_food_handlers_card || "No"}</span></span>
-                              <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">{portfolioData.student_profile?.has_servsafe || "No"}</span></span>
+                              <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">
+                                {portfolioData.student_profile?.has_resume === "Yes" ? (
+                                  <button onClick={handleAdminViewResume} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                                    View Resume
+                                  </button>
+                                ) : (
+                                  "Not Provided"
+                                )}
+                              </span></span>
+                              <span className="flex items-center gap-2"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">
+                                {portfolioData.student_profile?.has_food_handlers_card === "Yes" ? (
+                                  <button onClick={handleAdminViewCredential} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                                ) : (
+                                  portfolioData.student_profile?.has_food_handlers_card || "No"
+                                )}
+                              </span></span>
+                              <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">
+                                {portfolioData.student_profile?.has_servsafe === "Yes" ? (
+                                  <button onClick={handleAdminViewServSafe} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                                ) : (
+                                  portfolioData.student_profile?.has_servsafe || "No"
+                                )}
+                              </span></span>
                             </div>
                           </div>
                           {/* Details */}
