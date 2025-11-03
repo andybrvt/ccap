@@ -304,6 +304,7 @@ export default function Portfolio() {
                           C-CAP Connection: <span className="text-gray-700 font-normal">{user.ccapConnection}</span>
                         </span>
                       )}
+                      <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{user.culinaryYears} years</span></span>
                     </div>
                     {/* Work */}
                     <div className="flex flex-col gap-1 mt-2">
@@ -315,7 +316,6 @@ export default function Portfolio() {
                       {user.pastJob === "Yes" && (
                         <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{user.pastPosition} at {user.pastEmployer} ({user.pastHours} hrs/week)</span></span>
                       )}
-                      <span className="ml-7 text-green-600 text-xs">Culinary Exp: <span className="text-gray-900">{user.culinaryYears} years</span></span>
                     </div>
                     {/* Credentials */}
                     <div className="flex flex-col gap-1 mt-2">

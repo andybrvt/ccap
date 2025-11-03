@@ -938,6 +938,7 @@ export default function Submissions() {
                                 C-CAP Connection: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.ccap_connection}</span>
                               </span>
                             )}
+                            <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{portfolioData.student_profile?.culinary_class_years || 0} years</span></span>
                           </div>
                           {/* Work */}
                           <div className="flex flex-col gap-1 mt-2">
@@ -949,7 +950,6 @@ export default function Submissions() {
                             {portfolioData.student_profile?.previous_employment === "Yes" && (
                               <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{portfolioData.student_profile?.previous_position || 'N/A'} at {portfolioData.student_profile?.previous_employer || 'N/A'} ({portfolioData.student_profile?.previous_hours_per_week || 0} hrs/week)</span></span>
                             )}
-                            <span className="ml-7 text-green-600 text-xs">Culinary Exp: <span className="text-gray-900">{portfolioData.student_profile?.culinary_class_years || 0} years</span></span>
                           </div>
                           {/* Credentials */}
                           <div className="flex flex-col gap-1 mt-2">
