@@ -745,15 +745,11 @@ export default function Submissions() {
       header: 'Program Stage',
       minWidth: '160px',
       render: (item) => (
-        item.onboardingStep === 0 ? (
-          <AssignBucketButton
-            submission={item}
-            onUpdate={refreshStudents}
-            currentBucket={item.bucket}
-          />
-        ) : (
-          <span className="text-xs text-gray-400">Pending onboarding</span>
-        )
+        <AssignBucketButton
+          submission={item}
+          onUpdate={refreshStudents}
+          currentBucket={item.bucket}
+        />
       ),
       sortable: true,
     },
