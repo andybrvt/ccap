@@ -677,7 +677,7 @@ export default function BulkBucketAssignPage() {
               searchPlaceholder=""
               searchKeys={[]}
               filterOptions={[]}
-              itemsPerPage={itemsPerPage}
+              itemsPerPage={1000}
               sortable={true}
               defaultSortKey="name"
               defaultSortOrder="asc"

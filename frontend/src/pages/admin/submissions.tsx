@@ -99,7 +99,7 @@ export default function Submissions() {
   // Pagination state from API
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [pageSize, setPageSize] = useState(50); // Default page size from backend
+  const [pageSize, setPageSize] = useState(25); // Default page size from backend
 
   // State for search
   const [searchKey, setSearchKey] = useState("");
@@ -185,17 +185,91 @@ export default function Submissions() {
     window.history.replaceState({}, '', url);
   }, [currentPage, initialLoadDone]);
 
-  // Fetch students with pagination
+  // Fetch students with pagination and filters
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, {
-          params: {
-            page: currentPage,
-            page_size: pageSize
+
+        // Build filter params
+        const params: any = {
+          page: currentPage,
+          page_size: pageSize
+        };
+
+        // Search
+        if (searchKey) {
+          params.search = searchKey;
+        }
+
+        // Graduation year
+        if (selectedGraduationYear) {
+          params.graduation_year = selectedGraduationYear;
+        }
+
+        // State of residence
+        if (selectedStatesOfResidence.length > 0) {
+          params.state = selectedStatesOfResidence.join(',');
+        }
+
+        // Relocation states
+        if (selectedStatesOfRelocation.length > 0) {
+          params.relocation_states = selectedStatesOfRelocation.join(',');
+        }
+
+        // Buckets
+        if (selectedBuckets.length > 0) {
+          params.bucket = selectedBuckets.join(',');
+        }
+
+        // C-CAP Connections
+        if (selectedCcapConnections.length > 0) {
+          params.ccap_connection = selectedCcapConnections.join(',');
+        }
+
+        // Status filters
+        if (statusFilter !== "all") {
+          switch (statusFilter) {
+            case 'has_resume':
+              params.has_resume = "Yes";
+              break;
+            case 'currently_working':
+              params.currently_working = "Yes";
+              break;
+            case 'food_handlers':
+              params.food_handlers = "Yes";
+              break;
+            case 'servsafe':
+              params.servsafe = "Yes";
+              break;
+            case 'will_relocate':
+              params.will_relocate = "Yes";
+              break;
+            case 'ready_to_work':
+              params.ready_to_work = "Yes";
+              break;
           }
-        });
+        }
+
+        // Onboarding filter
+        if (onboardingFilter !== "all") {
+          if (onboardingFilter === "complete") {
+            params.onboarding_complete = true;
+          } else if (onboardingFilter === "incomplete") {
+            params.onboarding_complete = false;
+          }
+        }
+
+        // Resume filter
+        if (resumeFilter !== "all") {
+          if (resumeFilter === "has") {
+            params.has_resume = "Yes";
+          } else if (resumeFilter === "no") {
+            params.has_resume = "No";
+          }
+        }
+
+        const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, { params });
 
         if (response.data) {
           // Handle paginated response
@@ -266,7 +340,36 @@ export default function Submissions() {
     };
 
     fetchStudents();
-  }, [currentPage, pageSize]);
+  }, [
+    currentPage,
+    pageSize,
+    searchKey,
+    selectedGraduationYear,
+    selectedStatesOfResidence,
+    selectedStatesOfRelocation,
+    selectedBuckets,
+    selectedCcapConnections,
+    statusFilter,
+    onboardingFilter,
+    resumeFilter
+  ]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (initialLoadDone && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [
+    searchKey,
+    selectedGraduationYear,
+    selectedStatesOfResidence,
+    selectedStatesOfRelocation,
+    selectedBuckets,
+    selectedCcapConnections,
+    statusFilter,
+    onboardingFilter,
+    resumeFilter
+  ]);
 
   const handleRowClick = (item: Submission) => {
     console.log('Clicked on:', item);
@@ -448,15 +551,44 @@ export default function Submissions() {
   };
 
 
-  // Refresh student data after updates
+  // Refresh student data after updates (with current filters)
   const refreshStudents = async () => {
     try {
-      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, {
-        params: {
-          page: currentPage,
-          page_size: pageSize
+      // Build filter params (same as fetchStudents)
+      const params: any = {
+        page: currentPage,
+        page_size: pageSize
+      };
+
+      if (searchKey) params.search = searchKey;
+      if (selectedGraduationYear) params.graduation_year = selectedGraduationYear;
+      if (selectedStatesOfResidence.length > 0) params.state = selectedStatesOfResidence.join(',');
+      if (selectedStatesOfRelocation.length > 0) params.relocation_states = selectedStatesOfRelocation.join(',');
+      if (selectedBuckets.length > 0) params.bucket = selectedBuckets.join(',');
+      if (selectedCcapConnections.length > 0) params.ccap_connection = selectedCcapConnections.join(',');
+
+      if (statusFilter !== "all") {
+        switch (statusFilter) {
+          case 'has_resume': params.has_resume = "Yes"; break;
+          case 'currently_working': params.currently_working = "Yes"; break;
+          case 'food_handlers': params.food_handlers = "Yes"; break;
+          case 'servsafe': params.servsafe = "Yes"; break;
+          case 'will_relocate': params.will_relocate = "Yes"; break;
+          case 'ready_to_work': params.ready_to_work = "Yes"; break;
         }
-      });
+      }
+
+      if (onboardingFilter !== "all") {
+        if (onboardingFilter === "complete") params.onboarding_complete = true;
+        else if (onboardingFilter === "incomplete") params.onboarding_complete = false;
+      }
+
+      if (resumeFilter !== "all") {
+        if (resumeFilter === "has") params.has_resume = "Yes";
+        else if (resumeFilter === "no") params.has_resume = "No";
+      }
+
+      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, { params });
 
       if (response.data) {
         // Handle paginated response
@@ -561,8 +693,15 @@ export default function Submissions() {
     ).map((connection) => ({ value: connection, label: connection }));
   }, [data]);
 
-  // Filter data based on search and filters
+  // Data is already filtered by backend, so just use it directly
+  // (Keeping filteredData for backward compatibility with existing code)
   const filteredData = useMemo(() => {
+    // Backend now handles all filtering, so we just return the data
+    return data;
+  }, [data]);
+
+  // Legacy filter logic (kept for reference, but not used since backend filters)
+  const _legacyFilteredData = useMemo(() => {
     return data.filter((item) => {
       // Search filtering
       const searchText = searchKey.toLowerCase();
@@ -1391,7 +1530,7 @@ export default function Submissions() {
           searchKeys={[]}
           filterOptions={[]}
           onFilterChange={handleFilterChange}
-          itemsPerPage={itemsPerPage}
+          itemsPerPage={1000}
           sortable={true}
           defaultSortKey="submissionDate"
           defaultSortOrder="desc"
