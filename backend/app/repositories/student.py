@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, and_, func
 from typing import List, Optional
 from uuid import UUID
 from app.models.user import User
@@ -22,6 +22,185 @@ class StudentRepository:
         if requesting_user.role != "admin":
             raise PermissionError("Only admins can count all students")
         return self.user_repo.count_students()
+    
+    def _build_filter_query(self, 
+                           search: Optional[str] = None,
+                           graduation_year: Optional[str] = None,
+                           states: Optional[List[str]] = None,
+                           relocation_states: Optional[List[str]] = None,
+                           buckets: Optional[List[str]] = None,
+                           ccap_connections: Optional[List[str]] = None,
+                           has_resume: Optional[str] = None,
+                           currently_working: Optional[str] = None,
+                           food_handlers: Optional[str] = None,
+                           servsafe: Optional[str] = None,
+                           will_relocate: Optional[str] = None,
+                           ready_to_work: Optional[str] = None,
+                           onboarding_step: Optional[int] = None,
+                           onboarding_complete: Optional[bool] = None):
+        """Build a filtered query for students"""
+        query = self.db.query(User).join(StudentProfile, User.id == StudentProfile.user_id)
+        query = query.filter(User.role == "student")
+        
+        # Search filter
+        if search:
+            search_term = f"%{search.lower()}%"
+            query = query.filter(
+                or_(
+                    User.email.ilike(search_term),
+                    User.username.ilike(search_term),
+                    StudentProfile.first_name.ilike(search_term),
+                    StudentProfile.last_name.ilike(search_term),
+                    StudentProfile.high_school.ilike(search_term)
+                )
+            )
+        
+        # Graduation year filter
+        if graduation_year:
+            query = query.filter(StudentProfile.graduation_year == graduation_year)
+        
+        # State filter (multiple states)
+        if states:
+            query = query.filter(StudentProfile.state.in_(states))
+        
+        # Relocation states filter (array contains)
+        if relocation_states:
+            conditions = []
+            for state in relocation_states:
+                conditions.append(StudentProfile.relocation_states.contains([state]))
+            query = query.filter(or_(*conditions))
+        
+        # Bucket filter (multiple buckets)
+        if buckets:
+            query = query.filter(StudentProfile.current_bucket.in_(buckets))
+        
+        # C-CAP Connection filter (multiple connections)
+        if ccap_connections:
+            query = query.filter(StudentProfile.ccap_connection.in_(ccap_connections))
+        
+        # Has resume filter
+        if has_resume:
+            query = query.filter(StudentProfile.has_resume == has_resume)
+        
+        # Currently working filter
+        if currently_working:
+            query = query.filter(StudentProfile.currently_employed == currently_working)
+        
+        # Food handlers filter
+        if food_handlers:
+            query = query.filter(StudentProfile.has_food_handlers_card == food_handlers)
+        
+        # ServSafe filter
+        if servsafe:
+            query = query.filter(StudentProfile.has_servsafe == servsafe)
+        
+        # Will relocate filter
+        if will_relocate:
+            query = query.filter(StudentProfile.willing_to_relocate == will_relocate)
+        
+        # Ready to work filter
+        if ready_to_work:
+            query = query.filter(StudentProfile.ready_to_work == ready_to_work)
+        
+        # Onboarding step filter
+        if onboarding_step is not None:
+            query = query.filter(StudentProfile.onboarding_step == onboarding_step)
+        
+        # Onboarding complete filter
+        if onboarding_complete is not None:
+            if onboarding_complete:
+                query = query.filter(StudentProfile.onboarding_step == 0)
+            else:
+                query = query.filter(StudentProfile.onboarding_step > 0)
+        
+        return query
+    
+    def get_all_students_filtered(self,
+                                  requesting_user: User,
+                                  limit: Optional[int] = None,
+                                  offset: int = 0,
+                                  search: Optional[str] = None,
+                                  graduation_year: Optional[str] = None,
+                                  states: Optional[List[str]] = None,
+                                  relocation_states: Optional[List[str]] = None,
+                                  buckets: Optional[List[str]] = None,
+                                  ccap_connections: Optional[List[str]] = None,
+                                  has_resume: Optional[str] = None,
+                                  currently_working: Optional[str] = None,
+                                  food_handlers: Optional[str] = None,
+                                  servsafe: Optional[str] = None,
+                                  will_relocate: Optional[str] = None,
+                                  ready_to_work: Optional[str] = None,
+                                  onboarding_step: Optional[int] = None,
+                                  onboarding_complete: Optional[bool] = None) -> List[User]:
+        """Get filtered students with pagination"""
+        if requesting_user.role != "admin":
+            raise PermissionError("Only admins can access all students")
+        
+        query = self._build_filter_query(
+            search=search,
+            graduation_year=graduation_year,
+            states=states,
+            relocation_states=relocation_states,
+            buckets=buckets,
+            ccap_connections=ccap_connections,
+            has_resume=has_resume,
+            currently_working=currently_working,
+            food_handlers=food_handlers,
+            servsafe=servsafe,
+            will_relocate=will_relocate,
+            ready_to_work=ready_to_work,
+            onboarding_step=onboarding_step,
+            onboarding_complete=onboarding_complete
+        )
+        
+        # Order by created_at descending
+        query = query.order_by(StudentProfile.created_at.desc())
+        
+        # Apply pagination
+        if limit is not None:
+            query = query.limit(limit).offset(offset)
+        
+        return query.all()
+    
+    def count_all_students_filtered(self,
+                                    requesting_user: User,
+                                    search: Optional[str] = None,
+                                    graduation_year: Optional[str] = None,
+                                    states: Optional[List[str]] = None,
+                                    relocation_states: Optional[List[str]] = None,
+                                    buckets: Optional[List[str]] = None,
+                                    ccap_connections: Optional[List[str]] = None,
+                                    has_resume: Optional[str] = None,
+                                    currently_working: Optional[str] = None,
+                                    food_handlers: Optional[str] = None,
+                                    servsafe: Optional[str] = None,
+                                    will_relocate: Optional[str] = None,
+                                    ready_to_work: Optional[str] = None,
+                                    onboarding_step: Optional[int] = None,
+                                    onboarding_complete: Optional[bool] = None) -> int:
+        """Count filtered students"""
+        if requesting_user.role != "admin":
+            raise PermissionError("Only admins can count all students")
+        
+        query = self._build_filter_query(
+            search=search,
+            graduation_year=graduation_year,
+            states=states,
+            relocation_states=relocation_states,
+            buckets=buckets,
+            ccap_connections=ccap_connections,
+            has_resume=has_resume,
+            currently_working=currently_working,
+            food_handlers=food_handlers,
+            servsafe=servsafe,
+            will_relocate=will_relocate,
+            ready_to_work=ready_to_work,
+            onboarding_step=onboarding_step,
+            onboarding_complete=onboarding_complete
+        )
+        
+        return query.count()
     
     def search_students(self, query: str, requesting_user: User) -> List[User]:
         """

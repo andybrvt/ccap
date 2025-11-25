@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, func
 from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel
@@ -11,6 +12,7 @@ from app.core.security import get_password_hash
 from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
 from app.models.user import User
+from app.models.student_profile import StudentProfile
 from app.repositories.student import StudentRepository
 from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile, BulkProgramStatusUpdate, PaginatedStudentsResponse
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
@@ -49,14 +51,31 @@ def search_students(
 @router.get("/", response_model=PaginatedStudentsResponse)
 def get_all_students(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
-    page_size: int = Query(50, ge=1, le=200, description="Number of students per page"),
+    page_size: int = Query(25, ge=1, le=200, description="Number of students per page"),
+    # Search filter
+    search: Optional[str] = Query(None, description="Search by name, email, or school"),
+    # Filter parameters
+    graduation_year: Optional[str] = Query(None, description="Filter by graduation year"),
+    state: Optional[str] = Query(None, description="Filter by state (comma-separated for multiple)"),
+    relocation_states: Optional[str] = Query(None, description="Filter by relocation states (comma-separated)"),
+    bucket: Optional[str] = Query(None, description="Filter by program stage/bucket (comma-separated)"),
+    ccap_connection: Optional[str] = Query(None, description="Filter by C-CAP connection (comma-separated)"),
+    has_resume: Optional[str] = Query(None, description="Filter by resume status: Yes, No"),
+    currently_working: Optional[str] = Query(None, description="Filter by employment status: Yes, No"),
+    food_handlers: Optional[str] = Query(None, description="Filter by food handlers card: Yes, No"),
+    servsafe: Optional[str] = Query(None, description="Filter by ServSafe: Yes, No"),
+    will_relocate: Optional[str] = Query(None, description="Filter by relocation willingness: Yes, No"),
+    ready_to_work: Optional[str] = Query(None, description="Filter by ready to work: Yes, No"),
+    onboarding_step: Optional[int] = Query(None, description="Filter by onboarding step (0=complete, 1-6=incomplete)"),
+    onboarding_complete: Optional[bool] = Query(None, description="Filter by onboarding complete (true) or incomplete (false)"),
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
     """
-    Get paginated list of students with full profile data - Admin only
+    Get paginated and filtered list of students with full profile data - Admin only
     
     Returns paginated results with total count for frontend pagination.
+    Supports filtering by multiple criteria.
     Default: 50 students per page, max 200 per page.
     """
     student_repo = StudentRepository(db)
@@ -64,14 +83,54 @@ def get_all_students(
         # Calculate offset
         offset = (page - 1) * page_size
         
-        # Get paginated students
-        students = student_repo.get_all_students(admin_user, limit=page_size, offset=offset)
+        # Parse comma-separated filters
+        state_list = [s.strip() for s in state.split(',')] if state else []
+        relocation_states_list = [s.strip() for s in relocation_states.split(',')] if relocation_states else []
+        bucket_list = [b.strip() for b in bucket.split(',')] if bucket else []
+        ccap_connection_list = [c.strip() for c in ccap_connection.split(',')] if ccap_connection else []
         
-        # Get total count
-        total = student_repo.count_all_students(admin_user)
+        # Get paginated and filtered students
+        students = student_repo.get_all_students_filtered(
+            requesting_user=admin_user,
+            limit=page_size,
+            offset=offset,
+            search=search,
+            graduation_year=graduation_year,
+            states=state_list,
+            relocation_states=relocation_states_list,
+            buckets=bucket_list,
+            ccap_connections=ccap_connection_list,
+            has_resume=has_resume,
+            currently_working=currently_working,
+            food_handlers=food_handlers,
+            servsafe=servsafe,
+            will_relocate=will_relocate,
+            ready_to_work=ready_to_work,
+            onboarding_step=onboarding_step,
+            onboarding_complete=onboarding_complete
+        )
+        
+        # Get total count with same filters
+        total = student_repo.count_all_students_filtered(
+            requesting_user=admin_user,
+            search=search,
+            graduation_year=graduation_year,
+            states=state_list,
+            relocation_states=relocation_states_list,
+            buckets=bucket_list,
+            ccap_connections=ccap_connection_list,
+            has_resume=has_resume,
+            currently_working=currently_working,
+            food_handlers=food_handlers,
+            servsafe=servsafe,
+            will_relocate=will_relocate,
+            ready_to_work=ready_to_work,
+            onboarding_step=onboarding_step,
+            onboarding_complete=onboarding_complete
+        )
         
         # Calculate total pages
-        total_pages = (total + page_size - 1) // page_size  # Ceiling division
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
         
         return PaginatedStudentsResponse(
             students=students,
