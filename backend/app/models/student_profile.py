@@ -25,7 +25,7 @@ class StudentProfile(Base):
     address = Column(String, nullable=True)
     address_line2 = Column(String, nullable=True)
     city = Column(String, nullable=True)
-    state = Column(String, nullable=True)
+    state = Column(String, nullable=True, index=True)  # Indexed for filtering
     zip_code = Column(String, nullable=True)
     
     # Relocation
@@ -34,9 +34,9 @@ class StudentProfile(Base):
     
     # Education
     high_school = Column(String, nullable=True)
-    graduation_year = Column(String, nullable=True)
+    graduation_year = Column(String, nullable=True, index=True)  # Indexed for filtering
     culinary_class_years = Column(Integer, nullable=True)
-    ccap_connection = Column(String, nullable=True)  # How student is connected to C-CAP
+    ccap_connection = Column(String, nullable=True, index=True)  # How student is connected to C-CAP, indexed for filtering
     
     # Work Experience
     currently_employed = Column(String, nullable=True)  # "Yes", "No"
@@ -58,7 +58,7 @@ class StudentProfile(Base):
     available_date = Column(String, nullable=True)
     
     # Documents
-    has_resume = Column(String, nullable=True)  # "Yes", "No"
+    has_resume = Column(String, nullable=True, index=True)  # "Yes", "No", indexed for filtering
     resume_url = Column(String, nullable=True)
     has_food_handlers_card = Column(String, nullable=True)  # "Yes", "No", "In Progress"
     food_handlers_card_url = Column(String, nullable=True)
@@ -69,15 +69,15 @@ class StudentProfile(Base):
     interests = Column(ARRAY(String), nullable=True)  # Array of culinary interests
     
     # Program Status
-    current_bucket = Column(String, default="Pre-Apprentice Explorer", nullable=False)
+    current_bucket = Column(String, default="Pre-Apprentice Explorer", nullable=False, index=True)  # Indexed for filtering
     
     # Onboarding Status
     # 0 = onboarding complete
     # 1-6 = current step in onboarding process
-    onboarding_step = Column(Integer, default=1, server_default='0', nullable=False)
+    onboarding_step = Column(Integer, default=1, server_default='0', nullable=False, index=True)  # Indexed for filtering
     
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)  # Indexed for sorting
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships

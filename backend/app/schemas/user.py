@@ -80,3 +80,14 @@ class AdminResponse(BaseModel):
 
 class AdminWithPassword(AdminResponse):
     temporary_password: str  # Only returned once on creation/reset
+
+# Pagination schema
+class PaginatedStudentsResponse(BaseModel):
+    students: List[UserWithFullProfile]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    
+    class Config:
+        from_attributes = True

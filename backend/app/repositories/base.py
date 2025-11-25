@@ -64,9 +64,18 @@ class UserRepository(BaseRepository[User]):
         """Get user by username"""
         return self.db.query(User).filter(User.username == username).first()
 
-    def get_all_students(self) -> List[User]:
+    def get_all_students(self, limit: Optional[int] = None, offset: int = 0) -> List[User]:
         """Get all users with role 'student'"""
-        return self.db.query(User).filter(User.role == "student").all()
+        query = self.db.query(User).filter(User.role == "student")
+        
+        if limit is not None:
+            query = query.limit(limit).offset(offset)
+        
+        return query.all()
+    
+    def count_students(self) -> int:
+        """Count total number of students"""
+        return self.db.query(User).filter(User.role == "student").count()
 
     def get_all_admins(self) -> List[User]:
         """Get all users with role 'admin'"""
@@ -83,11 +92,11 @@ class UserRepository(BaseRepository[User]):
         )
 
     # Permission-based methods
-    def get_students_for_admin(self, admin_user: User) -> List[User]:
+    def get_students_for_admin(self, admin_user: User, limit: Optional[int] = None, offset: int = 0) -> List[User]:
         """Get all students - only admins can access this"""
         if admin_user.role != "admin":
             raise PermissionError("Only admins can access all students")
-        return self.get_all_students()
+        return self.get_all_students(limit=limit, offset=offset)
 
     def get_student_by_id_for_admin(self, student_id: UUID, admin_user: User) -> Optional[User]:
         """Get specific student - only admins can access any student"""

@@ -13,9 +13,15 @@ class StudentRepository:
         self.db = db
         self.user_repo = UserRepository(db)
 
-    def get_all_students(self, requesting_user: User) -> List[User]:
+    def get_all_students(self, requesting_user: User, limit: Optional[int] = None, offset: int = 0) -> List[User]:
         """Get all students - with permission check"""
-        return self.user_repo.get_students_for_admin(requesting_user)
+        return self.user_repo.get_students_for_admin(requesting_user, limit=limit, offset=offset)
+    
+    def count_all_students(self, requesting_user: User) -> int:
+        """Count total number of students - with permission check"""
+        if requesting_user.role != "admin":
+            raise PermissionError("Only admins can count all students")
+        return self.user_repo.count_students()
     
     def search_students(self, query: str, requesting_user: User) -> List[User]:
         """

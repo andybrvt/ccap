@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
@@ -12,7 +12,7 @@ from app.core.database import get_db
 from app.deps.auth import require_admin, get_current_active_user
 from app.models.user import User
 from app.repositories.student import StudentRepository
-from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile, BulkProgramStatusUpdate
+from app.schemas.user import UserCreate, UserResponse, UserWithFullProfile, BulkProgramStatusUpdate, PaginatedStudentsResponse
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate, StudentProfileResponse
 from app.models.student_profile import StudentProfile
 from app.utils.s3 import S3Service
@@ -46,16 +46,40 @@ def search_students(
             detail="Only admins can search students"
         )
 
-@router.get("/", response_model=List[UserWithFullProfile])
+@router.get("/", response_model=PaginatedStudentsResponse)
 def get_all_students(
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(50, ge=1, le=200, description="Number of students per page"),
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    """Get all students with full profile data - Admin only"""
+    """
+    Get paginated list of students with full profile data - Admin only
+    
+    Returns paginated results with total count for frontend pagination.
+    Default: 50 students per page, max 200 per page.
+    """
     student_repo = StudentRepository(db)
     try:
-        students = student_repo.get_all_students(admin_user)
-        return students
+        # Calculate offset
+        offset = (page - 1) * page_size
+        
+        # Get paginated students
+        students = student_repo.get_all_students(admin_user, limit=page_size, offset=offset)
+        
+        # Get total count
+        total = student_repo.count_all_students(admin_user)
+        
+        # Calculate total pages
+        total_pages = (total + page_size - 1) // page_size  # Ceiling division
+        
+        return PaginatedStudentsResponse(
+            students=students,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages
+        )
     except PermissionError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
