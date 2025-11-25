@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Building, MapPin, Calendar, CheckCircle, Clock, FileText, User, Mail, Phone, GraduationCap, Car, Clock as ClockIcon, Briefcase, FileCheck, Utensils, Shield, School, Search, Filter, X, MoreHorizontal, Trash2, Eye, ArrowLeft, Download } from 'lucide-react';
+import { Building, MapPin, Calendar, CheckCircle, Clock, FileText, User, Mail, Phone, GraduationCap, Car, Clock as ClockIcon, Briefcase, FileCheck, Utensils, Shield, School, Search, Filter, X, MoreHorizontal, Trash2, Eye, ArrowLeft, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +96,10 @@ export default function Submissions() {
   // State for data
   const [data, setData] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Pagination state from API
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [pageSize, setPageSize] = useState(50); // Default page size from backend
 
   // State for search
   const [searchKey, setSearchKey] = useState("");
@@ -181,16 +185,29 @@ export default function Submissions() {
     window.history.replaceState({}, '', url);
   }, [currentPage, initialLoadDone]);
 
-  // Fetch all students on mount
+  // Fetch students with pagination
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS);
+        const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, {
+          params: {
+            page: currentPage,
+            page_size: pageSize
+          }
+        });
 
         if (response.data) {
+          // Handle paginated response
+          const studentsData = response.data.students || response.data; // Support both old and new format
+          const total = response.data.total || studentsData.length;
+          const pages = response.data.total_pages || Math.ceil(total / pageSize);
+
+          setTotalStudents(total);
+          setTotalPages(pages);
+
           // Transform backend data to match frontend Submission interface
-          const transformedData: Submission[] = response.data.map((student: any) => {
+          const transformedData: Submission[] = studentsData.map((student: any) => {
             const profile = student.student_profile || {};
             return {
               id: student.id,
@@ -249,7 +266,7 @@ export default function Submissions() {
     };
 
     fetchStudents();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const handleRowClick = (item: Submission) => {
     console.log('Clicked on:', item);
@@ -434,10 +451,23 @@ export default function Submissions() {
   // Refresh student data after updates
   const refreshStudents = async () => {
     try {
-      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS);
+      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, {
+        params: {
+          page: currentPage,
+          page_size: pageSize
+        }
+      });
 
       if (response.data) {
-        const transformedData: Submission[] = response.data.map((student: any) => {
+        // Handle paginated response
+        const studentsData = response.data.students || response.data;
+        const total = response.data.total || studentsData.length;
+        const pages = response.data.total_pages || Math.ceil(total / pageSize);
+
+        setTotalStudents(total);
+        setTotalPages(pages);
+
+        const transformedData: Submission[] = studentsData.map((student: any) => {
           const profile = student.student_profile || {};
           return {
             id: student.id,
@@ -1372,6 +1402,61 @@ export default function Submissions() {
             description: "Try adjusting your search or filter criteria",
           }}
         />
+
+        {/* Server-side Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 px-2">
+            <div className="text-sm text-gray-600">
+              Showing page {currentPage} of {totalPages} ({totalStudents} total students)
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || isLoading}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      disabled={isLoading}
+                      className="min-w-[40px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || isLoading}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

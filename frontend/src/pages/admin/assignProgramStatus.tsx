@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MultiSelect } from '@/components/ui/multi-select';
-import { User, Mail, Phone, MapPin, GraduationCap, Briefcase, Clock as ClockIcon, Search, Filter, FileCheck, Utensils, Shield, X } from 'lucide-react';
+import { User, Mail, Phone, MapPin, GraduationCap, Briefcase, Clock as ClockIcon, Search, Filter, FileCheck, Utensils, Shield, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import DataTable, { Column, FilterOption } from '@/components/ui/data-table';
 import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
@@ -163,6 +163,11 @@ export default function BulkBucketAssignPage() {
   // Local state for data (fetched from API)
   const [data, setData] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Pagination state from API
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // State for search and filters
   const [searchKey, setSearchKey] = useState("");
@@ -179,19 +184,32 @@ export default function BulkBucketAssignPage() {
   // Dynamic items per page calculation
   const { itemsPerPage, containerRef } = useDynamicItemsPerPage();
 
-  // Fetch all students on mount
+  // Fetch students with pagination
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS);
+      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, {
+        params: {
+          page: currentPage,
+          page_size: pageSize
+        }
+      });
 
       if (response.data) {
+        // Handle paginated response
+        const studentsData = response.data.students || response.data;
+        const total = response.data.total || studentsData.length;
+        const pages = response.data.total_pages || Math.ceil(total / pageSize);
+        
+        setTotalStudents(total);
+        setTotalPages(pages);
+        
         // Transform backend data to match frontend Submission interface
-        const transformedData: Submission[] = response.data.map((student: any) => {
+        const transformedData: Submission[] = studentsData.map((student: any) => {
           const profile = student.student_profile || {};
           return {
             id: student.id,
@@ -669,6 +687,61 @@ export default function BulkBucketAssignPage() {
                 description: "Try adjusting your search or filter criteria",
               }}
             />
+            
+            {/* Server-side Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 px-2">
+                <div className="text-sm text-gray-600">
+                  Showing page {currentPage} of {totalPages} ({totalStudents} total students)
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1 || isLoading}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          disabled={isLoading}
+                          className="min-w-[40px]"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || isLoading}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Panel - Desktop and Tablet */}
