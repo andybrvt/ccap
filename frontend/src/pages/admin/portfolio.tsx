@@ -183,6 +183,55 @@ export default function Portfolio() {
     setLocation(`/admin/portfolio/${userId}`);
   };
 
+  // Admin: view student documents via signed URLs
+  const handleAdminViewResume = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_RESUME_URL}${user.id}/profile/resume`);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get resume URL:', error);
+      toast.error('Failed to view resume', {
+        description: error?.response?.data?.detail || 'Could not generate download link',
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleAdminViewCredential = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_CREDENTIAL_URL}${user.id}/profile/credential`);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get credential URL:', error);
+      toast.error('Failed to view credential', {
+        description: error?.response?.data?.detail || 'Could not generate download link',
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleAdminViewServSafe = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await api.get(`${API_ENDPOINTS.ADMIN_GET_SERVSAFE_URL}${user.id}/profile/servsafe`);
+      if (response.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Failed to get ServSafe URL:', error);
+      toast.error('Failed to view ServSafe certificate', {
+        description: error?.response?.data?.detail || 'Could not generate download link',
+        duration: 5000,
+      });
+    }
+  };
+
   // Format date helper
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -321,15 +370,29 @@ export default function Portfolio() {
                     <div className="flex flex-col gap-1 mt-2">
                       <span className="font-semibold text-purple-700 flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-purple-500" />Credentials</span>
                       <div className="ml-7 flex flex-col gap-2 text-purple-900 text-sm">
-                        <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">{
-                          user.hasResume === "Yes"
-                            ? (user.resumeUrl && user.resumeUrl.trim() !== ""
-                              ? <a href={user.resumeUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View Resume</a>
-                              : "Not Available")
-                            : "Not Provided"
-                        }</span></span>
-                        <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">{user.foodHandlersCard}</span></span>
-                        <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">{user.servsafeCredentials || "No"}</span></span>
+                        <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">
+                          {user.hasResume === "Yes" ? (
+                            <button onClick={handleAdminViewResume} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                              View Resume
+                            </button>
+                          ) : (
+                            "Not Provided"
+                          )}
+                        </span></span>
+                        <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">
+                          {user.foodHandlersCard === "Yes" ? (
+                            <button onClick={handleAdminViewCredential} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                          ) : (
+                            user.foodHandlersCard || "No"
+                          )}
+                        </span></span>
+                        <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">
+                          {user.servsafeCredentials === "Yes" ? (
+                            <button onClick={handleAdminViewServSafe} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                          ) : (
+                            user.servsafeCredentials || "No"
+                          )}
+                        </span></span>
                       </div>
                     </div>
                     {/* Details */}
