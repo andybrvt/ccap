@@ -108,6 +108,7 @@ export default function Submissions() {
   const [selectedCcapConnections, setSelectedCcapConnections] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [onboardingFilter, setOnboardingFilter] = useState("all"); // New: onboarding status filter
+  const [resumeFilter, setResumeFilter] = useState("all"); // Resume filter: all, has, no
 
   // CSV Export state
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -595,10 +596,20 @@ export default function Submissions() {
         }
       }
 
+      // Resume filtering
+      let matchesResume = true;
+      if (resumeFilter !== "all") {
+        if (resumeFilter === "has") {
+          matchesResume = item.hasResume === "Yes";
+        } else if (resumeFilter === "no") {
+          matchesResume = item.hasResume !== "Yes";
+        }
+      }
+
       return matchesSearch && matchesGraduationYear && matchesStateOfResidence &&
-        matchesStateOfRelocation && matchesBucket && matchesCcapConnection && matchesStatus && matchesOnboarding;
+        matchesStateOfRelocation && matchesBucket && matchesCcapConnection && matchesStatus && matchesOnboarding && matchesResume;
     });
-  }, [data, searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, selectedCcapConnections, statusFilter, onboardingFilter]);
+  }, [data, searchKey, selectedGraduationYear, selectedStatesOfResidence, selectedStatesOfRelocation, selectedBuckets, selectedCcapConnections, statusFilter, onboardingFilter, resumeFilter]);
 
   // Reset all filters
   const handleResetFilters = () => {
@@ -610,6 +621,7 @@ export default function Submissions() {
     setSelectedCcapConnections([]);
     setStatusFilter("all");
     setOnboardingFilter("all");
+    setResumeFilter("all");
   };
 
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -1225,6 +1237,24 @@ export default function Submissions() {
                       <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
                       <SelectItem value="complete" className="text-gray-900 hover:bg-gray-100">Complete</SelectItem>
                       <SelectItem value="incomplete" className="text-gray-900 hover:bg-gray-100">Incomplete</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Resume Filter */}
+                <div className="min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Resume
+                  </label>
+                  <Select value={resumeFilter} onValueChange={setResumeFilter}>
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                      <FileCheck className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
+                      <SelectItem value="has" className="text-gray-900 hover:bg-gray-100">Has Resume</SelectItem>
+                      <SelectItem value="no" className="text-gray-900 hover:bg-gray-100">No Resume</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
