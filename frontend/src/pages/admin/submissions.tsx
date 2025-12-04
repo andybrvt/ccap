@@ -96,13 +96,15 @@ export default function Submissions() {
   // State for data
   const [data, setData] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   // Pagination state from API
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(25); // Default page size from backend
 
-  // State for search
+  // State for search (debounced)
   const [searchKey, setSearchKey] = useState("");
+  const [debouncedSearchKey, setDebouncedSearchKey] = useState("");
 
   // State for filters
   const [selectedGraduationYear, setSelectedGraduationYear] = useState<string | null>(null);
@@ -156,6 +158,15 @@ export default function Submissions() {
   // Track if we've initially loaded to prevent URL overwriting on first render
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
+  // Debounce search input (500ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchKey(searchKey);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchKey]);
+
   // Restore page from URL on mount
   useEffect(() => {
     const searchParams = new URLSearchParams(location.split('?')[1] || '');
@@ -198,8 +209,8 @@ export default function Submissions() {
         };
 
         // Search
-        if (searchKey) {
-          params.search = searchKey;
+        if (debouncedSearchKey) {
+          params.search = debouncedSearchKey;
         }
 
         // Graduation year
@@ -336,6 +347,7 @@ export default function Submissions() {
         toast.error('Failed to load student data');
       } finally {
         setIsLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
@@ -343,7 +355,7 @@ export default function Submissions() {
   }, [
     currentPage,
     pageSize,
-    searchKey,
+    debouncedSearchKey,
     selectedGraduationYear,
     selectedStatesOfResidence,
     selectedStatesOfRelocation,
@@ -360,7 +372,7 @@ export default function Submissions() {
       setCurrentPage(1);
     }
   }, [
-    searchKey,
+    debouncedSearchKey,
     selectedGraduationYear,
     selectedStatesOfResidence,
     selectedStatesOfRelocation,
@@ -560,7 +572,7 @@ export default function Submissions() {
         page_size: pageSize
       };
 
-      if (searchKey) params.search = searchKey;
+      if (debouncedSearchKey) params.search = debouncedSearchKey;
       if (selectedGraduationYear) params.graduation_year = selectedGraduationYear;
       if (selectedStatesOfResidence.length > 0) params.state = selectedStatesOfResidence.join(',');
       if (selectedStatesOfRelocation.length > 0) params.relocation_states = selectedStatesOfRelocation.join(',');
@@ -1003,32 +1015,6 @@ export default function Submissions() {
   ];
 
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading student data...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading student data...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       {/* Portfolio Modal */}
@@ -1272,7 +1258,24 @@ export default function Submissions() {
       <div className="py-4 px-6" ref={containerRef}>
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">C-CAP Student Management</h1>
+          {isLoading && !isInitialLoad && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>Updating...</span>
+            </div>
+          )}
         </div>
+
+        {/* Initial loading state */}
+        {isInitialLoad && isLoading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading student data...</p>
+            </div>
+          </div>
+        ) : (
+          <>
 
         <div className="flex flex-col gap-2 pb-4">
           {/* Filter Bar */}
@@ -1457,6 +1460,11 @@ export default function Submissions() {
                   onChange={(e) => setSearchKey(e.target.value)}
                   className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
                 />
+                {searchKey !== debouncedSearchKey && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1596,7 +1604,8 @@ export default function Submissions() {
             </div>
           </div>
         )}
-      </div>
+        </>
+        )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -1685,6 +1694,8 @@ export default function Submissions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      </div>
 
     </Layout>
   );
