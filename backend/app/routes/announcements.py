@@ -26,6 +26,7 @@ async def send_announcement_emails_background(
     announcement_priority: str,
     announcement_category: str,
     send_to_admins: bool,
+    send_to_students: bool,
     db: Session
 ):
     """
@@ -41,17 +42,19 @@ async def send_announcement_emails_background(
             logger.error(f"Announcement {announcement_id} not found for email sending")
             return
 
-        # Get all students who should receive this announcement
-        target_students = repo.get_students_for_announcement(announcement)
-
-        # Extract valid email addresses from students
+        # Initialize recipient emails list
         recipient_emails = []
-        if target_students and len(target_students) > 0:
-            for student in target_students:
-                if student.email:
-                    recipient_emails.append(student.email)
-                elif hasattr(student, 'student_profile') and student.student_profile and student.student_profile.email:
-                    recipient_emails.append(student.student_profile.email)
+
+        # Get students if send_to_students is True
+        if send_to_students:
+            target_students = repo.get_students_for_announcement(announcement)
+            if target_students and len(target_students) > 0:
+                for student in target_students:
+                    if student.email:
+                        recipient_emails.append(student.email)
+                    elif hasattr(student, 'student_profile') and student.student_profile and student.student_profile.email:
+                        recipient_emails.append(student.student_profile.email)
+                logger.info(f"Added {len(recipient_emails)} students to recipient list")
 
         # Add admin emails if send_to_admins is True
         if send_to_admins:
@@ -60,7 +63,7 @@ async def send_announcement_emails_background(
             for admin in admin_users:
                 if admin.email and admin.email not in recipient_emails:
                     recipient_emails.append(admin.email)
-            logger.info(f"Added {len(admin_users)} admins to recipient list")
+            logger.info(f"Added {len([a for a in admin_users if a.email])} admins to recipient list")
 
         if not recipient_emails:
             logger.warning(f"No valid email addresses found for announcement {announcement_id}")
@@ -224,8 +227,8 @@ async def create_announcement(
             **announcement_dict
         )
 
-        # Trigger background email task if enabled
-        if send_email:
+        # Trigger background email task if enabled (either students or admins or both)
+        if send_email or send_to_admins:
             logger.info(f"Queuing email notification for announcement {announcement.id}")
             background_tasks.add_task(
                 send_announcement_emails_background,
@@ -235,6 +238,7 @@ async def create_announcement(
                 announcement_priority=announcement.priority,
                 announcement_category=announcement.category,
                 send_to_admins=send_to_admins,
+                send_to_students=send_email,
                 db=db
             )
         else:
