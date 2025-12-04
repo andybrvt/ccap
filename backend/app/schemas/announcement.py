@@ -21,7 +21,7 @@ class AnnouncementBase(BaseModel):
 
 # Schema for creating announcement
 class AnnouncementCreate(AnnouncementBase):
-    pass
+    send_email: bool = True  # Whether to send email notification to students
 
 # Schema for updating announcement
 class AnnouncementUpdate(BaseModel):

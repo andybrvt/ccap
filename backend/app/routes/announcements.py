@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
+import logging
 
 from app.core.database import get_db
 from app.deps.auth import get_current_user
@@ -12,8 +13,89 @@ from app.schemas.announcement import (
     AnnouncementResponse
 )
 from app.repositories.announcement import AnnouncementRepository
+from app.services.email_service import email_service
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+async def send_announcement_emails_background(
+    announcement_id: UUID,
+    announcement_title: str,
+    announcement_content: str,
+    announcement_priority: str,
+    announcement_category: str,
+    db: Session
+):
+    """
+    Background task to send announcement emails to targeted students
+    This runs asynchronously so it doesn't block the API response
+    """
+    try:
+        repo = AnnouncementRepository(db)
+
+        # Get the announcement
+        announcement = repo.get_by_id(announcement_id)
+        if not announcement:
+            logger.error(f"Announcement {announcement_id} not found for email sending")
+            return
+
+        # Get all students who should receive this announcement
+        target_students = repo.get_students_for_announcement(announcement)
+
+        if not target_students or len(target_students) == 0:
+            logger.info(f"No students match targeting criteria for announcement {announcement_id}")
+            return
+
+        # Extract valid email addresses
+        recipient_emails = []
+        for student in target_students:
+            if student.email:
+                recipient_emails.append(student.email)
+            elif hasattr(student, 'student_profile') and student.student_profile and student.student_profile.email:
+                recipient_emails.append(student.student_profile.email)
+
+        if not recipient_emails:
+            logger.warning(f"No valid email addresses found for {len(target_students)} targeted students")
+            return
+
+        logger.info(f"Sending announcement emails to {len(recipient_emails)} students")
+
+        # Send emails in batches to avoid overwhelming SendGrid
+        batch_size = 100
+        success_count = 0
+        failed_count = 0
+
+        for i in range(0, len(recipient_emails), batch_size):
+            batch = recipient_emails[i:i + batch_size]
+
+            try:
+                success = await email_service.send_announcement_email(
+                    to=batch,
+                    title=announcement_title,
+                    content=announcement_content,
+                    priority=announcement_priority,
+                    category=announcement_category,
+                    db_session=db
+                )
+
+                if success:
+                    success_count += len(batch)
+                    logger.info(f"Successfully sent batch {i//batch_size + 1} ({len(batch)} emails)")
+                else:
+                    failed_count += len(batch)
+                    logger.error(f"Failed to send batch {i//batch_size + 1} ({len(batch)} emails)")
+
+            except Exception as e:
+                failed_count += len(batch)
+                logger.error(f"Error sending email batch: {str(e)}")
+
+        logger.info(f"Email sending complete: {success_count} successful, {failed_count} failed")
+
+    except Exception as e:
+        logger.error(f"Error in background email task: {str(e)}")
+    finally:
+        db.close()
 
 
 @router.get("/", response_model=List[AnnouncementResponse])
@@ -85,17 +167,19 @@ def get_announcement(
 
 
 @router.post("/", response_model=AnnouncementResponse, status_code=status.HTTP_201_CREATED)
-def create_announcement(
+async def create_announcement(
     announcement_data: AnnouncementCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Create a new announcement
     - Only admins can create announcements
+    - Optionally sends email notification to targeted students
     """
     repo = AnnouncementRepository(db)
-    
+
     try:
         # Validate target audience logic
         if announcement_data.target_audience == "program_stages" and (not announcement_data.target_program_stages or len(announcement_data.target_program_stages) == 0):
@@ -103,13 +187,13 @@ def create_announcement(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="target_program_stages is required when target_audience is 'program_stages'"
             )
-        
+
         if announcement_data.target_audience == "locations" and (not announcement_data.target_locations or len(announcement_data.target_locations) == 0):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="target_locations is required when target_audience is 'locations'"
             )
-        
+
         if announcement_data.target_audience == "both":
             program_stages_empty = not announcement_data.target_program_stages or len(announcement_data.target_program_stages) == 0
             locations_empty = not announcement_data.target_locations or len(announcement_data.target_locations) == 0
@@ -118,13 +202,34 @@ def create_announcement(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="At least one of target_program_stages or target_locations is required when target_audience is 'both'"
                 )
-        
-        # Create the announcement
+
+        # Extract send_email flag before creating announcement
+        send_email = announcement_data.send_email
+
+        # Create the announcement (exclude send_email from model data)
+        announcement_dict = announcement_data.model_dump()
+        announcement_dict.pop('send_email', None)  # Remove send_email from dict
+
         announcement = repo.create_announcement(
             current_user,
-            **announcement_data.model_dump()
+            **announcement_dict
         )
-        
+
+        # Trigger background email task if enabled
+        if send_email:
+            logger.info(f"Queuing email notification for announcement {announcement.id}")
+            background_tasks.add_task(
+                send_announcement_emails_background,
+                announcement_id=announcement.id,
+                announcement_title=announcement.title,
+                announcement_content=announcement.content,
+                announcement_priority=announcement.priority,
+                announcement_category=announcement.category,
+                db=db
+            )
+        else:
+            logger.info(f"Email notification disabled for announcement {announcement.id}")
+
         return announcement
     except PermissionError as e:
         raise HTTPException(

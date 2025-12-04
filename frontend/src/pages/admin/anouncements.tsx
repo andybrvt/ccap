@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import Layout from "@/components/layout/AdminLayout";
 import { api } from "@/lib/apiService";
@@ -172,6 +173,7 @@ export default function Announcements() {
     target_state: '',
     target_program_stages: [] as string[],
     target_locations: [] as string[],
+    send_email: true,
   });
 
   // Fetch announcements
@@ -227,6 +229,7 @@ export default function Announcements() {
       target_state: '',
       target_program_stages: [],
       target_locations: [],
+      send_email: true,
     });
   };
 
@@ -245,6 +248,7 @@ export default function Announcements() {
         target_audience: announcementForm.target_audience,
         target_program_stages: announcementForm.target_program_stages,
         target_locations: announcementForm.target_locations,
+        send_email: announcementForm.send_email,
       };
 
       await api.post(API_ENDPOINTS.ANNOUNCEMENTS_CREATE, payload);
@@ -277,6 +281,7 @@ export default function Announcements() {
       target_state: announcement.target_state || '',
       target_program_stages: announcement.target_program_stages || [],
       target_locations: announcement.target_locations || [],
+      send_email: true,
     });
     setIsEditDialogOpen(true);
   };
@@ -338,7 +343,7 @@ export default function Announcements() {
     }
   };
 
-  const handleInputChange = (field: string, value: string | string[]) => {
+  const handleInputChange = (field: string, value: string | string[] | boolean) => {
     setAnnouncementForm(prev => ({
       ...prev,
       [field]: value
@@ -498,6 +503,26 @@ export default function Announcements() {
           </p>
         </div>
       )}
+
+      {/* Email Notification Checkbox */}
+      <div className="flex items-start space-x-3 pt-4 border-t">
+        <Checkbox
+          id="send_email"
+          checked={announcementForm.send_email}
+          onCheckedChange={(checked) => handleInputChange('send_email', checked as boolean)}
+        />
+        <div className="grid gap-1.5 leading-none">
+          <label
+            htmlFor="send_email"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          >
+            Send email notification to students
+          </label>
+          <p className="text-sm text-muted-foreground">
+            When enabled, all students matching the target audience will receive an email notification about this announcement.
+          </p>
+        </div>
+      </div>
     </div>
   );
 

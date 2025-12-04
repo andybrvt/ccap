@@ -158,20 +158,91 @@ class AnnouncementRepository(BaseRepository[Announcement]):
         Students can only view announcements they have access to
         """
         announcement = self.get_by_id(announcement_id)
-        
+
         if not announcement:
             return None
-        
+
         # Admins can see any announcement
         if user.role == "admin":
             return announcement
-        
+
         # For students, check if they have access to this announcement
         accessible_announcements = self.get_announcements_for_student(user)
         accessible_ids = [a.id for a in accessible_announcements]
-        
+
         if announcement.id in accessible_ids:
             return announcement
-        
+
         return None
+
+    def get_students_for_announcement(self, announcement: Announcement) -> List[User]:
+        """
+        Get all students who should receive this announcement based on targeting criteria.
+        This is the inverse of get_announcements_for_student - instead of filtering
+        announcements for one student, we filter students for one announcement.
+
+        Returns: List of User objects (with student role) who match the targeting
+        """
+        # Start with base query for all students with profiles
+        query = self.db.query(User).join(
+            StudentProfile, User.id == StudentProfile.user_id
+        ).filter(
+            User.role == "student"
+        )
+
+        # Apply filters based on announcement targeting
+        target_audience = announcement.target_audience
+
+        # 1. If targeting all students, return everyone
+        if target_audience == "all":
+            return query.all()
+
+        # 2. Bucket-specific (legacy single selection)
+        if target_audience == "bucket" and announcement.target_bucket:
+            query = query.filter(
+                StudentProfile.current_bucket == announcement.target_bucket
+            )
+            return query.all()
+
+        # 3. Location-specific (legacy single selection)
+        if target_audience == "location" and announcement.target_state:
+            query = query.filter(
+                StudentProfile.state == announcement.target_state
+            )
+            return query.all()
+
+        # 4. Program stages (new multi-selection)
+        if target_audience == "program_stages" and announcement.target_program_stages:
+            query = query.filter(
+                StudentProfile.current_bucket.in_(announcement.target_program_stages)
+            )
+            return query.all()
+
+        # 5. Locations (new multi-selection)
+        if target_audience == "locations" and announcement.target_locations:
+            query = query.filter(
+                StudentProfile.state.in_(announcement.target_locations)
+            )
+            return query.all()
+
+        # 6. Both program stages AND locations (match either/or)
+        if target_audience == "both":
+            filters = []
+
+            if announcement.target_program_stages:
+                filters.append(
+                    StudentProfile.current_bucket.in_(announcement.target_program_stages)
+                )
+
+            if announcement.target_locations:
+                filters.append(
+                    StudentProfile.state.in_(announcement.target_locations)
+                )
+
+            if filters:
+                query = query.filter(or_(*filters))
+                return query.all()
+
+        # If no valid targeting criteria, return empty list
+        return []
 

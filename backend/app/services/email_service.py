@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 import ssl
 import urllib3
+from jinja2 import Environment, FileSystemLoader
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,11 @@ class EmailService:
         self.api_key = os.getenv("SENDGRID_API_KEY")
         self.from_email = os.getenv("MAIL_FROM", "admin@c-cap-platform.com")
         self.from_name = os.getenv("MAIL_FROM_NAME", "C-CAP Apprentice Program")
-        
+
+        # Setup Jinja2 template environment
+        template_dir = os.path.join(os.path.dirname(__file__), '..', 'static', 'templates')
+        self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
+
         if not self.api_key:
             logger.warning("SENDGRID_API_KEY not found in environment variables")
             self.sg = None
@@ -201,10 +206,10 @@ class EmailService:
     ) -> bool:
         """Send notification email to admins when student completes onboarding"""
         from datetime import datetime
-        
+
         subject = f"New Student Enrollment: {student_name}"
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -216,13 +221,68 @@ class EmailService:
         </body>
         </html>
         """
-        
+
         return await self.send_email(
             to=admin_emails,
             subject=subject,
             body=body,
             db_session=db_session
         )
+
+    async def send_announcement_email(
+        self,
+        to: List[str],
+        title: str,
+        content: str,
+        priority: str = "low",
+        category: str = None,
+        platform_url: str = None,
+        db_session=None
+    ) -> bool:
+        """
+        Send announcement email using HTML template
+
+        Args:
+            to: List of recipient email addresses
+            title: Announcement title
+            content: Announcement content/body
+            priority: Priority level (low, medium, high)
+            category: Announcement category
+            platform_url: URL to view announcement on platform
+            db_session: Database session for logging
+
+        Returns:
+            bool: True if email sent successfully, False otherwise
+        """
+        try:
+            # Load and render the template
+            template = self.jinja_env.get_template('announcement_email.html')
+
+            # Set default platform URL if not provided
+            if not platform_url:
+                platform_url = os.getenv("FRONTEND_URL", "https://ccap-gold.vercel.app")
+
+            html_body = template.render(
+                title=title,
+                content=content,
+                priority=priority,
+                category=category,
+                platform_url=platform_url,
+                current_year=datetime.now().year
+            )
+
+            subject = f"C·CAP Announcement: {title}"
+
+            return await self.send_email(
+                to=to,
+                subject=subject,
+                body=html_body,
+                db_session=db_session
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to send announcement email: {str(e)}")
+            return False
 
 
 # Global email service instance
