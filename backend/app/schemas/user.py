@@ -74,7 +74,18 @@ class AdminResponse(BaseModel):
     email: str
     username: str
     created_at: datetime
-    
+
+    class Config:
+        from_attributes = True
+
+class UserListResponse(BaseModel):
+    id: UUID
+    email: str
+    username: str
+    role: str
+    is_active: bool
+    created_at: datetime
+
     class Config:
         from_attributes = True
 

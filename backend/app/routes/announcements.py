@@ -25,6 +25,7 @@ async def send_announcement_emails_background(
     announcement_content: str,
     announcement_priority: str,
     announcement_category: str,
+    send_to_admins: bool,
     db: Session
 ):
     """
@@ -43,23 +44,29 @@ async def send_announcement_emails_background(
         # Get all students who should receive this announcement
         target_students = repo.get_students_for_announcement(announcement)
 
-        if not target_students or len(target_students) == 0:
-            logger.info(f"No students match targeting criteria for announcement {announcement_id}")
-            return
-
-        # Extract valid email addresses
+        # Extract valid email addresses from students
         recipient_emails = []
-        for student in target_students:
-            if student.email:
-                recipient_emails.append(student.email)
-            elif hasattr(student, 'student_profile') and student.student_profile and student.student_profile.email:
-                recipient_emails.append(student.student_profile.email)
+        if target_students and len(target_students) > 0:
+            for student in target_students:
+                if student.email:
+                    recipient_emails.append(student.email)
+                elif hasattr(student, 'student_profile') and student.student_profile and student.student_profile.email:
+                    recipient_emails.append(student.student_profile.email)
+
+        # Add admin emails if send_to_admins is True
+        if send_to_admins:
+            from app.models.user import User
+            admin_users = db.query(User).filter(User.role == "admin").all()
+            for admin in admin_users:
+                if admin.email and admin.email not in recipient_emails:
+                    recipient_emails.append(admin.email)
+            logger.info(f"Added {len(admin_users)} admins to recipient list")
 
         if not recipient_emails:
-            logger.warning(f"No valid email addresses found for {len(target_students)} targeted students")
+            logger.warning(f"No valid email addresses found for announcement {announcement_id}")
             return
 
-        logger.info(f"Sending announcement emails to {len(recipient_emails)} students")
+        logger.info(f"Sending announcement emails to {len(recipient_emails)} recipients")
 
         # Send emails in batches to avoid overwhelming SendGrid
         batch_size = 100
@@ -203,12 +210,14 @@ async def create_announcement(
                     detail="At least one of target_program_stages or target_locations is required when target_audience is 'both'"
                 )
 
-        # Extract send_email flag before creating announcement
+        # Extract send_email and send_to_admins flags before creating announcement
         send_email = announcement_data.send_email
+        send_to_admins = announcement_data.send_to_admins
 
-        # Create the announcement (exclude send_email from model data)
+        # Create the announcement (exclude send_email and send_to_admins from model data)
         announcement_dict = announcement_data.model_dump()
         announcement_dict.pop('send_email', None)  # Remove send_email from dict
+        announcement_dict.pop('send_to_admins', None)  # Remove send_to_admins from dict
 
         announcement = repo.create_announcement(
             current_user,
@@ -225,6 +234,7 @@ async def create_announcement(
                 announcement_content=announcement.content,
                 announcement_priority=announcement.priority,
                 announcement_category=announcement.category,
+                send_to_admins=send_to_admins,
                 db=db
             )
         else:

@@ -7,10 +7,23 @@ from app.core.database import get_db
 from app.core.security import get_password_hash
 from app.deps.auth import require_admin
 from app.models.user import User, UserRole
-from app.schemas.user import AdminCreate, AdminResponse, AdminWithPassword
+from app.schemas.user import AdminCreate, AdminResponse, AdminWithPassword, UserListResponse
 from app.utils.password_generator import generate_temporary_password
 
 router = APIRouter()
+
+
+@router.get("/users", response_model=List[UserListResponse])
+def get_all_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Get list of all users (admins and students) with email and role.
+    Only accessible by admins.
+    """
+    users = db.query(User).all()
+    return users
 
 
 @router.get("/admins", response_model=List[AdminResponse])

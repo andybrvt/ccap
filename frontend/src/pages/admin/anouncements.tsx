@@ -174,6 +174,7 @@ export default function Announcements() {
     target_program_stages: [] as string[],
     target_locations: [] as string[],
     send_email: true,
+    send_to_admins: false,
   });
 
   // Fetch announcements
@@ -230,6 +231,7 @@ export default function Announcements() {
       target_program_stages: [],
       target_locations: [],
       send_email: true,
+      send_to_admins: false,
     });
   };
 
@@ -249,6 +251,7 @@ export default function Announcements() {
         target_program_stages: announcementForm.target_program_stages,
         target_locations: announcementForm.target_locations,
         send_email: announcementForm.send_email,
+        send_to_admins: announcementForm.send_to_admins,
       };
 
       await api.post(API_ENDPOINTS.ANNOUNCEMENTS_CREATE, payload);
@@ -282,6 +285,7 @@ export default function Announcements() {
       target_program_stages: announcement.target_program_stages || [],
       target_locations: announcement.target_locations || [],
       send_email: true,
+      send_to_admins: false,
     });
     setIsEditDialogOpen(true);
   };
@@ -504,23 +508,44 @@ export default function Announcements() {
         </div>
       )}
 
-      {/* Email Notification Checkbox */}
-      <div className="flex items-start space-x-3 pt-4 border-t">
-        <Checkbox
-          id="send_email"
-          checked={announcementForm.send_email}
-          onCheckedChange={(checked) => handleInputChange('send_email', checked as boolean)}
-        />
-        <div className="grid gap-1.5 leading-none">
-          <label
-            htmlFor="send_email"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-          >
-            Send email notification to students
-          </label>
-          <p className="text-sm text-muted-foreground">
-            When enabled, all students matching the target audience will receive an email notification about this announcement.
-          </p>
+      {/* Email Notification Checkboxes */}
+      <div className="grid gap-3 pt-4 border-t">
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id="send_email"
+            checked={announcementForm.send_email}
+            onCheckedChange={(checked) => handleInputChange('send_email', checked as boolean)}
+          />
+          <div className="grid gap-1.5 leading-none">
+            <label
+              htmlFor="send_email"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Send email notification to students
+            </label>
+            <p className="text-sm text-muted-foreground">
+              When enabled, all students matching the target audience will receive an email notification about this announcement.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id="send_to_admins"
+            checked={announcementForm.send_to_admins}
+            onCheckedChange={(checked) => handleInputChange('send_to_admins', checked as boolean)}
+          />
+          <div className="grid gap-1.5 leading-none">
+            <label
+              htmlFor="send_to_admins"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Send to admins
+            </label>
+            <p className="text-sm text-muted-foreground">
+              When enabled, all admins will receive the announcement email (useful for testing before sending to students).
+            </p>
+          </div>
         </div>
       </div>
     </div>
