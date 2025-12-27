@@ -36,7 +36,7 @@ class StudentProfile(Base):
     high_school = Column(String, nullable=True)
     graduation_year = Column(String, nullable=True, index=True)  # Indexed for filtering
     culinary_class_years = Column(Integer, nullable=True)
-    ccap_connection = Column(String, nullable=True, index=True)  # How student is connected to C-CAP, indexed for filtering
+    ccap_connection = Column(String, nullable=True, index=True)  # How student is connected to C•CAP, indexed for filtering
     
     # Work Experience
     currently_employed = Column(String, nullable=True)  # "Yes", "No"

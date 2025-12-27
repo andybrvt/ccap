@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-C-CAP Platform - A career and alumni platform for C-CAP (Careers through Culinary Arts Program) connecting culinary students with employers. Students create portfolios and track their career development while admins review profiles, manage announcements, and oversee program status.
+C•CAP Platform - A career and alumni platform for C•CAP (Careers through Culinary Arts Program) connecting culinary students with employers. Students create portfolios and track their career development while admins review profiles, manage announcements, and oversee program status.
 
 ## Common Commands
 

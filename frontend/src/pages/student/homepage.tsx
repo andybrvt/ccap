@@ -224,7 +224,7 @@ export default function Homepage() {
         <div className="max-w-7xl w-full mx-auto">
           <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center">
             <p className="text-3xl font-bold text-black">
-              C-CAP Student Dashboard
+              C•CAP Student Dashboard
             </p>
             <p className="text-xl font-medium text-gray-800">
               Welcome back, {user?.full_name}
@@ -461,11 +461,11 @@ export default function Homepage() {
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg font-semibold text-black">
-                C-CAP
+                C•CAP
               </span>
             </div>
             <div className="text-sm text-gray-600">
-              © 2025 C-CAP. All rights reserved.
+              © 2025 C•CAP. All rights reserved.
             </div>
           </div>
         </div>

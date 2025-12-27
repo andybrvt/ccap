@@ -108,7 +108,7 @@ export default function RegisterStudentPage() {
                                 Create Your Account
                             </CardTitle>
                             <p className="text-gray-400">
-                                Join C-CAP and start building your culinary career
+                                Join C•CAP and start building your culinary career
                             </p>
                         </div>
                     </CardHeader>

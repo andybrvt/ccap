@@ -63,7 +63,7 @@ export function Navigation() {
             >
               <img
                 src="/ccap-logo.png"
-                alt="C-CAP Logo"
+                alt="C•CAP Logo"
                 className="h-8 w-auto"
               />
             </div>

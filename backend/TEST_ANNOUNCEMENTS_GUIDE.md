@@ -45,7 +45,7 @@ python create_test_announcements.py
 You should see output like:
 ```
 ============================================================
-C-CAP Test Announcements Generator
+C•CAP Test Announcements Generator
 ============================================================
 
 Step 1: Admin Authentication

@@ -56,14 +56,13 @@ async def send_announcement_emails_background(
                         recipient_emails.append(student.student_profile.email)
                 logger.info(f"Added {len(recipient_emails)} students to recipient list")
 
-        # Add admin emails if send_to_admins is True
+        # Add admin test email if send_to_admins is True
+        # Sends only to designated admin email for testing purposes
         if send_to_admins:
-            from app.models.user import User
-            admin_users = db.query(User).filter(User.role == "admin").all()
-            for admin in admin_users:
-                if admin.email and admin.email not in recipient_emails:
-                    recipient_emails.append(admin.email)
-            logger.info(f"Added {len([a for a in admin_users if a.email])} admins to recipient list")
+            admin_test_email = "jsmith@culinarycareers.org"
+            if admin_test_email not in recipient_emails:
+                recipient_emails.append(admin_test_email)
+            logger.info(f"Added admin test email to recipient list: {admin_test_email}")
 
         if not recipient_emails:
             logger.warning(f"No valid email addresses found for announcement {announcement_id}")

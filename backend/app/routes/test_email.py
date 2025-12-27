@@ -48,8 +48,8 @@ async def test_email(
         # Send a simple test email to yourself
         success = await email_service.send_email(
             to=["andybrvt@gmail.com"],
-            subject="C-CAP Test Email",
-            body="<h2>Test Email from C-CAP</h2><p>This is a test email to verify SendGrid is working correctly!</p>",
+            subject="C•CAP Test Email",
+            body="<h2>Test Email from C•CAP</h2><p>This is a test email to verify SendGrid is working correctly!</p>",
             db_session=db
         )
 

@@ -12,7 +12,7 @@ export default function Portfolio() {
 
   // Mock posts (replace with real data if available)
   const posts = [
-    { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80", caption: "First day at C-CAP!" },
+    { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80", caption: "First day at C•CAP!" },
     { url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80", caption: "Baking class fun." },
     { url: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80", caption: "Teamwork in the kitchen." },
     { url: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=600&q=80", caption: "Trying a new recipe." },

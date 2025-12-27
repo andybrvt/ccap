@@ -59,7 +59,7 @@ def get_all_students(
     state: Optional[str] = Query(None, description="Filter by state (comma-separated for multiple)"),
     relocation_states: Optional[str] = Query(None, description="Filter by relocation states (comma-separated)"),
     bucket: Optional[str] = Query(None, description="Filter by program stage/bucket (comma-separated)"),
-    ccap_connection: Optional[str] = Query(None, description="Filter by C-CAP connection (comma-separated)"),
+    ccap_connection: Optional[str] = Query(None, description="Filter by C•CAP connection (comma-separated)"),
     has_resume: Optional[str] = Query(None, description="Filter by resume status: Yes, No"),
     currently_working: Optional[str] = Query(None, description="Filter by employment status: Yes, No"),
     food_handlers: Optional[str] = Query(None, description="Filter by food handlers card: Yes, No"),

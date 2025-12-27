@@ -245,7 +245,7 @@ export default function StudentOnboarding() {
             }
         }
         if (!formData.ccapConnection) {
-            errors.ccapConnection = 'C-CAP connection is required';
+            errors.ccapConnection = 'C•CAP connection is required';
         }
 
         return errors;
@@ -628,7 +628,7 @@ export default function StudentOnboarding() {
             if (nextStep === 0) {
                 // Onboarding complete! Refresh user data to update onboarding_step
                 await refreshUser();
-                toast.success('Onboarding complete! Welcome to C-CAP!');
+                toast.success('Onboarding complete! Welcome to C•CAP!');
                 // Small delay to ensure state updates
                 setTimeout(() => {
                     setLocation('/student/onboarding-complete');
@@ -671,7 +671,7 @@ export default function StudentOnboarding() {
             <div className="max-w-3xl mx-auto px-4">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to C-CAP!</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to C•CAP!</h1>
                     <p className="text-gray-600">Let's get your profile set up.</p>
                 </div>
 
@@ -849,7 +849,7 @@ function Step1Personal({ formData, handleInputChange, handlePhoneChange, handleP
                 </div>
 
                 <div>
-                    <Label htmlFor="ccapConnection" className="text-base mb-3 block">How are you connected to C-CAP? *</Label>
+                    <Label htmlFor="ccapConnection" className="text-base mb-3 block">How are you connected to C•CAP? *</Label>
                     <Select value={formData.ccapConnection} onValueChange={(value) => handleInputChange('ccapConnection', value)}>
                         <SelectTrigger className={validationErrors.ccapConnection ? 'border-red-500' : ''}>
                             <SelectValue placeholder="Select your connection" />

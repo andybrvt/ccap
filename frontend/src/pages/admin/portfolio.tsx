@@ -350,7 +350,7 @@ export default function Portfolio() {
                       </span>
                       {user.ccapConnection && (
                         <span className="ml-7 text-blue-600 text-sm font-semibold">
-                          C-CAP Connection: <span className="text-gray-700 font-normal">{user.ccapConnection}</span>
+                          C•CAP Connection: <span className="text-gray-700 font-normal">{user.ccapConnection}</span>
                         </span>
                       )}
                       <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{user.culinaryYears} years</span></span>

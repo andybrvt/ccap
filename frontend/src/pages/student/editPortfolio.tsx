@@ -1081,7 +1081,7 @@ export default function EditPortfolio() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ccapConnection">How are you connected to C-CAP? *</Label>
+                <Label htmlFor="ccapConnection">How are you connected to C•CAP? *</Label>
                 <Select
                   key={formData.ccapConnection || 'no-ccap'}
                   value={formData.ccapConnection}

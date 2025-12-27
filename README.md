@@ -1,6 +1,6 @@
-# C-CAP Platform
+# C•CAP Platform
 
-A career and alumni platform for C-CAP (Careers through Culinary Arts Program) connecting students with opportunities.
+A career and alumni platform for C•CAP (Careers through Culinary Arts Program) connecting students with opportunities.
 
 ## Overview
 

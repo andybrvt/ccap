@@ -433,7 +433,7 @@ export default function PortfolioLookup() {
                             </h1>
                         </div>
                         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Search for any student to view their C-CAP portfolio, including contact details, interests, and more.
+                            Search for any student to view their C•CAP portfolio, including contact details, interests, and more.
                         </p>
                         {/* Feature highlights */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 max-w-3xl mx-auto">

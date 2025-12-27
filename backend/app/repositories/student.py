@@ -74,7 +74,7 @@ class StudentRepository:
         if buckets:
             query = query.filter(StudentProfile.current_bucket.in_(buckets))
         
-        # C-CAP Connection filter (multiple connections)
+        # C•CAP Connection filter (multiple connections)
         if ccap_connections:
             query = query.filter(StudentProfile.ccap_connection.in_(ccap_connections))
         

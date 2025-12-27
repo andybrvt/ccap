@@ -35,7 +35,7 @@ export default function OnboardingComplete() {
                             🎉 Congratulations!
                         </CardTitle>
                         <p className="text-xl text-gray-600 mb-4">
-                            Welcome to the C-CAP Apprentice Program.
+                            Welcome to the C•CAP Apprentice Program.
                         </p>
                         <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-green-500 mx-auto rounded-full"></div>
                     </CardHeader>
@@ -44,7 +44,7 @@ export default function OnboardingComplete() {
                         {/* Success Message */}
                         <div className="text-center space-y-4">
                             <p className="text-lg text-gray-700 leading-relaxed">
-                                You've successfully completed your profile setup! Your culinary journey with C-CAP begins now.
+                                You've successfully completed your profile setup! Your culinary journey with C•CAP begins now.
                             </p>
 
                             <div className="bg-green-50 border border-green-200 rounded-lg p-4">

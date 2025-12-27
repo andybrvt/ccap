@@ -139,7 +139,7 @@ export default function Submissions() {
     { value: 'email', label: 'Email' },
     { value: 'mobileNumber', label: 'Mobile Number' },
     { value: 'dateOfBirth', label: 'Date of Birth' },
-    { value: 'ccapConnection', label: 'C-CAP Connection' },
+    { value: 'ccapConnection', label: 'C•CAP Connection' },
     { value: 'bucket', label: 'Program Stage' },
     { value: 'highSchool', label: 'High School' },
     { value: 'graduationYear', label: 'Graduation Year' },
@@ -233,7 +233,7 @@ export default function Submissions() {
           params.bucket = selectedBuckets.join(',');
         }
 
-        // C-CAP Connections
+        // C•CAP Connections
         if (selectedCcapConnections.length > 0) {
           params.ccap_connection = selectedCcapConnections.join(',');
         }
@@ -738,7 +738,7 @@ export default function Submissions() {
       const matchesBucket = selectedBuckets.length === 0 ||
         (item.bucket && selectedBuckets.includes(item.bucket));
 
-      // C-CAP Connection filtering
+      // C•CAP Connection filtering
       const matchesCcapConnection = selectedCcapConnections.length === 0 ||
         (item.ccapConnection && selectedCcapConnections.includes(item.ccapConnection));
 
@@ -919,7 +919,7 @@ export default function Submissions() {
     },
     {
       key: 'location',
-      header: 'C-CAP Connection',
+      header: 'C•CAP Connection',
       minWidth: '140px',
       render: (item) => (
         <div className="space-y-1">
@@ -1102,7 +1102,7 @@ export default function Submissions() {
                             </span>
                             {portfolioData.student_profile?.ccap_connection && (
                               <span className="ml-7 text-blue-600 text-sm font-semibold">
-                                C-CAP Connection: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.ccap_connection}</span>
+                                C•CAP Connection: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.ccap_connection}</span>
                               </span>
                             )}
                             <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{portfolioData.student_profile?.culinary_class_years || 0} years</span></span>
@@ -1257,7 +1257,7 @@ export default function Submissions() {
       {/* Submissions Table */}
       <div className="py-4 px-6" ref={containerRef}>
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">C-CAP Student Management</h1>
+          <h1 className="text-2xl font-bold">C•CAP Student Management</h1>
           {isLoading && !isInitialLoad && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -1351,17 +1351,17 @@ export default function Submissions() {
                   />
                 </div>
 
-                {/* C-CAP Connection Filter */}
+                {/* C•CAP Connection Filter */}
                 <div className="min-w-[180px]">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    C-CAP Connection
+                    C•CAP Connection
                   </label>
                   <MultiSelect
                     key={`ccap-connections-${selectedCcapConnections.length}`}
                     options={uniqueCcapConnections}
                     onValueChange={setSelectedCcapConnections}
                     defaultValue={selectedCcapConnections}
-                    placeholder="Select C-CAP Connection"
+                    placeholder="Select C•CAP Connection"
                     maxCount={3}
                   />
                 </div>

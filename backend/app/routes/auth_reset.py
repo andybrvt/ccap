@@ -57,14 +57,14 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
     <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <p>Hello,</p>
-        <p>You have requested to reset your password for your C-CAP account.</p>
+        <p>You have requested to reset your password for your C•CAP account.</p>
         <p>Click the link below to reset your password:</p>
         <p><a href="{reset_link}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
         <p>Or copy and paste this URL into your browser:</p>
         <p>{reset_link}</p>
         <p><strong>This link will expire in 15 minutes.</strong></p>
         <p>If you did not request a password reset, please ignore this email.</p>
-        <p>Best regards,<br>C-CAP Team</p>
+        <p>Best regards,<br>C•CAP Team</p>
     </body>
     </html>
     """

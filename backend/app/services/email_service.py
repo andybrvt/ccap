@@ -18,7 +18,7 @@ class EmailService:
     def __init__(self):
         self.api_key = os.getenv("SENDGRID_API_KEY")
         self.from_email = os.getenv("MAIL_FROM", "admin@c-cap-platform.com")
-        self.from_name = os.getenv("MAIL_FROM_NAME", "C-CAP Apprentice Program")
+        self.from_name = os.getenv("MAIL_FROM_NAME", "C•CAP Apprentice Program")
 
         # Setup Jinja2 template environment
         template_dir = os.path.join(os.path.dirname(__file__), '..', 'static', 'templates')

@@ -1,7 +1,7 @@
 # Announcements Feature Implementation
 
 ## Overview
-This document describes the implementation of the announcements feature for the C-CAP platform. Announcements can be created by admins and are filtered based on user role and location/bucket.
+This document describes the implementation of the announcements feature for the C•CAP platform. Announcements can be created by admins and are filtered based on user role and location/bucket.
 
 ## Features
 - **Admin-only creation**: Only admins can create, update, and delete announcements

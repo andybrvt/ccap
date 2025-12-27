@@ -394,7 +394,7 @@ export default function Portfolio() {
                   </span>
                   {studentProfile.ccap_connection && (
                     <span className="ml-7 text-blue-800 text-sm">
-                      <span className="font-semibold text-blue-700">C-CAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>
+                      <span className="font-semibold text-blue-700">C•CAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>
                     </span>
                   )}
                   <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{studentProfile.culinary_class_years} years</span></span>

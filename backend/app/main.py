@@ -20,8 +20,8 @@ logging.basicConfig(
 )
 
 app = FastAPI(
-    title=os.getenv("PROJECT_NAME", "C-CAP"),
-    description="C-CAP Backend API",
+    title=os.getenv("PROJECT_NAME", "C•CAP"),
+    description="C•CAP Backend API",
     version="1.0.0"
 )
 
