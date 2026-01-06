@@ -163,6 +163,7 @@ export default function BulkBucketAssignPage() {
   // Local state for data (fetched from API)
   const [data, setData] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   // Pagination state from API
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -171,6 +172,7 @@ export default function BulkBucketAssignPage() {
 
   // State for search and filters
   const [searchKey, setSearchKey] = useState("");
+  const [debouncedSearchKey, setDebouncedSearchKey] = useState("");
   const [selectedGraduationYear, setSelectedGraduationYear] = useState<string | null>(null);
   const [selectedStatesOfResidence, setSelectedStatesOfResidence] = useState<string[]>([]);
   const [selectedStatesOfRelocation, setSelectedStatesOfRelocation] = useState<string[]>([]);
@@ -184,20 +186,41 @@ export default function BulkBucketAssignPage() {
   // Dynamic items per page calculation
   const { itemsPerPage, containerRef } = useDynamicItemsPerPage();
 
+  // Debounce search input (500ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchKey(searchKey);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchKey]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchKey]);
+
   // Fetch students with pagination
   useEffect(() => {
     fetchStudents();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearchKey]);
 
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, {
-        params: {
-          page: currentPage,
-          page_size: pageSize
-        }
-      });
+
+      // Build params with search support
+      const params: any = {
+        page: currentPage,
+        page_size: pageSize
+      };
+
+      if (debouncedSearchKey) {
+        params.search = debouncedSearchKey;
+      }
+
+      const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, { params });
 
       if (response.data) {
         // Handle paginated response
@@ -262,6 +285,7 @@ export default function BulkBucketAssignPage() {
       toast.error('Failed to load student data');
     } finally {
       setIsLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -550,7 +574,7 @@ export default function BulkBucketAssignPage() {
     },
   ];
 
-  if (isLoading) {
+  if (isInitialLoad && isLoading) {
     return (
       <Layout>
         <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
@@ -568,6 +592,12 @@ export default function BulkBucketAssignPage() {
       <div className="py-4 px-6" ref={containerRef}>
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Program Status Assignment</h1>
+          {isLoading && !isInitialLoad && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>Updating...</span>
+            </div>
+          )}
         </div>
         {/* Filters and Search Bar */}
         <div className="flex flex-col gap-2 pb-4">
@@ -661,6 +691,11 @@ export default function BulkBucketAssignPage() {
                 onChange={e => setSearchKey(e.target.value)}
                 className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
               />
+              {searchKey !== debouncedSearchKey && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
