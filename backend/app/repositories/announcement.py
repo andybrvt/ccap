@@ -78,24 +78,24 @@ class AnnouncementRepository(BaseRepository[Announcement]):
                 )
             )
         
-        # 5. New multi-selection locations
-        if student_profile.state:
+        # 5. New multi-selection locations (by C-CAP connection)
+        if student_profile.ccap_connection:
             filters.append(
                 and_(
                     Announcement.target_audience == "locations",
-                    Announcement.target_locations.any(student_profile.state)
+                    Announcement.target_locations.any(student_profile.ccap_connection)
                 )
             )
         
         # 6. Both program stages and locations
-        if student_profile.current_bucket and student_profile.state:
+        if student_profile.current_bucket and student_profile.ccap_connection:
             # Check if student matches either program stages OR locations
             filters.append(
                 and_(
                     Announcement.target_audience == "both",
                     or_(
                         Announcement.target_program_stages.any(student_profile.current_bucket),
-                        Announcement.target_locations.any(student_profile.state)
+                        Announcement.target_locations.any(student_profile.ccap_connection)
                     )
                 )
             )
@@ -107,12 +107,12 @@ class AnnouncementRepository(BaseRepository[Announcement]):
                     Announcement.target_program_stages.any(student_profile.current_bucket)
                 )
             )
-        elif student_profile.state:
+        elif student_profile.ccap_connection:
             # Only check locations
             filters.append(
                 and_(
                     Announcement.target_audience == "both",
-                    Announcement.target_locations.any(student_profile.state)
+                    Announcement.target_locations.any(student_profile.ccap_connection)
                 )
             )
         
@@ -218,10 +218,10 @@ class AnnouncementRepository(BaseRepository[Announcement]):
             )
             return query.all()
 
-        # 5. Locations (new multi-selection)
+        # 5. Locations (new multi-selection by C-CAP connection)
         if target_audience == "locations" and announcement.target_locations:
             query = query.filter(
-                StudentProfile.state.in_(announcement.target_locations)
+                StudentProfile.ccap_connection.in_(announcement.target_locations)
             )
             return query.all()
 
@@ -236,7 +236,7 @@ class AnnouncementRepository(BaseRepository[Announcement]):
 
             if announcement.target_locations:
                 filters.append(
-                    StudentProfile.state.in_(announcement.target_locations)
+                    StudentProfile.ccap_connection.in_(announcement.target_locations)
                 )
 
             if filters:
