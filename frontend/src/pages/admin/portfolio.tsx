@@ -403,7 +403,7 @@ export default function Portfolio() {
                         <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{user.transportation}</span></span>
                         <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{user.availableTimes}</span></span>
                         <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{user.availableWeekends}</span></span>
-                        <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{user.readyToWork} {user.readyDate && `(from ${user.readyDate})`}</span></span>
+                        <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{user.readyToWork}</span></span>
                         <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{user.willRelocate} {user.relocationStates.length > 0 && `(${user.relocationStates.join(", ")})`}</span></span>
                         <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{user.address} {user.address2}</span></span>
                         <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{user.zipCode}</span></span>

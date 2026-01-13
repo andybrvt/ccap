@@ -480,7 +480,7 @@ export default function Portfolio() {
                     <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{studentProfile.transportation}</span></span>
                     <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{studentProfile.availability?.join(", ")}</span></span>
                     <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{studentProfile.weekend_availability}</span></span>
-                    <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{studentProfile.ready_to_work} {studentProfile.available_date && `(from ${studentProfile.available_date})`}</span></span>
+                    <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{studentProfile.ready_to_work}</span></span>
                     <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{studentProfile.willing_to_relocate} {studentProfile.relocation_states?.length > 0 && `(${studentProfile.relocation_states.join(", ")})`}</span></span>
                     <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{studentProfile.address} {studentProfile.address_line2}</span></span>
                     <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{studentProfile.zip_code}</span></span>

@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import Layout from "@/components/layout/AdminLayout";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
-import { PROGRAM_STAGE_OPTIONS } from '@/lib/constants';
+import { PROGRAM_STAGE_OPTIONS, CCAP_CONNECTION_OPTIONS } from '@/lib/constants';
 import { renderTextWithLinks } from "@/lib/linkUtils";
 import {
   Megaphone,
@@ -106,14 +106,6 @@ const lucideIconMap: Record<string, React.ReactNode> = {
   mail: <Mail className="h-5 w-5 text-white" />,
   message: <MessageCircle className="h-5 w-5 text-white" />,
 };
-
-const US_STATES = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
-];
 
 const BUCKETS = PROGRAM_STAGE_OPTIONS;
 
@@ -469,12 +461,12 @@ export default function Announcements() {
 
       {announcementForm.target_audience === 'locations' && (
         <div className="grid gap-2">
-          <Label htmlFor="target_locations">States *</Label>
+          <Label htmlFor="target_locations">C•CAP Locations *</Label>
           <MultiSelect
-            options={US_STATES.map(state => ({ value: state, label: state }))}
+            options={CCAP_CONNECTION_OPTIONS.map(location => ({ value: location, label: location }))}
             onValueChange={(values) => handleInputChange('target_locations', values)}
             defaultValue={announcementForm.target_locations}
-            placeholder="Select states"
+            placeholder="Select locations"
             maxCount={5}
           />
         </div>
@@ -493,17 +485,17 @@ export default function Announcements() {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="target_locations">States</Label>
+            <Label htmlFor="target_locations">C•CAP Locations</Label>
             <MultiSelect
-              options={US_STATES.map(state => ({ value: state, label: state }))}
+              options={CCAP_CONNECTION_OPTIONS.map(location => ({ value: location, label: location }))}
               onValueChange={(values) => handleInputChange('target_locations', values)}
               defaultValue={announcementForm.target_locations}
-              placeholder="Select states (optional)"
+              placeholder="Select locations (optional)"
               maxCount={5}
             />
           </div>
           <p className="text-sm text-gray-600">
-            Students will see this announcement if they match ANY of the selected program stages OR ANY of the selected states.
+            Students will see this announcement if they match ANY of the selected program stages OR ANY of the selected locations.
           </p>
         </div>
       )}

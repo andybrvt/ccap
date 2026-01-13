@@ -257,7 +257,7 @@ export default function Announcements() {
                                   : announcement.target_audience === 'program_stages'
                                     ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
                                     : announcement.target_audience === 'locations'
-                                      ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
+                                      ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple Locations'}`
                                       : announcement.target_audience === 'both'
                                         ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
                                         : `🎯 ${announcement.target_audience}`
