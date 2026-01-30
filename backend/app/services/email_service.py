@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional, Dict
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment
+from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, Personalization
 import logging
 from datetime import datetime
 import ssl
@@ -68,14 +68,23 @@ class EmailService:
         try:
             # Create the email
             from_email = Email(self.from_email, self.from_name)
-            to_emails = [To(email) for email in to]
-            
+
             # Determine content type
             content_type = "text/html" if "<html>" in body.lower() else "text/plain"
             content = Content(content_type, body)
-            
-            # Create the mail object
-            mail = Mail(from_email, to_emails, subject, content)
+
+            # Create the mail object without recipients initially
+            mail = Mail()
+            mail.from_email = from_email
+            mail.subject = subject
+            mail.add_content(content)
+
+            # Add individual personalizations for each recipient
+            # This sends separate emails to each person (they won't see other recipients)
+            for email in to:
+                personalization = Personalization()
+                personalization.add_to(To(email))
+                mail.add_personalization(personalization)
             
             # Add attachments if provided
             if attachments:
