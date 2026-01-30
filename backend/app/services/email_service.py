@@ -280,7 +280,7 @@ class EmailService:
                 current_year=datetime.now().year
             )
 
-            subject = f"C·CAP Announcement: {title}"
+            subject = f"C•CAP Announcement: {title}"
 
             return await self.send_email(
                 to=to,
