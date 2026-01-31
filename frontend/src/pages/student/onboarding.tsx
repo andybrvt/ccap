@@ -76,6 +76,7 @@ export default function StudentOnboarding() {
 
         // Step 3: Education
         highSchool: "",
+        culinaryTeacher: "",
         graduationYear: "",
         culinaryClassYears: 0,
         transportation: "",
@@ -152,6 +153,7 @@ export default function StudentOnboarding() {
                         willingToRelocate: profile.willing_to_relocate || "",
                         relocationStates: profile.relocation_states || [],
                         highSchool: profile.high_school || "",
+                        culinaryTeacher: profile.culinary_teacher || "",
                         graduationYear: profile.graduation_year || "",
                         culinaryClassYears: profile.culinary_class_years || 0,
                         transportation: profile.transportation || "",
@@ -282,6 +284,9 @@ export default function StudentOnboarding() {
 
         if (!formData.highSchool.trim()) {
             errors.highSchool = 'Name of high school/culinary school is required';
+        }
+        if (!formData.culinaryTeacher.trim()) {
+            errors.culinaryTeacher = 'Culinary teacher name is required';
         }
         if (!formData.graduationYear) {
             errors.graduationYear = 'Graduation year is required';
@@ -599,6 +604,7 @@ export default function StudentOnboarding() {
                 willing_to_relocate: formData.willingToRelocate,
                 relocation_states: formData.relocationStates,
                 high_school: formData.highSchool,
+                culinary_teacher: formData.culinaryTeacher,
                 graduation_year: formData.graduationYear,
                 culinary_class_years: formData.culinaryClassYears,
                 transportation: formData.transportation,
@@ -1002,6 +1008,20 @@ function Step3Education({ formData, handleInputChange, validationErrors }: any) 
                     />
                     {validationErrors.highSchool && (
                         <p className="text-red-500 text-sm mt-1">{validationErrors.highSchool}</p>
+                    )}
+                </div>
+
+                <div>
+                    <Label htmlFor="culinaryTeacher" className="text-base mb-3 block">Who is your culinary teacher? *</Label>
+                    <Input
+                        id="culinaryTeacher"
+                        value={formData.culinaryTeacher}
+                        onChange={(e) => handleInputChange('culinaryTeacher', e.target.value)}
+                        required
+                        className={validationErrors.culinaryTeacher ? 'border-red-500' : ''}
+                    />
+                    {validationErrors.culinaryTeacher && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.culinaryTeacher}</p>
                     )}
                 </div>
 

@@ -1100,6 +1100,11 @@ export default function Submissions() {
                             <span className="ml-7 text-blue-900 text-sm">
                               <span className="font-semibold text-blue-600">{portfolioData.student_profile?.high_school || 'N/A'}</span> <span className="text-gray-500">({portfolioData.student_profile?.graduation_year || 'N/A'})</span>
                             </span>
+                            {portfolioData.student_profile?.culinary_teacher && (
+                              <span className="ml-7 text-blue-600 text-sm font-semibold">
+                                Culinary Teacher: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.culinary_teacher}</span>
+                              </span>
+                            )}
                             {portfolioData.student_profile?.ccap_connection && (
                               <span className="ml-7 text-blue-600 text-sm font-semibold">
                                 C•CAP Connection: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.ccap_connection}</span>
@@ -1155,7 +1160,7 @@ export default function Submissions() {
                               <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{portfolioData.student_profile?.transportation || 'N/A'}</span></span>
                               <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{portfolioData.student_profile?.availability?.join(", ") || 'N/A'}</span></span>
                               <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{portfolioData.student_profile?.weekend_availability || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{portfolioData.student_profile?.ready_to_work || 'N/A'} {portfolioData.student_profile?.available_date && `(from ${portfolioData.student_profile.available_date})`}</span></span>
+                              <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{portfolioData.student_profile?.ready_to_work || 'N/A'}</span></span>
                               <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{portfolioData.student_profile?.willing_to_relocate || 'N/A'} {portfolioData.student_profile?.relocation_states && portfolioData.student_profile.relocation_states.length > 0 && `(${portfolioData.student_profile.relocation_states.join(", ")})`}</span></span>
                               <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{portfolioData.student_profile?.address || 'N/A'} {portfolioData.student_profile?.address_line2 || ''}</span></span>
                               <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{portfolioData.student_profile?.zip_code || 'N/A'}</span></span>

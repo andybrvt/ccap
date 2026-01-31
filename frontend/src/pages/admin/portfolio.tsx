@@ -102,6 +102,7 @@ export default function Portfolio() {
             dateOfBirth: profile.date_of_birth || "",
             mobileNumber: profile.phone || "",
             highSchool: profile.high_school || "",
+            culinaryTeacher: profile.culinary_teacher || "",
             graduationYear: profile.graduation_year || "",
             transportation: profile.transportation || "",
             hoursWanted: profile.hours_per_week?.toString() || "0",
@@ -348,6 +349,11 @@ export default function Portfolio() {
                       <span className="ml-7 text-blue-900 text-sm">
                         <span className="font-semibold text-blue-600">{user.highSchool}</span> <span className="text-gray-500">({user.graduationYear})</span>
                       </span>
+                      {user.culinaryTeacher && (
+                        <span className="ml-7 text-blue-600 text-sm font-semibold">
+                          Culinary Teacher: <span className="text-gray-700 font-normal">{user.culinaryTeacher}</span>
+                        </span>
+                      )}
                       {user.ccapConnection && (
                         <span className="ml-7 text-blue-600 text-sm font-semibold">
                           C•CAP Connection: <span className="text-gray-700 font-normal">{user.ccapConnection}</span>

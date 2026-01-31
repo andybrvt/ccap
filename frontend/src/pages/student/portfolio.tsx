@@ -392,6 +392,11 @@ export default function Portfolio() {
                   <span className="ml-7 text-blue-900 text-sm">
                     <span className="font-semibold text-blue-600">{studentProfile.high_school}</span> <span className="text-gray-500">({studentProfile.graduation_year})</span>
                   </span>
+                  {studentProfile.culinary_teacher && (
+                    <span className="ml-7 text-blue-800 text-sm">
+                      <span className="font-semibold text-blue-700">Culinary Teacher:</span> <span className="text-gray-900">{studentProfile.culinary_teacher}</span>
+                    </span>
+                  )}
                   {studentProfile.ccap_connection && (
                     <span className="ml-7 text-blue-800 text-sm">
                       <span className="font-semibold text-blue-700">C•CAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>

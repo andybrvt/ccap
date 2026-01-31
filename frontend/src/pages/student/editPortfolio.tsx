@@ -38,6 +38,7 @@ interface PortfolioFormData {
   dateOfBirth: string;
   mobilePhoneNumber: string;
   culinarySchool: string;
+  culinaryTeacher: string;
   yearOfGraduation: number;
   transportation: string;
   hoursPerWeek: number;
@@ -198,6 +199,7 @@ export default function EditPortfolio() {
     dateOfBirth: "",
     mobilePhoneNumber: "",
     culinarySchool: "",
+    culinaryTeacher: "",
     yearOfGraduation: 0,
     transportation: "",
     hoursPerWeek: 0,
@@ -255,6 +257,7 @@ export default function EditPortfolio() {
         dateOfBirth: fullProfile.date_of_birth || "",
         mobilePhoneNumber: fullProfile.phone || "",
         culinarySchool: fullProfile.high_school || "",
+        culinaryTeacher: fullProfile.culinary_teacher || "",
         yearOfGraduation: fullProfile.graduation_year ? parseInt(fullProfile.graduation_year) : 0,
         transportation: fullProfile.transportation || "",
         hoursPerWeek: fullProfile.hours_per_week || 0,
@@ -645,6 +648,7 @@ export default function EditPortfolio() {
 
         // Education
         high_school: formData.culinarySchool,
+        culinary_teacher: formData.culinaryTeacher,
         graduation_year: formData.yearOfGraduation.toString(),
         culinary_class_years: formData.culinaryClassYears,
         ccap_connection: formData.ccapConnection,
@@ -1052,6 +1056,15 @@ export default function EditPortfolio() {
                     id="culinarySchool"
                     value={formData.culinarySchool}
                     onChange={(e) => handleInputChange('culinarySchool', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="culinaryTeacher">Who is your culinary teacher? *</Label>
+                  <Input
+                    id="culinaryTeacher"
+                    value={formData.culinaryTeacher}
+                    onChange={(e) => handleInputChange('culinaryTeacher', e.target.value)}
                     required
                   />
                 </div>

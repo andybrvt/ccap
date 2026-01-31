@@ -525,6 +525,7 @@ export default function PortfolioLookup() {
                                                     <span>
                                                         {student.student_profile.high_school || 'High School'}
                                                         {student.student_profile.graduation_year && ` - Class of ${student.student_profile.graduation_year}`}
+                                                        {student.student_profile.culinary_teacher && ` (Teacher: ${student.student_profile.culinary_teacher})`}
                                                     </span>
                                                 </div>
                                             )}
