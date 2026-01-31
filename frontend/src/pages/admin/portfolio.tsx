@@ -546,6 +546,7 @@ interface Submission extends Record<string, unknown> {
   dateOfBirth: string;
   mobileNumber: string;
   highSchool: string;
+  culinaryTeacher: string;
   graduationYear: string;
   transportation: string;
   hoursWanted: string;
