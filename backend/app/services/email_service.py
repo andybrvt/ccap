@@ -238,6 +238,37 @@ class EmailService:
             db_session=db_session
         )
 
+    async def send_admin_signup_notification_email(
+        self,
+        admin_emails: List[str],
+        student_email: str,
+        db_session=None
+    ) -> bool:
+        """Send notification email to admins when a new student registers"""
+        from datetime import datetime
+
+        subject = f"New Student Registration: {student_email}"
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2>New Student Account Created</h2>
+            <p>A new student has registered on the C•CAP platform and will begin the onboarding process.</p>
+            <p><strong>Email:</strong> {student_email}</p>
+            <p><strong>Registered:</strong> {current_time}</p>
+            <p style="color: #666; font-size: 0.9em;">You will receive another notification once the student completes onboarding.</p>
+        </body>
+        </html>
+        """
+
+        return await self.send_email(
+            to=admin_emails,
+            subject=subject,
+            body=body,
+            db_session=db_session
+        )
+
     async def send_announcement_email(
         self,
         to: List[str],

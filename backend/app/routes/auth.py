@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -8,9 +8,15 @@ from app.models.student_profile import StudentProfile
 from app.models.password_reset import PasswordResetToken
 from app.schemas.user import UserCreate, UserResponse, Token, UserLogin
 from app.deps.auth import get_current_active_user, require_admin
+from app.repositories.email_notification import EmailNotificationRepository
+from app.services.email_service import email_service
 from datetime import datetime, timedelta
+import asyncio
 import secrets
+import logging
 from pydantic import BaseModel, EmailStr
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -56,7 +62,7 @@ def register(
     return new_user
 
 @router.post("/register/student", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register_student(user_data: UserCreate, db: Session = Depends(get_db)):
+def register_student(user_data: UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Public student registration endpoint
     Creates a student account with an empty profile
@@ -105,7 +111,26 @@ def register_student(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(student_profile)
     db.commit()
     db.refresh(new_user)
-    
+
+    # Send admin notification email about new student registration
+    try:
+        email_repo = EmailNotificationRepository(db)
+        admin_emails = email_repo.get_active_emails()
+
+        if admin_emails:
+            background_tasks.add_task(
+                asyncio.run,
+                email_service.send_admin_signup_notification_email(
+                    admin_emails=admin_emails,
+                    student_email=user_data.email,
+                    db_session=db
+                )
+            )
+            logger.info(f"Admin signup notification queued for new student: {user_data.email}")
+    except Exception as e:
+        # Log error but don't fail the registration
+        logger.error(f"Failed to queue admin signup notification for {user_data.email}: {str(e)}")
+
     return new_user
 
 @router.post("/login", response_model=Token)
