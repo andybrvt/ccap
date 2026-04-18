@@ -567,6 +567,7 @@ interface Submission extends Record<string, unknown> {
   foodHandlersCard: string;
   servsafeCredentials: string;
   culinaryYears: string;
+  culinaryTeacher: string;
   bio: string;
   ccapConnection: string;
   bucket: string;
