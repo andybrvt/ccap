@@ -73,13 +73,19 @@ def get_all_students(
 ):
     """
     Get paginated and filtered list of students with full profile data - Admin only
-    
+
     Returns paginated results with total count for frontend pagination.
     Supports filtering by multiple criteria.
     Default: 50 students per page, max 200 per page.
+    By default, only shows students who completed onboarding (onboarding_step == 0).
+    Pass onboarding_complete=false or onboarding_step to override.
     """
     student_repo = StudentRepository(db)
     try:
+        # Default to only showing completed onboarding unless explicitly filtered
+        if onboarding_complete is None and onboarding_step is None:
+            onboarding_complete = True
+
         # Calculate offset
         offset = (page - 1) * page_size
         

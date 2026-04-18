@@ -113,7 +113,7 @@ export default function Submissions() {
   const [selectedBuckets, setSelectedBuckets] = useState<string[]>([]);
   const [selectedCcapConnections, setSelectedCcapConnections] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [onboardingFilter, setOnboardingFilter] = useState("all"); // New: onboarding status filter
+  const [onboardingFilter, setOnboardingFilter] = useState("complete"); // Default to showing only completed onboarding
   const [resumeFilter, setResumeFilter] = useState("all"); // Resume filter: all, has, no
 
   // CSV Export state
