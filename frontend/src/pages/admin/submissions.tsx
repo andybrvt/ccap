@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Building, MapPin, Calendar, CheckCircle, Clock, FileText, User, Mail, Phone, GraduationCap, Car, Clock as ClockIcon, Briefcase, FileCheck, Utensils, Shield, School, Search, Filter, X, MoreHorizontal, Trash2, Eye, ArrowLeft, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Building, MapPin, Calendar, CheckCircle, Clock, FileText, User, Mail, Phone, GraduationCap, Car, Clock as ClockIcon, Briefcase, FileCheck, Utensils, Shield, School, Search, Filter, X, MoreHorizontal, Trash2, Eye, ArrowLeft, Download, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1030,6 +1030,13 @@ export default function Submissions() {
                 View
               </DropdownMenuItem>
               <DropdownMenuItem
+                onClick={() => setLocation(`/admin/portfolio/${item.id}`)}
+                className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() => handleDeleteClick(item)}
                 className="text-red-600 hover:bg-red-50 cursor-pointer"
               >
@@ -1062,7 +1069,7 @@ export default function Submissions() {
           ) : portfolioData && selectedStudent ? (
             <div className="p-6 w-full">
               {/* Back Button */}
-              <div className="mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <button
                   onClick={() => {
                     setShowPortfolioModal(false);
@@ -1074,6 +1081,15 @@ export default function Submissions() {
                   <ArrowLeft className="h-5 w-5" />
                   <span className="font-medium">Back to Submissions</span>
                 </button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation(`/admin/portfolio/${selectedStudent.id}`)}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
               </div>
 
               <div className="flex flex-col lg:flex-row gap-8">
