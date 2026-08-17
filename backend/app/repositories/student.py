@@ -4,6 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 from app.models.user import User
 from app.models.student_profile import StudentProfile
+from app.models.post import Post
 from app.schemas.student_profile import StudentProfileCreate, StudentProfileUpdate
 from app.schemas.user import UserCreate
 from app.repositories.base import UserRepository
@@ -37,7 +38,8 @@ class StudentRepository:
                            will_relocate: Optional[str] = None,
                            ready_to_work: Optional[str] = None,
                            onboarding_step: Optional[int] = None,
-                           onboarding_complete: Optional[bool] = None):
+                           onboarding_complete: Optional[bool] = None,
+                           has_posts: Optional[str] = None):
         """Build a filtered query for students"""
         query = self.db.query(User).join(StudentProfile, User.id == StudentProfile.user_id)
         query = query.filter(User.role == "student")
@@ -112,7 +114,15 @@ class StudentRepository:
                 query = query.filter(StudentProfile.onboarding_step == 0)
             else:
                 query = query.filter(StudentProfile.onboarding_step > 0)
-        
+
+        # Has posts (cooking photos) filter
+        if has_posts:
+            posts_exist = self.db.query(Post.id).filter(Post.user_id == User.id).exists()
+            if has_posts == "Yes":
+                query = query.filter(posts_exist)
+            elif has_posts == "No":
+                query = query.filter(~posts_exist)
+
         return query
     
     def get_all_students_filtered(self,
@@ -132,7 +142,8 @@ class StudentRepository:
                                   will_relocate: Optional[str] = None,
                                   ready_to_work: Optional[str] = None,
                                   onboarding_step: Optional[int] = None,
-                                  onboarding_complete: Optional[bool] = None) -> List[User]:
+                                  onboarding_complete: Optional[bool] = None,
+                                  has_posts: Optional[str] = None) -> List[User]:
         """Get filtered students with pagination"""
         if requesting_user.role != "admin":
             raise PermissionError("Only admins can access all students")
@@ -151,17 +162,34 @@ class StudentRepository:
             will_relocate=will_relocate,
             ready_to_work=ready_to_work,
             onboarding_step=onboarding_step,
-            onboarding_complete=onboarding_complete
+            onboarding_complete=onboarding_complete,
+            has_posts=has_posts
         )
-        
+
         # Order by created_at descending
         query = query.order_by(StudentProfile.created_at.desc())
-        
+
         # Apply pagination
         if limit is not None:
             query = query.limit(limit).offset(offset)
-        
-        return query.all()
+
+        students = query.all()
+        self.annotate_post_counts(students)
+        return students
+
+    def annotate_post_counts(self, users: List[User]) -> None:
+        """Attach a post_count attribute to each user (single grouped query)"""
+        if not users:
+            return
+        user_ids = [u.id for u in users]
+        counts = dict(
+            self.db.query(Post.user_id, func.count(Post.id))
+            .filter(Post.user_id.in_(user_ids))
+            .group_by(Post.user_id)
+            .all()
+        )
+        for u in users:
+            u.post_count = counts.get(u.id, 0)
     
     def count_all_students_filtered(self,
                                     requesting_user: User,
@@ -178,7 +206,8 @@ class StudentRepository:
                                     will_relocate: Optional[str] = None,
                                     ready_to_work: Optional[str] = None,
                                     onboarding_step: Optional[int] = None,
-                                    onboarding_complete: Optional[bool] = None) -> int:
+                                    onboarding_complete: Optional[bool] = None,
+                                    has_posts: Optional[str] = None) -> int:
         """Count filtered students"""
         if requesting_user.role != "admin":
             raise PermissionError("Only admins can count all students")
@@ -197,9 +226,10 @@ class StudentRepository:
             will_relocate=will_relocate,
             ready_to_work=ready_to_work,
             onboarding_step=onboarding_step,
-            onboarding_complete=onboarding_complete
+            onboarding_complete=onboarding_complete,
+            has_posts=has_posts
         )
-        
+
         return query.count()
     
     def search_students(self, query: str, requesting_user: User) -> List[User]:

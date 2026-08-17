@@ -48,7 +48,8 @@ class UserWithFullProfile(UserBase):
     is_active: bool
     created_at: datetime
     student_profile: Optional[StudentProfileResponse] = None  # Full profile for admin
-    
+    post_count: int = 0  # Number of posts (cooking photos) the student has shared
+
     class Config:
         from_attributes = True
 

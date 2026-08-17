@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Loader2, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Loader2, ArrowLeft, Pencil } from "lucide-react";
 import Layout from "@/components/layout/AdminLayout";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
@@ -68,6 +73,12 @@ export default function Portfolio() {
   // Comments state
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
+
+  // Admin edit-profile state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Fetch student data on mount
   useEffect(() => {
@@ -140,7 +151,79 @@ export default function Portfolio() {
     };
 
     fetchStudent();
-  }, [params?.id]);
+  }, [params?.id, reloadKey]);
+
+  // Open the edit dialog seeded with the current profile values
+  const handleOpenEdit = () => {
+    if (!user) return;
+    setEditForm({
+      first_name: user.firstName,
+      last_name: user.lastName,
+      preferred_name: user.preferredName,
+      phone: user.mobileNumber,
+      date_of_birth: user.dateOfBirth,
+      bio: user.bio,
+      address: user.address,
+      address_line2: user.address2,
+      city: user.city,
+      state: user.state,
+      zip_code: user.zipCode,
+      high_school: user.highSchool,
+      culinary_teacher: user.culinaryTeacher,
+      graduation_year: user.graduationYear,
+      culinary_class_years: user.culinaryYears,
+      ccap_connection: user.ccapConnection,
+      currently_employed: user.currentJob,
+      current_employer: user.currentEmployer,
+      current_position: user.currentPosition,
+      current_hours_per_week: user.currentHours,
+      previous_employment: user.pastJob,
+      previous_employer: user.pastEmployer,
+      previous_position: user.pastPosition,
+      previous_hours_per_week: user.pastHours,
+      transportation: user.transportation,
+      weekend_availability: user.availableWeekends,
+      ready_to_work: user.readyToWork,
+      available_date: user.readyDate,
+      willing_to_relocate: user.willRelocate,
+      relocation_states: user.relocationStates.join(", "),
+    });
+    setEditOpen(true);
+  };
+
+  const setField = (field: string, value: string) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!user?.id) return;
+    const intFields = ["culinary_class_years", "current_hours_per_week", "previous_hours_per_week"];
+    const payload: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(editForm)) {
+      if (key === "relocation_states") {
+        payload[key] = value.split(",").map((s) => s.trim()).filter(Boolean);
+      } else if (intFields.includes(key)) {
+        const n = parseInt(value, 10);
+        if (!Number.isNaN(n)) payload[key] = n;
+      } else {
+        payload[key] = value;
+      }
+    }
+    try {
+      setSaving(true);
+      await api.put(`${API_ENDPOINTS.ADMIN_GET_STUDENT}${user.id}/profile`, payload);
+      toast.success('Profile updated');
+      setEditOpen(false);
+      setReloadKey((k) => k + 1);
+    } catch (error: any) {
+      console.error('Failed to update profile:', error);
+      toast.error('Failed to update profile', {
+        description: error?.response?.data?.detail || 'Please try again',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Fetch user's posts
   useEffect(() => {
@@ -296,6 +379,12 @@ export default function Portfolio() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* LinkedIn-style Bio - Fixed width on large screens */}
           <div className="lg:w-2/4">
+            <div className="flex justify-end mb-3">
+              <Button variant="outline" size="sm" onClick={handleOpenEdit} className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
+            </div>
             <Card className="shadow-lg border-blue-100">
               <CardContent className="p-8">
                 <div className="flex flex-col md:flex-row gap-8">
@@ -453,6 +542,118 @@ export default function Portfolio() {
             </div>
           </div>
         </div>
+
+        {/* Admin Edit Profile Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Student Profile</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 py-2">
+              {/* Personal */}
+              <div>
+                <h3 className="text-sm font-semibold text-blue-700 mb-3">Personal</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><Label className="mb-1 block">First Name</Label><Input value={editForm.first_name || ""} onChange={(e) => setField("first_name", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Last Name</Label><Input value={editForm.last_name || ""} onChange={(e) => setField("last_name", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Preferred Name</Label><Input value={editForm.preferred_name || ""} onChange={(e) => setField("preferred_name", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Phone</Label><Input value={editForm.phone || ""} onChange={(e) => setField("phone", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Date of Birth</Label><Input placeholder="YYYY-MM-DD" value={editForm.date_of_birth || ""} onChange={(e) => setField("date_of_birth", e.target.value)} /></div>
+                </div>
+                <div className="mt-4"><Label className="mb-1 block">Bio</Label><Textarea rows={3} value={editForm.bio || ""} onChange={(e) => setField("bio", e.target.value)} /></div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <h3 className="text-sm font-semibold text-blue-700 mb-3">Address</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><Label className="mb-1 block">Address</Label><Input value={editForm.address || ""} onChange={(e) => setField("address", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Address Line 2</Label><Input value={editForm.address_line2 || ""} onChange={(e) => setField("address_line2", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">City</Label><Input value={editForm.city || ""} onChange={(e) => setField("city", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">State</Label><Input value={editForm.state || ""} onChange={(e) => setField("state", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Zip Code</Label><Input value={editForm.zip_code || ""} onChange={(e) => setField("zip_code", e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Education */}
+              <div>
+                <h3 className="text-sm font-semibold text-blue-700 mb-3">Education</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><Label className="mb-1 block">High School</Label><Input value={editForm.high_school || ""} onChange={(e) => setField("high_school", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Culinary Teacher</Label><Input value={editForm.culinary_teacher || ""} onChange={(e) => setField("culinary_teacher", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Graduation Year</Label><Input value={editForm.graduation_year || ""} onChange={(e) => setField("graduation_year", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Culinary Class Years</Label><Input type="number" value={editForm.culinary_class_years || ""} onChange={(e) => setField("culinary_class_years", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">C•CAP Connection</Label><Input value={editForm.ccap_connection || ""} onChange={(e) => setField("ccap_connection", e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Work */}
+              <div>
+                <h3 className="text-sm font-semibold text-blue-700 mb-3">Work</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="mb-1 block">Currently Employed</Label>
+                    <Select value={editForm.currently_employed || ""} onValueChange={(v) => setField("currently_employed", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="mb-1 block">Current Employer</Label><Input value={editForm.current_employer || ""} onChange={(e) => setField("current_employer", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Current Position</Label><Input value={editForm.current_position || ""} onChange={(e) => setField("current_position", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Current Hours / Week</Label><Input type="number" value={editForm.current_hours_per_week || ""} onChange={(e) => setField("current_hours_per_week", e.target.value)} /></div>
+                  <div>
+                    <Label className="mb-1 block">Past Employment</Label>
+                    <Select value={editForm.previous_employment || ""} onValueChange={(v) => setField("previous_employment", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="mb-1 block">Past Employer</Label><Input value={editForm.previous_employer || ""} onChange={(e) => setField("previous_employer", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Past Position</Label><Input value={editForm.previous_position || ""} onChange={(e) => setField("previous_position", e.target.value)} /></div>
+                  <div><Label className="mb-1 block">Past Hours / Week</Label><Input type="number" value={editForm.previous_hours_per_week || ""} onChange={(e) => setField("previous_hours_per_week", e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Availability & Relocation */}
+              <div>
+                <h3 className="text-sm font-semibold text-blue-700 mb-3">Availability & Relocation</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><Label className="mb-1 block">Transportation</Label><Input value={editForm.transportation || ""} onChange={(e) => setField("transportation", e.target.value)} /></div>
+                  <div>
+                    <Label className="mb-1 block">Available Weekends</Label>
+                    <Select value={editForm.weekend_availability || ""} onValueChange={(v) => setField("weekend_availability", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem><SelectItem value="Sometimes">Sometimes</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="mb-1 block">Ready to Work</Label>
+                    <Select value={editForm.ready_to_work || ""} onValueChange={(v) => setField("ready_to_work", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="mb-1 block">Available Date</Label><Input placeholder="YYYY-MM-DD" value={editForm.available_date || ""} onChange={(e) => setField("available_date", e.target.value)} /></div>
+                  <div>
+                    <Label className="mb-1 block">Willing to Relocate</Label>
+                    <Select value={editForm.willing_to_relocate || ""} onValueChange={(v) => setField("willing_to_relocate", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem><SelectItem value="Maybe">Maybe</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label className="mb-1 block">Relocation States (comma-separated)</Label><Input placeholder="CA, NY, TX" value={editForm.relocation_states || ""} onChange={(e) => setField("relocation_states", e.target.value)} /></div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
+              <Button onClick={handleSaveEdit} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white">
+                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Post Modal with Comments */}
         {selectedPost && (

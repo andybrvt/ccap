@@ -115,6 +115,7 @@ export default function Submissions() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [onboardingFilter, setOnboardingFilter] = useState("complete"); // Default to showing only completed onboarding
   const [resumeFilter, setResumeFilter] = useState("all"); // Resume filter: all, has, no
+  const [photosFilter, setPhotosFilter] = useState("all"); // Cooking photos filter: all, has, no
 
   // CSV Export state
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -280,6 +281,11 @@ export default function Submissions() {
           }
         }
 
+        // Cooking photos filter
+        if (photosFilter !== "all") {
+          params.has_posts = photosFilter === "has" ? "Yes" : "No";
+        }
+
         const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, { params });
 
         if (response.data) {
@@ -337,6 +343,7 @@ export default function Submissions() {
               bucket: profile.current_bucket || "",
               onboardingStep: profile.onboarding_step || 0,
               ccapConnection: profile.ccap_connection || "",
+              postCount: student.post_count ?? 0,
             };
           });
 
@@ -363,7 +370,8 @@ export default function Submissions() {
     selectedCcapConnections,
     statusFilter,
     onboardingFilter,
-    resumeFilter
+    resumeFilter,
+    photosFilter
   ]);
 
   // Reset to page 1 when filters change
@@ -380,7 +388,8 @@ export default function Submissions() {
     selectedCcapConnections,
     statusFilter,
     onboardingFilter,
-    resumeFilter
+    resumeFilter,
+    photosFilter
   ]);
 
   const handleRowClick = (item: Submission) => {
@@ -600,6 +609,10 @@ export default function Submissions() {
         else if (resumeFilter === "no") params.has_resume = "No";
       }
 
+      if (photosFilter !== "all") {
+        params.has_posts = photosFilter === "has" ? "Yes" : "No";
+      }
+
       const response = await api.get(API_ENDPOINTS.ADMIN_GET_ALL_STUDENTS, { params });
 
       if (response.data) {
@@ -656,6 +669,7 @@ export default function Submissions() {
             bucket: profile.current_bucket || "",
             onboardingStep: profile.onboarding_step || 0,
             ccapConnection: profile.ccap_connection || "",
+            postCount: student.post_count ?? 0,
           };
         });
 
@@ -803,6 +817,7 @@ export default function Submissions() {
     setStatusFilter("all");
     setOnboardingFilter("all");
     setResumeFilter("all");
+    setPhotosFilter("all");
   };
 
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -961,6 +976,20 @@ export default function Submissions() {
           <div className="text-xs text-gray-500">
             Graduates: {item.graduationYear}
           </div>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'postCount',
+      header: 'Photos',
+      minWidth: '90px',
+      render: (item) => (
+        <div className="flex items-center space-x-2">
+          <Utensils className={`h-4 w-4 flex-shrink-0 ${item.postCount > 0 ? 'text-orange-500' : 'text-gray-300'}`} />
+          <span className={`text-sm ${item.postCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
+            {item.postCount > 0 ? item.postCount : 'None'}
+          </span>
         </div>
       ),
       sortable: true,
@@ -1436,6 +1465,24 @@ export default function Submissions() {
                   </Select>
                 </div>
 
+                {/* Cooking Photos Filter */}
+                <div className="min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cooking Photos
+                  </label>
+                  <Select value={photosFilter} onValueChange={setPhotosFilter}>
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                      <Utensils className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
+                      <SelectItem value="has" className="text-gray-900 hover:bg-gray-100">Has Photos</SelectItem>
+                      <SelectItem value="no" className="text-gray-900 hover:bg-gray-100">No Photos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Reset Button */}
                 <div className="flex items-end">
                   <Button
@@ -1749,6 +1796,7 @@ interface Submission extends Record<string, unknown> {
   bucket: string;
   onboardingStep: number; // 0 = complete, 1-6 = in progress
   ccapConnection: string;
+  postCount: number;
   id?: string;
 }
 

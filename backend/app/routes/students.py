@@ -68,6 +68,7 @@ def get_all_students(
     ready_to_work: Optional[str] = Query(None, description="Filter by ready to work: Yes, No"),
     onboarding_step: Optional[int] = Query(None, description="Filter by onboarding step (0=complete, 1-6=incomplete)"),
     onboarding_complete: Optional[bool] = Query(None, description="Filter by onboarding complete (true) or incomplete (false)"),
+    has_posts: Optional[str] = Query(None, description="Filter by posts (cooking photos): Yes, No"),
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
@@ -113,9 +114,10 @@ def get_all_students(
             will_relocate=will_relocate,
             ready_to_work=ready_to_work,
             onboarding_step=onboarding_step,
-            onboarding_complete=onboarding_complete
+            onboarding_complete=onboarding_complete,
+            has_posts=has_posts
         )
-        
+
         # Get total count with same filters
         total = student_repo.count_all_students_filtered(
             requesting_user=admin_user,
@@ -132,9 +134,10 @@ def get_all_students(
             will_relocate=will_relocate,
             ready_to_work=ready_to_work,
             onboarding_step=onboarding_step,
-            onboarding_complete=onboarding_complete
+            onboarding_complete=onboarding_complete,
+            has_posts=has_posts
         )
-        
+
         # Calculate total pages
         total_pages = (total + page_size - 1) // page_size if total > 0 else 0
         
