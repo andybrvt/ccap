@@ -1088,7 +1088,7 @@ export default function Submissions() {
                   className="border-blue-300 text-blue-700 hover:bg-blue-50"
                 >
                   <Pencil className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  Open Full Profile
                 </Button>
               </div>
 
