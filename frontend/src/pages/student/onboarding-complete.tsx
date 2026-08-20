@@ -21,7 +21,7 @@ export default function OnboardingComplete() {
                 {/* Success Animation */}
                 <div className="text-center mb-8">
                     <div className="relative inline-block">
-                        <CheckCircle className="h-24 w-24 text-green-500 mx-auto animate-pulse" />
+                        <CheckCircle className="h-24 w-24 text-success mx-auto animate-pulse" />
                         <div className="absolute -top-2 -right-2">
                             <Star className="h-8 w-8 text-yellow-400 animate-bounce" />
                         </div>
@@ -47,8 +47,8 @@ export default function OnboardingComplete() {
                                 You've successfully completed your profile setup! Your culinary journey with C•CAP begins now.
                             </p>
 
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <div className="flex items-center justify-center gap-2 text-green-800">
+                            <div className="bg-success-soft border border-success/30 rounded-lg p-4">
+                                <div className="flex items-center justify-center gap-2 text-success">
                                     <Trophy className="h-5 w-5" />
                                     <span className="font-semibold">Profile Complete!</span>
                                 </div>
@@ -56,22 +56,22 @@ export default function OnboardingComplete() {
                         </div>
 
                         {/* Next Steps */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                            <h3 className="font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                        <div className="bg-canvas border border-line rounded-lg p-6">
+                            <h3 className="font-semibold text-ink mb-4 flex items-center gap-2">
                                 <Star className="h-5 w-5" />
                                 What's Next?
                             </h3>
-                            <ul className="space-y-3 text-blue-800">
+                            <ul className="space-y-3 text-inkmuted">
                                 <li className="flex items-start gap-3">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div className="w-2 h-2 bg-brand rounded-full mt-2 flex-shrink-0"></div>
                                     <span>Review and update your profile anytime</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div className="w-2 h-2 bg-brand rounded-full mt-2 flex-shrink-0"></div>
                                     <span>Check for announcements and opportunities</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div className="w-2 h-2 bg-brand rounded-full mt-2 flex-shrink-0"></div>
                                     <span>Start building your culinary portfolio</span>
                                 </li>
                             </ul>
@@ -81,7 +81,7 @@ export default function OnboardingComplete() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Button
                                 onClick={handleViewProfile}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                className="px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                             >
                                 <User className="h-5 w-5 mr-2" />
                                 View Your Profile
@@ -91,7 +91,7 @@ export default function OnboardingComplete() {
                             <Button
                                 onClick={handleGoHome}
                                 variant="outline"
-                                className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 text-lg font-semibold"
+                                className="border-line text-ink hover:bg-secondary px-8 py-3 text-lg font-semibold"
                             >
                                 Go to Dashboard
                             </Button>
@@ -114,7 +114,7 @@ export default function OnboardingComplete() {
                     <Trophy className="h-6 w-6 text-blue-400 animate-bounce" />
                 </div>
                 <div className="absolute bottom-20 left-20 opacity-20">
-                    <CheckCircle className="h-6 w-6 text-green-400 animate-pulse" />
+                    <CheckCircle className="h-6 w-6 text-success animate-pulse" />
                 </div>
             </div>
         </div>

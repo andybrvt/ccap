@@ -658,7 +658,7 @@ export default function StudentOnboarding() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading your profile...</p>
                 </div>
             </div>
@@ -666,7 +666,7 @@ export default function StudentOnboarding() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-canvas py-8">
             <div className="max-w-3xl mx-auto px-4">
                 {/* Header */}
                 <div className="mb-8">
@@ -677,7 +677,7 @@ export default function StudentOnboarding() {
                 {/* Progress Bar */}
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Step {currentStep} of 6</span>
+                        <span className="text-[13px] font-medium text-inkmuted">Step {currentStep} of 6</span>
                         <span className="text-sm text-gray-500">{Math.round(progress)}% Complete</span>
                     </div>
                     <Progress value={progress} className="h-2" />
@@ -707,7 +707,7 @@ export default function StudentOnboarding() {
                     <Button
                         onClick={() => saveAndContinue(currentStep === 6 ? 0 : currentStep + 1)}
                         disabled={isSaving}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        
                     >
                         {isSaving ? 'Saving...' : currentStep === 6 ? (
                             <>
@@ -732,7 +732,7 @@ function Step1Personal({ formData, handleInputChange, handlePhoneChange, handleP
     return (
         <>
             <CardHeader>
-                <CardTitle className="text-xl font-semibold text-blue-700">Personal Information</CardTitle>
+                <CardTitle className="text-xl font-semibold text-ink">Personal Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 {/* Profile Picture */}
@@ -872,7 +872,7 @@ function Step2Address({ formData, handleInputChange, validationErrors }: any) {
     return (
         <>
             <CardHeader>
-                <CardTitle className="text-xl font-semibold text-blue-700">Address & Location</CardTitle>
+                <CardTitle className="text-xl font-semibold text-ink">Address & Location</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 <div>
@@ -956,7 +956,7 @@ function Step3Education({ formData, handleInputChange, validationErrors }: any) 
     return (
         <>
             <CardHeader>
-                <CardTitle className="text-xl font-semibold text-blue-700">Education</CardTitle>
+                <CardTitle className="text-xl font-semibold text-ink">Education</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 <div>
@@ -1051,7 +1051,7 @@ function Step4Experience({ formData, handleInputChange, validationErrors }: any)
     return (
         <>
             <CardHeader>
-                <CardTitle className="text-xl font-semibold text-blue-700">Work Experience</CardTitle>
+                <CardTitle className="text-xl font-semibold text-ink">Work Experience</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 {/* Current Employment */}
@@ -1196,7 +1196,7 @@ function Step5Availability({ formData, handleInputChange, validationErrors }: an
     return (
         <>
             <CardHeader>
-                <CardTitle className="text-xl font-semibold text-blue-700">Availability & Preferences</CardTitle>
+                <CardTitle className="text-xl font-semibold text-ink">Availability & Preferences</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 <div>
@@ -1300,7 +1300,7 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
     return (
         <>
             <CardHeader>
-                <CardTitle className="text-xl font-semibold text-blue-700">Interests & Documents</CardTitle>
+                <CardTitle className="text-xl font-semibold text-ink">Interests & Documents</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
                 {/* Interests */}
@@ -1350,8 +1350,8 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                         <div className="mt-4">
                             {formData.existingResumeUrl ? (
                                 <div className="flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-green-600" />
-                                    <span className="text-sm text-green-600">Resume uploaded</span>
+                                    <Check className="h-4 w-4 text-success" />
+                                    <span className="text-sm text-success">Resume uploaded</span>
                                     <Button variant="outline" size="sm" onClick={() => document.getElementById('resume-upload')?.click()} disabled={isUploadingResume}>
                                         Change
                                     </Button>
@@ -1401,8 +1401,8 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                         <div className="mt-4">
                             {formData.existingFoodHandlersUrl ? (
                                 <div className="flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-green-600" />
-                                    <span className="text-sm text-green-600">Certificate uploaded</span>
+                                    <Check className="h-4 w-4 text-success" />
+                                    <span className="text-sm text-success">Certificate uploaded</span>
                                     <Button variant="outline" size="sm" onClick={() => document.getElementById('credential-upload')?.click()} disabled={isUploadingCredential}>
                                         Change
                                     </Button>
@@ -1456,8 +1456,8 @@ function Step6InterestsDocuments({ formData, handleInputChange, handleResumeUplo
                         <div className="mt-4">
                             {formData.existingServSafeUrl ? (
                                 <div className="flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-green-600" />
-                                    <span className="text-sm text-green-600">Certificate uploaded</span>
+                                    <Check className="h-4 w-4 text-success" />
+                                    <span className="text-sm text-success">Certificate uploaded</span>
                                     <Button variant="outline" size="sm" onClick={() => document.getElementById('servsafe-upload')?.click()} disabled={isUploadingServSafe}>
                                         Change
                                     </Button>

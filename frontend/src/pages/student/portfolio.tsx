@@ -3,7 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/apiService";
 import { API_ENDPOINTS } from "@/lib/endpoints";
-import { PROGRAM_STAGE_OPTIONS, CHAPTER_DISH_DROPDOWN_OPTIONS } from '@/lib/constants';
+import { PROGRAM_STAGE_OPTIONS, CHAPTER_DISH_DROPDOWN_OPTIONS, getStageBadgeClasses } from '@/lib/constants';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, MapPin, GraduationCap, Briefcase, Clock, FileCheck, Utensils, Shield, X, Pencil, Plus, Upload, Loader2, Trash2, Lock } from "lucide-react";
@@ -42,11 +42,11 @@ const getBucketStyling = (bucket: string) => {
     case 'Pre-Apprentice Candidate':
       return 'bg-orange-50 text-orange-700 border-orange-200';
     case 'Apprentice':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
+      return 'bg-blue-50 text-ink border-blue-200';
     case 'Completed Pre-Apprentice':
-      return 'bg-green-50 text-green-700 border-green-200';
+      return 'bg-green-50 text-ink border-green-200';
     case 'Completed Apprentice':
-      return 'bg-purple-50 text-purple-700 border-purple-200';
+      return 'bg-purple-50 text-ink border-purple-200';
     case 'Not Active':
       return 'bg-gray-50 text-gray-700 border-gray-200';
     default:
@@ -289,7 +289,7 @@ export default function Portfolio() {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
         </div>
       </Layout>
     );
@@ -321,7 +321,7 @@ export default function Portfolio() {
     <Layout>
       <div className="max-w-3xl mx-auto p-6">
         {/* LinkedIn-style Bio */}
-        <Card className="mb-8 shadow-lg border-blue-100">
+        <Card className="mb-8 shadow-card border-line">
           <CardContent className="p-8 relative">
             {/* Edit Button */}
             <Button
@@ -335,8 +335,8 @@ export default function Portfolio() {
             </Button>
             <div className="flex flex-col md:flex-row gap-8">
               {/* Avatar and Name */}
-              <div className="flex flex-col items-center md:items-start md:w-1/3 bg-blue-50 rounded-xl p-6 mb-4 md:mb-0">
-                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-500 mb-4 border-4 border-blue-200 overflow-hidden">
+              <div className="flex flex-col items-center md:items-start md:w-1/3 bg-canvas border border-line rounded-xl p-6 mb-4 md:mb-0">
+                <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center text-4xl font-bold text-ink mb-4 border-4 border-line overflow-hidden">
                   {studentProfile.profile_picture_url ? (
                     <img
                       src={studentProfile.profile_picture_url}
@@ -347,15 +347,15 @@ export default function Portfolio() {
                     `${studentProfile.first_name?.charAt(0) || ''}${studentProfile.last_name?.charAt(0) || ''}`
                   )}
                 </div>
-                <h1 className="text-2xl font-bold text-blue-700 mb-1 text-center md:text-left">
+                <h1 className="text-2xl font-bold text-ink mb-1 text-center md:text-left">
                   {studentProfile.first_name} {studentProfile.last_name}
                   {studentProfile.preferred_name && (
-                    <span className="text-lg text-blue-400 ml-2">({studentProfile.preferred_name})</span>
+                    <span className="text-lg text-inkmuted ml-2">({studentProfile.preferred_name})</span>
                   )}
                 </h1>
                 <div className="flex flex-wrap gap-2 mb-2 justify-center md:justify-start">
                   {studentProfile.interests?.map((option: string, i: number) => (
-                    <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">
+                    <Badge key={i} variant="outline" className="text-xs border-transparent text-inkmuted bg-secondary">
                       {option}
                     </Badge>
                   ))}
@@ -364,14 +364,14 @@ export default function Portfolio() {
                 <div className="flex justify-center md:justify-start mb-2">
                   <Badge
                     variant="outline"
-                    className={`text-xs font-medium ${getBucketStyling(studentProfile.current_bucket)}`}
+                    className={`text-[13px] font-medium rounded-md ${getStageBadgeClasses(studentProfile.current_bucket)}`}
                   >
                     {studentProfile.current_bucket || 'Pre-Apprentice Explorer'}
                   </Badge>
                 </div>
                 {/* Bio Section */}
                 {studentProfile.bio && (
-                  <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                  <div className="w-full mt-4 p-4 bg-white rounded-lg border border-line">
                     <p className="text-sm text-gray-700 leading-relaxed">{studentProfile.bio}</p>
                   </div>
                 )}
@@ -380,50 +380,50 @@ export default function Portfolio() {
               {/* Main Info */}
               <div className="flex-1 flex flex-col gap-6">
                 {/* Contact Row */}
-                <div className="flex flex-wrap gap-4 text-blue-900 text-sm items-center">
-                  <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-blue-400" />{studentProfile.email || user?.email}</span>
-                  <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-blue-400" />{studentProfile.phone}</span>
-                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-blue-400" />{studentProfile.city}, {studentProfile.state}</span>
+                <div className="flex flex-wrap gap-4 text-ink text-sm items-center">
+                  <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-inkmuted" />{studentProfile.email || user?.email}</span>
+                  <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-inkmuted" />{studentProfile.phone}</span>
+                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-inkmuted" />{studentProfile.city}, {studentProfile.state}</span>
                 </div>
-                <hr className="my-2 border-blue-100" />
+                <hr className="my-2 border-line" />
                 {/* Education */}
                 <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-blue-500" />Education</span>
-                  <span className="ml-7 text-blue-900 text-sm">
-                    <span className="font-semibold text-blue-600">{studentProfile.high_school}</span> <span className="text-gray-500">({studentProfile.graduation_year})</span>
+                  <span className="font-semibold text-ink flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-inkmuted" />Education</span>
+                  <span className="ml-7 text-ink text-sm">
+                    <span className="font-medium text-ink">{studentProfile.high_school}</span> <span className="text-gray-500">({studentProfile.graduation_year})</span>
                   </span>
                   {studentProfile.culinary_teacher && (
-                    <span className="ml-7 text-blue-800 text-sm">
-                      <span className="font-semibold text-blue-700">Culinary Teacher:</span> <span className="text-gray-900">{studentProfile.culinary_teacher}</span>
+                    <span className="ml-7 text-ink text-sm">
+                      <span className="font-semibold text-ink">Culinary Teacher:</span> <span className="text-gray-900">{studentProfile.culinary_teacher}</span>
                     </span>
                   )}
                   {studentProfile.ccap_connection && (
-                    <span className="ml-7 text-blue-800 text-sm">
-                      <span className="font-semibold text-blue-700">C•CAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>
+                    <span className="ml-7 text-ink text-sm">
+                      <span className="font-semibold text-ink">C•CAP Connection:</span> <span className="text-gray-900">{studentProfile.ccap_connection}</span>
                     </span>
                   )}
-                  <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{studentProfile.culinary_class_years} years</span></span>
+                  <span className="ml-7 text-inkmuted text-sm">Culinary Education: <span className="text-gray-900">{studentProfile.culinary_class_years} years</span></span>
                 </div>
                 {/* Work */}
                 <div className="flex flex-col gap-1 mt-2">
-                  <span className="font-semibold text-green-700 flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-green-500" />Work</span>
-                  <span className="ml-7 text-green-700 text-sm">
+                  <span className="font-semibold text-ink flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-inkmuted" />Work</span>
+                  <span className="ml-7 text-ink text-sm">
                     <span className="font-semibold">{studentProfile.currently_employed === "Yes" ? "Currently at" : "Not currently working"}</span>
                     <span className="text-gray-900">{studentProfile.currently_employed === "Yes" ? ` ${studentProfile.current_employer}` : ""}</span>
                   </span>
                   {studentProfile.previous_employment === "Yes" && (
-                    <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{studentProfile.previous_position} at {studentProfile.previous_employer} ({studentProfile.previous_hours_per_week} hrs/week)</span></span>
+                    <span className="ml-7 text-inkmuted text-xs">Past: <span className="text-gray-700">{studentProfile.previous_position} at {studentProfile.previous_employer} ({studentProfile.previous_hours_per_week} hrs/week)</span></span>
                   )}
                 </div>
                 {/* Credentials */}
                 <div className="flex flex-col gap-1 mt-2">
-                  <span className="font-semibold text-purple-700 flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-purple-500" />Credentials</span>
-                  <div className="ml-7 flex flex-col gap-3 text-purple-900 text-sm">
+                  <span className="font-semibold text-ink flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-inkmuted" />Credentials</span>
+                  <div className="ml-7 flex flex-col gap-3 text-ink text-sm">
                     {/* Resume */}
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <FileCheck className="w-4 h-4 text-purple-400" />
-                        <span className="font-semibold text-purple-700">Resume:</span>
+                        <FileCheck className="w-4 h-4 text-inkmuted" />
+                        <span className="font-semibold text-ink">Resume:</span>
                         <span className="text-gray-900">{studentProfile.has_resume === "Yes" ? "Available" : "Not Provided"}</span>
                       </span>
                       {studentProfile.has_resume === "Yes" && studentProfile.resume_url && (
@@ -441,8 +441,8 @@ export default function Portfolio() {
                     {/* Food Handlers Card */}
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Utensils className="w-4 h-4 text-purple-400" />
-                        <span className="font-semibold text-purple-700">Food Handler:</span>
+                        <Utensils className="w-4 h-4 text-inkmuted" />
+                        <span className="font-semibold text-ink">Food Handler:</span>
                         <span className="text-gray-900">{studentProfile.has_food_handlers_card || "Not Provided"}</span>
                       </span>
                       {studentProfile.has_food_handlers_card === "Yes" && studentProfile.food_handlers_card_url && (
@@ -460,8 +460,8 @@ export default function Portfolio() {
                     {/* ServSafe Certificate */}
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1">
-                        <Shield className="w-4 h-4 text-purple-400" />
-                        <span className="font-semibold text-purple-700">ServSafe:</span>
+                        <Shield className="w-4 h-4 text-inkmuted" />
+                        <span className="font-semibold text-ink">ServSafe:</span>
                         <span className="text-gray-900">{studentProfile.has_servsafe || "Not Provided"}</span>
                       </span>
                       {studentProfile.has_servsafe === "Yes" && studentProfile.servsafe_certificate_url && (
@@ -479,15 +479,15 @@ export default function Portfolio() {
                 </div>
                 {/* Details */}
                 <div className="flex flex-col gap-1 mt-4">
-                  <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg">Details</span>
-                  <div className="ml-7 flex flex-col gap-y-1 text-xs text-gray-500 bg-blue-50 rounded-lg p-4 border border-blue-100 mt-1">
-                    <span><span className="font-semibold text-blue-700">Date of Birth:</span> <span className="text-gray-900">{studentProfile.date_of_birth}</span></span>
-                    <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{studentProfile.transportation}</span></span>
-                    <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{studentProfile.availability?.join(", ")}</span></span>
-                    <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{studentProfile.weekend_availability}</span></span>
-                    <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{studentProfile.ready_to_work}</span></span>
-                    <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{studentProfile.address} {studentProfile.address_line2}</span></span>
-                    <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{studentProfile.zip_code}</span></span>
+                  <span className="font-semibold text-ink flex items-center gap-2 text-lg">Details</span>
+                  <div className="ml-7 flex flex-col gap-y-1 text-xs text-gray-500 bg-white rounded-lg p-4 border border-line mt-1">
+                    <span><span className="font-semibold text-ink">Date of Birth:</span> <span className="text-gray-900">{studentProfile.date_of_birth}</span></span>
+                    <span><span className="font-semibold text-ink">Transportation:</span> <span className="text-gray-900">{studentProfile.transportation}</span></span>
+                    <span><span className="font-semibold text-ink">Available Times:</span> <span className="text-gray-900">{studentProfile.availability?.join(", ")}</span></span>
+                    <span><span className="font-semibold text-ink">Available Weekends:</span> <span className="text-gray-900">{studentProfile.weekend_availability}</span></span>
+                    <span><span className="font-semibold text-ink">Ready to Work:</span> <span className="text-gray-900">{studentProfile.ready_to_work}</span></span>
+                    <span><span className="font-semibold text-ink">Address:</span> <span className="text-gray-900">{studentProfile.address} {studentProfile.address_line2}</span></span>
+                    <span><span className="font-semibold text-ink">Zip:</span> <span className="text-gray-900">{studentProfile.zip_code}</span></span>
                   </div>
                 </div>
               </div>
@@ -497,10 +497,10 @@ export default function Portfolio() {
 
         {/* Instagram-style Posts Grid */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-blue-700">Posts</h2>
+          <h2 className="text-xl font-semibold text-ink">Posts</h2>
           <Button
             onClick={() => setCreatePostOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className=""
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Post
@@ -509,14 +509,14 @@ export default function Portfolio() {
 
         {loadingPosts ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-inkmuted" />
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 border border-blue-200 rounded-lg bg-blue-50">
-            <p className="text-blue-600 mb-4">No posts yet. Share your culinary journey!</p>
+          <div className="text-center py-12 border border-line rounded-lg bg-canvas">
+            <p className="text-inkmuted mb-4">No posts yet. Share your culinary journey!</p>
             <Button
               onClick={() => setCreatePostOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className=""
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Post
@@ -527,7 +527,7 @@ export default function Portfolio() {
             {posts.map((post) => (
               <button
                 key={post.id}
-                className="relative aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none group"
+                className="relative aspect-square bg-secondary rounded-lg overflow-hidden border border-line focus:outline-none group"
                 onClick={() => handleOpenPost(post)}
                 style={{ width: "100%" }}
               >

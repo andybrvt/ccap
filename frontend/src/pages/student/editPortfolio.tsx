@@ -739,7 +739,7 @@ export default function EditPortfolio() {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
         </div>
       </Layout>
     );
@@ -771,7 +771,7 @@ export default function EditPortfolio() {
           {/* Profile Picture and Bio */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Profile Picture & Bio</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Profile Picture & Bio</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 gap-6">
@@ -801,7 +801,7 @@ export default function EditPortfolio() {
                           />
                         ) : isUploadingProfilePic ? (
                           <div className="flex flex-col items-center justify-center text-blue-600">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-1"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mb-1"></div>
                             <span className="text-xs">Uploading...</span>
                           </div>
                         ) : (
@@ -833,14 +833,14 @@ export default function EditPortfolio() {
                     <div className="flex flex-col items-center space-y-2">
                       {isUploadingProfilePic && (
                         <div className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand"></div>
                           <span className="text-sm text-gray-600">Uploading...</span>
                         </div>
                       )}
 
                       {formData.existingProfilePicture && !isUploadingProfilePic && (
                         <>
-                          <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                          <Badge variant="secondary" className="text-xs bg-success-soft text-success">
                             Profile picture uploaded
                           </Badge>
                           <Button
@@ -883,7 +883,7 @@ export default function EditPortfolio() {
           {/* Personal Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Personal Information</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Personal Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -951,7 +951,7 @@ export default function EditPortfolio() {
           {/* Address Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Address Information</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Address Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -1017,7 +1017,7 @@ export default function EditPortfolio() {
           {/* Education Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Education Information</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Education Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1089,7 +1089,7 @@ export default function EditPortfolio() {
           {/* Work Preferences */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Work Preferences</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Work Preferences</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1165,7 +1165,7 @@ export default function EditPortfolio() {
           {/* Current Employment */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Current Employment</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Current Employment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -1221,7 +1221,7 @@ export default function EditPortfolio() {
           {/* Previous Employment */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Previous Employment</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Previous Employment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -1277,7 +1277,7 @@ export default function EditPortfolio() {
           {/* Documents and Credentials */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Documents and Credentials</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Documents and Credentials</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -1356,16 +1356,16 @@ export default function EditPortfolio() {
                   {/* Show uploading state */}
                   {isUploadingResume && (
                     <div className="flex items-center justify-center gap-2 py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand"></div>
                       <span className="text-sm text-gray-600">Uploading resume...</span>
                     </div>
                   )}
 
                   {/* Show uploaded file preview */}
                   {formData.resumeUpload && !isUploadingResume && (
-                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">{formData.resumeUpload.name}</Badge>
-                      <span className="text-xs text-green-700 ml-auto">✓ Uploaded</span>
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-success-soft border border-success/30 rounded-lg">
+                      <Badge variant="secondary" className="bg-success-soft text-success">{formData.resumeUpload.name}</Badge>
+                      <span className="text-xs text-ink ml-auto">✓ Uploaded</span>
                     </div>
                   )}
                 </div>
@@ -1396,8 +1396,8 @@ export default function EditPortfolio() {
                     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <div className="w-10 h-10 bg-success-soft rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                             </svg>
                           </div>
@@ -1450,16 +1450,16 @@ export default function EditPortfolio() {
                   {/* Show uploading state */}
                   {isUploadingCredential && (
                     <div className="flex items-center justify-center gap-2 py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand"></div>
                       <span className="text-sm text-gray-600">Uploading credential...</span>
                     </div>
                   )}
 
                   {/* Show uploaded file preview */}
                   {formData.foodHandlersCardUpload && !isUploadingCredential && (
-                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">{formData.foodHandlersCardUpload.name}</Badge>
-                      <span className="text-xs text-green-700 ml-auto">✓ Uploaded</span>
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-success-soft border border-success/30 rounded-lg">
+                      <Badge variant="secondary" className="bg-success-soft text-success">{formData.foodHandlersCardUpload.name}</Badge>
+                      <span className="text-xs text-ink ml-auto">✓ Uploaded</span>
                     </div>
                   )}
                 </div>
@@ -1548,16 +1548,16 @@ export default function EditPortfolio() {
                   {/* Show uploading state */}
                   {isUploadingServSafe && (
                     <div className="flex items-center justify-center gap-2 py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand"></div>
                       <span className="text-sm text-gray-600">Uploading certificate...</span>
                     </div>
                   )}
 
                   {/* Show uploaded file preview */}
                   {formData.servSafeUpload && !isUploadingServSafe && (
-                    <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">{formData.servSafeUpload.name}</Badge>
-                      <span className="text-xs text-green-700 ml-auto">✓ Uploaded</span>
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-success-soft border border-success/30 rounded-lg">
+                      <Badge variant="secondary" className="bg-success-soft text-success">{formData.servSafeUpload.name}</Badge>
+                      <span className="text-xs text-ink ml-auto">✓ Uploaded</span>
                     </div>
                   )}
                 </div>
@@ -1568,7 +1568,7 @@ export default function EditPortfolio() {
           {/* Work Readiness */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Work Readiness</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Work Readiness</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -1602,7 +1602,7 @@ export default function EditPortfolio() {
           {/* Interests */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Interests</CardTitle>
+              <CardTitle className="text-xl font-semibold text-ink">Interests</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -1641,7 +1641,7 @@ export default function EditPortfolio() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
+              
             >
               {isSubmitting ? (
                 <>
