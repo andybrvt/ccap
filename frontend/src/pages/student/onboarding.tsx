@@ -268,13 +268,6 @@ export default function StudentOnboarding() {
         if (!formData.zipCode.trim()) {
             errors.zipCode = 'Zip code is required';
         }
-        if (!formData.willingToRelocate) {
-            errors.willingToRelocate = 'Please specify if you are willing to relocate';
-        }
-        // If they're willing to relocate, they must select at least one state
-        if (formData.willingToRelocate === "Yes" && formData.relocationStates.length === 0) {
-            errors.relocationStates = 'Please select at least one state you would consider relocating to';
-        }
 
         return errors;
     };
@@ -951,37 +944,6 @@ function Step2Address({ formData, handleInputChange, validationErrors }: any) {
                     </div>
                 </div>
 
-                <div>
-                    <Label className="text-base mb-3 block">Are you willing to relocate? *</Label>
-                    <RadioGroup value={formData.willingToRelocate} onValueChange={(value) => handleInputChange('willingToRelocate', value)}>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Yes" id="relocate-yes" />
-                            <Label htmlFor="relocate-yes">Yes</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="No" id="relocate-no" />
-                            <Label htmlFor="relocate-no">No</Label>
-                        </div>
-                    </RadioGroup>
-                    {validationErrors.willingToRelocate && (
-                        <p className="text-red-500 text-sm mt-1">{validationErrors.willingToRelocate}</p>
-                    )}
-                </div>
-
-                {formData.willingToRelocate === "Yes" && (
-                    <div>
-                        <Label className="text-base mb-3 block">Which states would you consider?</Label>
-                        <MultiSelect
-                            options={STATES_OPTIONS}
-                            onValueChange={(values) => handleInputChange('relocationStates', values)}
-                            defaultValue={formData.relocationStates}
-                            placeholder="Select states..."
-                        />
-                        {validationErrors.relocationStates && (
-                            <p className="text-red-500 text-sm mt-1">{validationErrors.relocationStates}</p>
-                        )}
-                    </div>
-                )}
             </CardContent>
         </>
     );

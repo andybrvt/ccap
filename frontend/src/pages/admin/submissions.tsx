@@ -3,6 +3,7 @@ import { Building, MapPin, Calendar, CheckCircle, Clock, FileText, User, Mail, P
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -483,6 +484,64 @@ export default function Submissions() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Submission | null>(null);
 
+  // Multi-select delete
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Clear selection whenever the visible rows change (page/filter/refresh)
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [data]);
+
+  const allRowsSelected = data.length > 0 && data.every((item) => selectedIds.has(String(item.id)));
+
+  const toggleSelectAllRows = () => {
+    setSelectedIds(allRowsSelected ? new Set() : new Set(data.map((item) => String(item.id))));
+  };
+
+  const toggleRowSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectedStudents = data.filter((item) => selectedIds.has(String(item.id)));
+
+  const handleBulkDeleteConfirm = async () => {
+    if (selectedStudents.length === 0) return;
+    setIsBulkDeleting(true);
+
+    let deletedCount = 0;
+    const failedNames: string[] = [];
+    for (const student of selectedStudents) {
+      try {
+        await api.delete(`${API_ENDPOINTS.ADMIN_DELETE_STUDENT}${student.id}`);
+        deletedCount++;
+      } catch (error) {
+        console.error('Failed to delete student:', student.id, error);
+        failedNames.push(`${student.firstName} ${student.lastName}`.trim() || String(student.email));
+      }
+    }
+
+    setIsBulkDeleting(false);
+    setBulkDeleteDialogOpen(false);
+    setSelectedIds(new Set());
+
+    if (failedNames.length === 0) {
+      toast.success(`Deleted ${deletedCount} student${deletedCount === 1 ? '' : 's'}`);
+    } else {
+      toast.error(`Deleted ${deletedCount}, failed to delete ${failedNames.length}: ${failedNames.join(', ')}`);
+    }
+    refreshStudents();
+  };
+
   const handleDeleteClick = (item: Submission) => {
     setStudentToDelete(item);
     setDeleteDialogOpen(true);
@@ -887,6 +946,28 @@ export default function Submissions() {
 
   // Column definitions
   const columns: Column<Submission>[] = [
+    {
+      key: 'select',
+      header: (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+          <Checkbox
+            checked={allRowsSelected}
+            onCheckedChange={toggleSelectAllRows}
+            aria-label="Select all students on this page"
+          />
+        </div>
+      ),
+      minWidth: '40px',
+      render: (item) => (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+          <Checkbox
+            checked={selectedIds.has(String(item.id))}
+            onCheckedChange={() => toggleRowSelected(String(item.id))}
+            aria-label={`Select ${item.firstName} ${item.lastName}`}
+          />
+        </div>
+      ),
+    },
     {
       key: 'name',
       header: 'Name',
@@ -1537,6 +1618,12 @@ export default function Submissions() {
             </div>
 
             <div className="flex items-center gap-4">
+              {selectedIds.size > 0 && (
+                <Button variant="destructive" onClick={() => setBulkDeleteDialogOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected ({selectedIds.size})
+                </Button>
+              )}
               <Button variant="default" onClick={() => setLocation(`/admin/assign-program-status`)}>
                 Assign Program Stages
               </Button>
@@ -1693,6 +1780,41 @@ export default function Submissions() {
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={(open) => !isBulkDeleting && setBulkDeleteDialogOpen(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedStudents.length} student{selectedStudents.length === 1 ? '' : 's'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the following student{selectedStudents.length === 1 ? '' : 's'} and all their associated data including posts, comments, and profile information. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-[200px] overflow-y-auto border rounded-lg p-3 text-sm text-gray-700">
+            {selectedStudents.map((student) => (
+              <div key={String(student.id)} className="py-0.5">
+                {`${student.firstName} ${student.lastName}`.trim() || 'Unnamed student'}
+                <span className="text-gray-400 ml-2">{String(student.email || '')}</span>
+              </div>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting} onClick={() => setBulkDeleteDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isBulkDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleBulkDeleteConfirm();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isBulkDeleting ? `Deleting ${selectedStudents.length}...` : `Delete ${selectedStudents.length}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
