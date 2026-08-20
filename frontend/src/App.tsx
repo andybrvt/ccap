@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner"
 
 import AdminHomepage from "@/pages/admin/homepage";
+import AdminCommunityPosts from "@/pages/admin/communityPosts";
 import Login from "@/pages/login";
 import ResetPassword from "@/pages/reset-password";
 import RegisterStudent from "@/pages/register-student";
@@ -49,6 +50,11 @@ function AppRoutes() {
       <Route path="/admin">
         <ProtectedRoute requiredRole="admin">
           <AdminHomepage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/community-posts">
+        <ProtectedRoute requiredRole="admin">
+          <AdminCommunityPosts />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/announcements">

@@ -284,7 +284,6 @@ export default function Homepage() {
   const [, setLocation] = useLocation();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [visiblePostCount, setVisiblePostCount] = useState(4);
 
   // Announcements state
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -293,9 +292,6 @@ export default function Homepage() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [loadingMorePosts, setLoadingMorePosts] = useState(false);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
-  const [postsOffset, setPostsOffset] = useState(0);
 
 
   // Fetch announcements
@@ -323,11 +319,9 @@ export default function Homepage() {
       try {
         setLoadingPosts(true);
         const response = await api.get(API_ENDPOINTS.POSTS_GET_ALL, {
-          params: { limit: 10, offset: 0 }
+          params: { limit: 4, offset: 0 }
         });
         setPosts(response.data);
-        setHasMorePosts(response.data.length === 10);
-        setPostsOffset(10);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -337,26 +331,6 @@ export default function Homepage() {
 
     fetchPosts();
   }, []);
-
-  // Load more posts
-  const handleLoadMorePosts = async () => {
-    if (loadingMorePosts || !hasMorePosts) return;
-
-    try {
-      setLoadingMorePosts(true);
-      const response = await api.get(API_ENDPOINTS.POSTS_GET_ALL, {
-        params: { limit: 10, offset: postsOffset }
-      });
-
-      setPosts([...posts, ...response.data]);
-      setHasMorePosts(response.data.length === 10);
-      setPostsOffset(postsOffset + response.data.length);
-    } catch (error) {
-      console.error('Error loading more posts:', error);
-    } finally {
-      setLoadingMorePosts(false);
-    }
-  };
 
   // Open post modal
   const handleOpenPost = async (post: Post) => {
@@ -430,6 +404,12 @@ export default function Homepage() {
                   <MessageCircle className="h-[18px] w-[18px] text-inkmuted" />
                   <h2 className="text-lg font-semibold text-ink">Community Posts</h2>
                 </div>
+                <Link
+                  href="/admin/community-posts"
+                  className="text-sm font-medium text-brand hover:underline"
+                >
+                  View all →
+                </Link>
               </div>
 
               <div className="space-y-3">
@@ -445,7 +425,7 @@ export default function Homepage() {
                   </div>
                 ) : (
                   <>
-                    {posts.slice(0, visiblePostCount).map((post) => (
+                    {posts.slice(0, 4).map((post) => (
                       <div
                         key={post.id}
                         onClick={() => handleOpenPost(post)}
@@ -492,29 +472,6 @@ export default function Homepage() {
                         )}
                       </div>
                     ))}
-
-                    {/* Show more */}
-                    {(visiblePostCount < posts.length || hasMorePosts) && (
-                      <div className="text-center pt-1">
-                        {loadingMorePosts ? (
-                          <div className="flex items-center justify-center py-2">
-                            <Loader2 className="h-5 w-5 animate-spin text-inkmuted" />
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              if (visiblePostCount >= posts.length && hasMorePosts) {
-                                handleLoadMorePosts();
-                              }
-                              setVisiblePostCount(visiblePostCount + 4);
-                            }}
-                            className="text-sm font-medium text-brand hover:underline"
-                          >
-                            View more posts →
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </>
                 )}
               </div>
