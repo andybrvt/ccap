@@ -24,6 +24,7 @@ import StudentAnnouncements from "@/pages/student/anouncements";
 import StudentPortfolio from "@/pages/student/portfolio";
 import StudentEditPortfolio from "@/pages/student/editPortfolio";
 import StudentOnboarding from "@/pages/student/onboarding";
+import StudentCommunityPosts from "@/pages/student/communityPosts";
 import OnboardingComplete from "@/pages/student/onboarding-complete";
 
 // Separate component that uses useAuth - must be inside AuthProvider
@@ -111,6 +112,11 @@ function AppRoutes() {
       <Route path="/student">
         <ProtectedRoute requiredRole="student">
           <StudentHomepage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/posts">
+        <ProtectedRoute requiredRole="student">
+          <StudentCommunityPosts />
         </ProtectedRoute>
       </Route>
       <Route path="/student/announcements">

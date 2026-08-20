@@ -136,7 +136,7 @@ export default function Homepage() {
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
   const [postsOffset, setPostsOffset] = useState(0);
   const [hasMorePosts, setHasMorePosts] = useState(true);
-  const POSTS_PER_PAGE = 10;
+  const POSTS_PER_PAGE = 4;
 
 
   // Fetch announcements (backend automatically filters for this student)
@@ -244,12 +244,12 @@ export default function Homepage() {
                   <MessageCircle className="h-[18px] w-[18px] text-inkmuted" />
                   <h2 className="text-lg font-semibold text-ink">Community Posts</h2>
                 </div>
-                {/* <Link
+                <Link
                   href="/student/posts"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
+                  className="text-sm font-medium text-brand hover:underline"
                 >
                   View all →
-                </Link> */}
+                </Link>
               </div>
 
               <div className="space-y-3">
@@ -265,7 +265,7 @@ export default function Homepage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {posts.map((post) => (
+                    {posts.slice(0, 4).map((post) => (
                       <div
                         key={post.id}
                         onClick={() => handleOpenPost(post)}
@@ -316,25 +316,6 @@ export default function Homepage() {
                         )}
                       </div>
                     ))}
-
-                    {/* Load More Button or Spinner */}
-                    {hasMorePosts && (
-                      <div className="text-center py-4">
-                        {loadingMorePosts ? (
-                          <div className="flex items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-inkmuted" />
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            onClick={handleLoadMore}
-                            className="w-full"
-                          >
-                            Load More Posts
-                          </Button>
-                        )}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
