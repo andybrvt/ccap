@@ -421,63 +421,40 @@ export default function PortfolioLookup() {
 
         <Layout>
             {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-6 py-8">
-                    <div className="text-center">
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <div className="p-3 bg-blue-700 rounded-lg">
-                                <User2 className="w-8 h-8 text-white" />
-                            </div>
-                            <h1 className="text-4xl font-bold text-blue-900">
-                                Portfolio Lookup
-                            </h1>
-                        </div>
-                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Search for any student to view their C•CAP portfolio, including contact details, interests, and more.
-                        </p>
-                        {/* Feature highlights */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 max-w-3xl mx-auto">
-                            <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2">
-                                <Award className="w-4 h-4 text-blue-400" />
-                                Student profiles
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2">
-                                <Search className="w-4 h-4 text-blue-400" />
-                                Search by name or school
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2">
-                                <Sparkles className="w-4 h-4 text-blue-400" />
-                                View portfolios
-                            </div>
-                        </div>
-                    </div>
+            <div className="max-w-2xl mx-auto px-6 pt-12 pb-2 text-center">
+                <div className="w-12 h-12 bg-brand-soft rounded-[10px] flex items-center justify-center mx-auto mb-4">
+                    <User2 className="w-6 h-6 text-brand" />
                 </div>
+                <h1 className="text-[28px] font-semibold text-ink tracking-tight mb-2">
+                    Portfolio Lookup
+                </h1>
+                <p className="text-[15px] text-inkmuted max-w-xl mx-auto">
+                    Search for any student to view their C•CAP portfolio, including contact details, interests, and more.
+                </p>
             </div>
-            <div className="max-w-xl mx-auto mt-10 px-4">
-                <h1 className="text-3xl font-bold mb-6 text-center hidden">Portfolio Lookup</h1>
-                <div className="mb-8 flex items-center gap-2">
-                    <Search className="w-5 h-5 text-gray-400" />
+            <div className="max-w-xl mx-auto mt-8 px-4 pb-12">
+                <div className="mb-8 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-inkmuted" />
                     <Input
                         placeholder="Search by name, email, or school..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full bg-white border-gray-200 text-gray-900"
+                        className="w-full h-12 pl-11 text-[15px] bg-white border-line text-ink placeholder:text-inkmuted/70"
                     />
                 </div>
                 {/* Loading State */}
                 {loading && (
                     <div className="text-center py-8">
-                        <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
-                        <p className="text-gray-600">Searching students...</p>
+                        <Loader2 className="w-6 h-6 animate-spin text-inkmuted mx-auto mb-2" />
+                        <p className="text-[15px] text-inkmuted">Searching students...</p>
                     </div>
                 )}
 
                 {/* Empty State - Before Search */}
                 {!loading && search.length < 2 && (
-                    <div className="text-gray-500 text-center py-8">
-                        <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p>Type at least 2 characters to search for a student.</p>
-                        <p className="text-sm text-gray-400 mt-1">Search by name, email, or school</p>
+                    <div className="text-center py-8">
+                        <Search className="w-8 h-8 text-inkmuted/50 mx-auto mb-3" />
+                        <p className="text-[15px] text-inkmuted">Type at least 2 characters to search by name, email, or school.</p>
                     </div>
                 )}
 
@@ -485,12 +462,12 @@ export default function PortfolioLookup() {
                 {!loading && hasSearched && (
                     <div className="space-y-4 mt-4">
                         {students.map(student => (
-                            <Card key={student.id} className="hover:shadow-lg transition-shadow">
+                            <Card key={student.id} className="border-line shadow-card rounded-[10px] hover:border-brand transition-colors">
                                 <CardContent className="p-6">
                                     <div className="flex items-center gap-6">
                                         {/* Left - Avatar */}
                                         <div className="flex-shrink-0">
-                                            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-500">
+                                            <div className="w-16 h-16 rounded-full bg-secondary border border-line flex items-center justify-center text-xl font-semibold text-ink">
                                                 {student.student_profile?.first_name && student.student_profile?.last_name
                                                     ? `${student.student_profile.first_name.charAt(0)}${student.student_profile.last_name.charAt(0)}`
                                                     : student.username?.substring(0, 2).toUpperCase() || 'ST'
@@ -502,7 +479,7 @@ export default function PortfolioLookup() {
                                         <div className="flex-1 space-y-2">
                                             {/* Name and Email */}
                                             <div>
-                                                <h3 className="text-xl font-bold text-blue-900">
+                                                <h3 className="text-lg font-semibold text-ink">
                                                     {student.student_profile?.first_name && student.student_profile?.last_name
                                                         ? `${student.student_profile.first_name} ${student.student_profile.last_name}`
                                                         : student.username
@@ -513,15 +490,15 @@ export default function PortfolioLookup() {
                                                         </span>
                                                     )}
                                                 </h3>
-                                                <div className="flex items-center gap-2 text-sm text-gray-700 mt-1">
-                                                    <Mail className="w-4 h-4 text-blue-400" /> {student.email}
+                                                <div className="flex items-center gap-2 text-sm text-inkmuted mt-1">
+                                                    <Mail className="w-4 h-4 text-inkmuted" /> {student.email}
                                                 </div>
                                             </div>
 
                                             {/* Education Info - Always show if available */}
                                             {(student.student_profile?.high_school || student.student_profile?.graduation_year) && (
-                                                <div className="flex items-center gap-2 text-sm text-gray-700">
-                                                    <GraduationCap className="w-4 h-4 text-blue-400" />
+                                                <div className="flex items-center gap-2 text-sm text-inkmuted">
+                                                    <GraduationCap className="w-4 h-4 text-inkmuted" />
                                                     <span>
                                                         {student.student_profile.high_school || 'High School'}
                                                         {student.student_profile.graduation_year && ` - Class of ${student.student_profile.graduation_year}`}
@@ -534,7 +511,7 @@ export default function PortfolioLookup() {
                                             {student.student_profile?.interests && student.student_profile.interests.length > 0 && (
                                                 <div className="flex flex-wrap gap-1">
                                                     {student.student_profile.interests.map((interest, i) => (
-                                                        <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">
+                                                        <Badge key={i} variant="outline" className="text-xs rounded-md border-transparent text-inkmuted bg-secondary">
                                                             {interest}
                                                         </Badge>
                                                     ))}
@@ -560,9 +537,9 @@ export default function PortfolioLookup() {
                         {/* No Results */}
                         {search.length >= 2 && students.length === 0 && (
                             <div className="text-center py-8">
-                                <User2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                <p className="text-gray-600 font-medium">No students found</p>
-                                <p className="text-sm text-gray-500 mt-1">Try searching with a different name, email, or school</p>
+                                <User2 className="w-8 h-8 text-inkmuted/50 mx-auto mb-3" />
+                                <p className="text-[15px] text-ink font-medium">No students found</p>
+                                <p className="text-[13px] text-inkmuted mt-1">Try searching with a different name, email, or school</p>
                             </div>
                         )}
                     </div>
