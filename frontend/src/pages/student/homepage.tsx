@@ -220,31 +220,29 @@ export default function Homepage() {
   return (
     <Layout>
       {/* Dashboard Hero */}
-      <section className="px-6 py-8 bg-gray-50">
+      <section className="px-6 py-8">
         <div className="max-w-7xl w-full mx-auto">
-          <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center">
-            <p className="text-3xl font-bold text-black">
+          <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-2 lg:items-center items-start">
+            <h1 className="text-[28px] font-semibold text-ink tracking-tight">
               C•CAP Student Dashboard
-            </p>
-            <p className="text-xl font-medium text-gray-800">
-              Welcome back, {user?.full_name}
+            </h1>
+            <p className="text-[15px] text-inkmuted">
+              Welcome back{user?.full_name ? `, ${user.full_name}` : ""}
             </p>
           </div>
         </div>
       </section>
 
       {/* Posts and Announcements */}
-      <section className="px-6 py-0 bg-gray-50">
+      <section className="px-6 pb-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* Posts Column */}
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <MessageCircle className="h-4 w-4 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Community Posts</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <MessageCircle className="h-[18px] w-[18px] text-inkmuted" />
+                  <h2 className="text-lg font-semibold text-ink">Community Posts</h2>
                 </div>
                 {/* <Link
                   href="/student/posts"
@@ -254,84 +252,67 @@ export default function Homepage() {
                 </Link> */}
               </div>
 
-              <div className="border border-gray-200 rounded-xl bg-white flex-1 flex flex-col h-full p-6">
+              <div className="space-y-3">
                 {loadingPosts ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <MessageCircle className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600">Loading posts...</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <MessageCircle className="h-8 w-8 text-inkmuted/50 mx-auto mb-3 animate-pulse" />
+                    <p className="text-[15px] text-inkmuted">Loading posts...</p>
                   </div>
                 ) : posts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Posts</h3>
-                    <p className="text-gray-600">No posts yet. Create your first post to get started!</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <MessageCircle className="h-8 w-8 text-inkmuted/50 mx-auto mb-3" />
+                    <p className="text-[15px] text-inkmuted">No posts yet. Create your first post to get started!</p>
                   </div>
                 ) : (
-                  <div className="max-h-[550px] overflow-y-auto scrollbar-hide space-y-3">
+                  <div className="space-y-3">
                     {posts.map((post) => (
-                      <div key={post.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                      <div
+                        key={post.id}
+                        onClick={() => handleOpenPost(post)}
+                        className="group bg-white border border-line rounded-[10px] p-4 shadow-card cursor-pointer transition-all duration-200 hover:border-brand"
+                      >
                         {/* Post Header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold ${user && post.author?.id && String(user.id) === String(post.author.id) ? 'cursor-pointer hover:bg-blue-200 transition-colors' : ''
+                        <div className="flex items-center gap-3 mb-3">
+                          <div
+                            className={`w-9 h-9 rounded-full bg-secondary border border-line flex items-center justify-center text-ink text-sm font-semibold ${user && post.author?.id && String(user.id) === String(post.author.id) ? 'cursor-pointer hover:border-brand transition-colors' : ''
+                              }`}
+                            onClick={(e) => post.author?.id && handleNavigateToProfile(post.author.id, e)}
+                          >
+                            {post.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span
+                              className={`font-medium text-[15px] text-ink block truncate ${user && post.author?.id && String(user.id) === String(post.author.id) ? 'cursor-pointer hover:underline' : ''
                                 }`}
                               onClick={(e) => post.author?.id && handleNavigateToProfile(post.author.id, e)}
                             >
-                              {post.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
-                            </div>
-                            <div className="flex-1">
-                              <span
-                                className={`font-semibold text-gray-900 block ${user && post.author?.id && String(user.id) === String(post.author.id) ? 'cursor-pointer hover:underline' : ''
-                                  }`}
-                                onClick={(e) => post.author?.id && handleNavigateToProfile(post.author.id, e)}
-                              >
-                                {post.author?.username || 'Student'}
-                              </span>
-                              <span className="text-xs text-gray-500">{formatDate(post.created_at)}</span>
-                            </div>
+                              {post.author?.username || 'Student'}
+                            </span>
+                            <span className="text-[13px] text-inkmuted">{formatDate(post.created_at)}</span>
                           </div>
                         </div>
 
                         {/* Post Image */}
-                        <div
-                          className="rounded-lg overflow-hidden mb-3 cursor-pointer"
-                          onClick={() => handleOpenPost(post)}
-                        >
+                        <div className="rounded-lg overflow-hidden mb-3 aspect-video bg-secondary">
                           <img
                             src={post.image_url}
                             alt="Post"
-                            className="w-full h-48 object-cover hover:scale-105 transition-transform"
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
                           />
-                        </div>
-
-                        {/* Post Actions */}
-                        <div className="flex items-center gap-4 mb-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenPost(post);
-                            }}
-                            className="flex items-center gap-1 hover:opacity-70 transition-opacity"
-                          >
-                            <span className="text-sm font-semibold">View Post</span>
-                          </button>
                         </div>
 
                         {/* Post Caption */}
                         {post.caption && (
-                          <p className="text-gray-900 text-sm mb-2">{post.caption}</p>
+                          <p className="text-ink text-[15px] mb-2 line-clamp-2">{post.caption}</p>
                         )}
 
                         {/* Featured Dish */}
                         {post.featured_dish && (
-                          <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700">
+                          <span className="inline-flex items-center rounded-md bg-warning-soft text-warning text-[13px] font-medium px-2 py-0.5">
                             Featured: {post.featured_dish}
-                          </Badge>
+                          </span>
                         )}
                       </div>
                     ))}
@@ -341,7 +322,7 @@ export default function Homepage() {
                       <div className="text-center py-4">
                         {loadingMorePosts ? (
                           <div className="flex items-center justify-center">
-                            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                            <Loader2 className="h-5 w-5 animate-spin text-inkmuted" />
                           </div>
                         ) : (
                           <Button
@@ -361,83 +342,75 @@ export default function Homepage() {
 
             {/* Announcements Column */}
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <Megaphone className="h-4 w-4 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Announcements</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <Megaphone className="h-[18px] w-[18px] text-inkmuted" />
+                  <h2 className="text-lg font-semibold text-ink">Announcements</h2>
                 </div>
                 <Link
                   href="/student/announcements"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
+                  className="text-sm font-medium text-brand hover:underline"
                 >
                   View all →
                 </Link>
               </div>
 
-              <div className="border border-gray-200 rounded-xl p-6 bg-white flex-1 flex flex-col h-full">
+              <div className="space-y-3">
                 {loadingAnnouncements ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <Megaphone className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600">Loading announcements...</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <Megaphone className="h-8 w-8 text-inkmuted/50 mx-auto mb-3 animate-pulse" />
+                    <p className="text-[15px] text-inkmuted">Loading announcements...</p>
                   </div>
                 ) : announcements.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Megaphone className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements</h3>
-                    <p className="text-gray-600">There are no announcements for you at this time. Check back later for updates.</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <Megaphone className="h-8 w-8 text-inkmuted/50 mx-auto mb-3" />
+                    <p className="text-[15px] text-inkmuted">There are no announcements for you at this time.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
+                  <div className="space-y-3">
                     {announcements.map((announcement) => (
-                      <div key={announcement.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow bg-white">
+                      <div key={announcement.id} className="bg-white border border-line rounded-[10px] p-4 shadow-card">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 bg-brand-soft rounded-[10px] flex items-center justify-center flex-shrink-0 [&_svg]:text-brand">
                             {renderAnnouncementIcon(announcement.icon)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-black text-sm mb-1">
+                            <h4 className="font-semibold text-ink text-[15px] mb-1">
                               {announcement.title}
                             </h4>
-                            <p className="text-sm text-gray-600 mb-2 leading-relaxed">
+                            <p className="text-[15px] text-inkmuted mb-2 leading-relaxed line-clamp-2">
                               {renderTextWithLinks(announcement.content)}
                             </p>
-                            <p className="text-xs text-gray-500 mb-2">
+                            <p className="text-[13px] text-inkmuted/80 mb-2">
                               {formatDate(announcement.created_at)}
                             </p>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Badge
-                                variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'}
-                                className="text-xs capitalize"
-                              >
+                              <span className={`inline-flex items-center rounded-md text-[13px] font-medium px-2 py-0.5 capitalize ${announcement.priority === 'high'
+                                ? 'bg-danger-soft text-danger'
+                                : announcement.priority === 'medium'
+                                  ? 'bg-warning-soft text-warning'
+                                  : 'bg-secondary text-inkmuted'
+                                }`}>
                                 {announcement.priority}
-                              </Badge>
-                              <Badge
-                                variant="outline"
-                                className="text-xs capitalize bg-gray-50"
-                              >
+                              </span>
+                              <span className="inline-flex items-center rounded-md bg-secondary text-inkmuted text-[13px] font-medium px-2 py-0.5 capitalize">
                                 {announcement.category}
-                              </Badge>
+                              </span>
                               {announcement.target_audience !== 'all' && (
-                                <Badge variant="outline" className="text-xs">
+                                <span className="inline-flex items-center rounded-md bg-info-soft text-info text-[13px] font-medium px-2 py-0.5">
                                   {announcement.target_audience === 'bucket'
-                                    ? `📦 ${announcement.target_bucket}`
+                                    ? announcement.target_bucket
                                     : announcement.target_audience === 'location'
-                                      ? `📍 ${announcement.target_state}`
+                                      ? announcement.target_state
                                       : announcement.target_audience === 'program_stages'
-                                        ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
+                                        ? announcement.target_program_stages?.join(', ') || 'Multiple Stages'
                                         : announcement.target_audience === 'locations'
-                                          ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
+                                          ? announcement.target_locations?.join(', ') || 'Multiple States'
                                           : announcement.target_audience === 'both'
-                                            ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
-                                            : `🎯 ${announcement.target_audience}`
+                                            ? `${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                            : announcement.target_audience
                                   }
-                                </Badge>
+                                </span>
                               )}
                             </div>
                           </div>
@@ -452,25 +425,6 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 bg-black rounded-lg flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-black">
-                C•CAP
-              </span>
-            </div>
-            <div className="text-sm text-gray-600">
-              © 2025 C•CAP. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
-
       {/* Post Dialog */}
       <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
         <DialogContent
@@ -480,7 +434,7 @@ export default function Homepage() {
           {selectedPost && (
             <div className="flex flex-col md:flex-row h-full">
               {/* Left Side - Image */}
-              <div className="md:w-3/5 bg-black flex items-center justify-center">
+              <div className="md:w-3/5 bg-ink flex items-center justify-center">
                 <img
                   src={selectedPost.image_url}
                   alt="Post"
@@ -491,8 +445,8 @@ export default function Homepage() {
               {/* Right Side - Post Info */}
               <div className="md:w-2/5 flex flex-col bg-white">
                 {/* Post Header */}
-                <div className="p-4 border-b flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                <div className="p-4 border-b border-line flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-secondary border border-line flex items-center justify-center text-ink font-semibold">
                     {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                   </div>
                   <div className="flex-1">
@@ -503,12 +457,12 @@ export default function Homepage() {
 
                 {/* Featured Dish */}
                 {selectedPost.featured_dish && (
-                  <div className="p-4 border-b">
+                  <div className="p-4 border-b border-line">
                     <div className="flex items-center gap-2">
-                      <Utensils className="w-4 h-4 text-orange-500" />
-                      <span className="font-semibold text-gray-900">Featured Dish:</span>
+                      <Utensils className="w-4 h-4 text-warning" />
+                      <span className="font-semibold text-ink">Featured Dish:</span>
                     </div>
-                    <Badge variant="outline" className="mt-2 border-orange-200 text-sm bg-orange-50 text-orange-700">
+                    <Badge variant="outline" className="mt-2 rounded-md border-transparent text-sm bg-warning-soft text-warning">
                       {selectedPost.featured_dish}
                     </Badge>
                   </div>
@@ -517,7 +471,7 @@ export default function Homepage() {
                 {/* Chapter Reflection */}
                 <div className="p-4 flex-1">
                   <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-secondary border border-line flex items-center justify-center text-ink font-semibold flex-shrink-0">
                       {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div className="flex-1">

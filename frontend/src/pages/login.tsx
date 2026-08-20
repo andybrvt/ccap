@@ -109,20 +109,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="bg-black border border-gray-800 shadow-lg">
+        <Card className="bg-white border border-line shadow-card rounded-[10px]">
           {view === "login" ? (
             <>
               <CardHeader className="space-y-6 text-center pb-8">
-                <div className="mx-auto w-16 h-16 bg-white rounded-2xl flex items-center justify-center">
-                  <User className="w-8 h-8 text-black" />
+                <div className="mx-auto w-14 h-14 bg-brand-soft rounded-2xl flex items-center justify-center">
+                  <User className="w-7 h-7 text-brand" />
                 </div>
                 <div className="space-y-2">
-                  <CardTitle className="text-3xl font-bold text-white">
+                  <CardTitle className="text-[28px] font-semibold text-ink tracking-tight">
                     Welcome Back
                   </CardTitle>
-                  <p className="text-gray-400">
+                  <p className="text-[15px] text-inkmuted">
                     Sign in to continue to your dashboard
                   </p>
                 </div>
@@ -131,43 +131,43 @@ export default function LoginPage() {
               <CardContent className="space-y-6 px-8 pb-8">
                 <form onSubmit={loginForm.handleSubmit(onSubmit)} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white font-medium">
+                    <Label htmlFor="email" className="text-ink font-medium">
                       Email Address
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="Enter your email"
-                        className="pl-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                        className="pl-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                         {...loginForm.register("email")}
                       />
                     </div>
                     {loginForm.formState.errors.email && (
-                      <p className="text-white text-sm flex items-center gap-1 mt-1">
+                      <p className="text-danger text-sm flex items-center gap-1 mt-1">
                         {loginForm.formState.errors.email.message}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-white font-medium">
+                    <Label htmlFor="password" className="text-ink font-medium">
                       Password
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
-                        className="pl-12 pr-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                        className="pl-12 pr-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                         {...loginForm.register("password")}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-inkmuted hover:text-ink transition-colors"
                       >
                         {showPassword ? (
                           <EyeOff className="h-5 w-5" />
@@ -177,7 +177,7 @@ export default function LoginPage() {
                       </button>
                     </div>
                     {loginForm.formState.errors.password && (
-                      <p className="text-white text-sm flex items-center gap-1 mt-1">
+                      <p className="text-danger text-sm flex items-center gap-1 mt-1">
                         {loginForm.formState.errors.password.message}
                       </p>
                     )}
@@ -191,7 +191,7 @@ export default function LoginPage() {
                         loginForm.reset();
                         setView("forgot-password");
                       }}
-                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                      className="text-sm font-medium text-brand hover:underline transition-colors"
                     >
                       Forgot Password?
                     </button>
@@ -199,12 +199,12 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-white hover:bg-gray-200 text-black font-semibold rounded-lg transition-all duration-200"
+                    className="w-full h-12 font-semibold rounded-lg"
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-black/20 rounded animate-pulse" />
+                        <div className="w-4 h-4 bg-white/30 rounded animate-pulse" />
                         Signing in...
                       </div>
                     ) : (
@@ -214,23 +214,23 @@ export default function LoginPage() {
                 </form>
 
                 <div className="text-center space-y-4">
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-inkmuted">
                     Don't have an account?{" "}
                     <button
                       onClick={() => setLocation("/register-student")}
-                      className="text-white hover:underline font-medium"
+                      className="text-brand hover:underline font-medium"
                     >
                       Create one here
                     </button>
                   </p>
 
-                  <p className="text-xs text-gray-400">
+                  <p className="text-[13px] text-inkmuted/80">
                     By signing in, you agree to our{" "}
-                    <a href="#" className="text-white hover:underline font-medium">
+                    <a href="#" className="text-brand hover:underline font-medium">
                       Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a href="#" className="text-white hover:underline font-medium">
+                    <a href="#" className="text-brand hover:underline font-medium">
                       Privacy Policy
                     </a>
                   </p>
@@ -240,14 +240,14 @@ export default function LoginPage() {
           ) : (
             <>
               <CardHeader className="space-y-6 text-center pb-8">
-                <div className="mx-auto w-16 h-16 bg-white rounded-2xl flex items-center justify-center">
-                  <Mail className="w-8 h-8 text-black" />
+                <div className="mx-auto w-14 h-14 bg-brand-soft rounded-2xl flex items-center justify-center">
+                  <Mail className="w-7 h-7 text-brand" />
                 </div>
                 <div className="space-y-2">
-                  <CardTitle className="text-3xl font-bold text-white">
+                  <CardTitle className="text-[28px] font-semibold text-ink tracking-tight">
                     Forgot Password?
                   </CardTitle>
-                  <p className="text-gray-400">
+                  <p className="text-[15px] text-inkmuted">
                     Enter your email to receive a reset link
                   </p>
                 </div>
@@ -256,21 +256,21 @@ export default function LoginPage() {
               <CardContent className="space-y-6 px-8 pb-8">
                 <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="forgot-email" className="text-white font-medium">
+                    <Label htmlFor="forgot-email" className="text-ink font-medium">
                       Email Address
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                       <Input
                         id="forgot-email"
                         type="email"
                         placeholder="Enter your email"
-                        className="pl-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                        className="pl-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                         {...forgotPasswordForm.register("email")}
                       />
                     </div>
                     {forgotPasswordForm.formState.errors.email && (
-                      <p className="text-white text-sm flex items-center gap-1 mt-1">
+                      <p className="text-danger text-sm flex items-center gap-1 mt-1">
                         {forgotPasswordForm.formState.errors.email.message}
                       </p>
                     )}
@@ -278,12 +278,12 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-white hover:bg-gray-200 text-black font-semibold rounded-lg transition-all duration-200"
+                    className="w-full h-12 font-semibold rounded-lg"
                     disabled={forgotPasswordLoading}
                   >
                     {forgotPasswordLoading ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-black/20 rounded animate-pulse" />
+                        <div className="w-4 h-4 bg-white/30 rounded animate-pulse" />
                         Sending...
                       </div>
                     ) : (
@@ -298,7 +298,7 @@ export default function LoginPage() {
                       forgotPasswordForm.reset();
                       setView("login");
                     }}
-                    className="text-sm text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+                    className="text-sm text-inkmuted hover:text-ink transition-colors flex items-center justify-center gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Login

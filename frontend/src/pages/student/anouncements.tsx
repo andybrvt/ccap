@@ -128,23 +128,18 @@ export default function Announcements() {
 
   return (
     <Layout>
-      <div className="flex flex-col max-h-[calc(100vh-6rem)]">
+      <div className="flex flex-col">
         {/* Header */}
-        <section className="px-6 py-8 bg-white border-b border-gray-200 shrink-0">
+        <section className="px-6 pt-8 pb-2">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                  <Megaphone className="h-4 w-4 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold text-black">Announcements</h1>
-              </div>
+            <div className="mb-6">
+              <h1 className="text-[28px] font-semibold text-ink tracking-tight">Announcements</h1>
             </div>
 
             {/* Search and Filter */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-inkmuted h-4 w-4" />
                 <Input
                   placeholder="Search announcements..."
                   value={searchTerm}
@@ -152,57 +147,41 @@ export default function Announcements() {
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={selectedPriority === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedPriority('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={selectedPriority === 'high' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedPriority('high')}
-                  className="border-red-200 text-red-700 hover:bg-red-50"
-                >
-                  High Priority
-                </Button>
-                <Button
-                  variant={selectedPriority === 'medium' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedPriority('medium')}
-                  className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-                >
-                  Medium Priority
-                </Button>
-                <Button
-                  variant={selectedPriority === 'low' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedPriority('low')}
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                >
-                  Low Priority
-                </Button>
+              <div className="flex gap-2 flex-wrap">
+                {([
+                  { value: 'all', label: 'All', active: 'bg-ink text-white' },
+                  { value: 'high', label: 'High', active: 'bg-danger text-white' },
+                  { value: 'medium', label: 'Medium', active: 'bg-warning text-white' },
+                  { value: 'low', label: 'Low', active: 'bg-inkmuted text-white' },
+                ] as const).map((chip) => (
+                  <button
+                    key={chip.value}
+                    onClick={() => setSelectedPriority(chip.value)}
+                    className={`h-9 px-4 rounded-full text-sm font-medium transition-colors border ${selectedPriority === chip.value
+                      ? `${chip.active} border-transparent`
+                      : 'bg-white text-inkmuted border-line hover:bg-secondary hover:text-ink'
+                      }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         {/* Announcements List */}
-        <section className="flex-1 min-h-0 overflow-auto px-6 py-8">
+        <section className="px-6 py-6 pb-12">
           <div className="max-w-4xl mx-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-inkmuted" />
               </div>
             ) : filteredAnnouncements.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Megaphone className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements Found</h3>
-                <p className="text-gray-600 mb-4">
+                <Megaphone className="h-8 w-8 text-inkmuted/50 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-ink mb-2">No Announcements Found</h3>
+                <p className="text-[15px] text-inkmuted mb-4">
                   {searchTerm || selectedPriority !== 'all'
                     ? "Try adjusting your search or filter criteria."
                     : "There are no announcements for you at this time. Check back later for updates."
@@ -223,46 +202,48 @@ export default function Announcements() {
             ) : (
               <div className="space-y-4">
                 {filteredAnnouncements.map((announcement) => (
-                  <div key={announcement.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                  <div key={announcement.id} className="bg-white border border-line rounded-[10px] p-5 shadow-card">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-11 h-11 bg-brand-soft rounded-[10px] flex items-center justify-center flex-shrink-0 [&_svg]:text-brand">
                         {renderAnnouncementIcon(announcement.icon)}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-black mb-2">
+                        <h3 className="text-lg font-semibold text-ink mb-1.5">
                           {announcement.title}
                         </h3>
-                        <p className="text-gray-600 mb-3 leading-relaxed">
+                        <p className="text-[15px] text-inkmuted mb-3 leading-relaxed">
                           {renderTextWithLinks(announcement.content)}
                         </p>
-                        <p className="text-sm text-gray-500 mb-3">
+                        <p className="text-[13px] text-inkmuted/80 mb-3">
                           {formatDate(announcement.created_at)}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Badge
-                            variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'}
-                            className="text-xs capitalize"
-                          >
+                          <span className={`inline-flex items-center rounded-md text-[13px] font-medium px-2 py-0.5 capitalize ${announcement.priority === 'high'
+                            ? 'bg-danger-soft text-danger'
+                            : announcement.priority === 'medium'
+                              ? 'bg-warning-soft text-warning'
+                              : 'bg-secondary text-inkmuted'
+                            }`}>
                             {announcement.priority}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs capitalize bg-gray-50">
+                          </span>
+                          <span className="inline-flex items-center rounded-md bg-secondary text-inkmuted text-[13px] font-medium px-2 py-0.5 capitalize">
                             {announcement.category}
-                          </Badge>
+                          </span>
                           {announcement.target_audience !== 'all' && (
-                            <Badge variant="outline" className="text-xs">
+                            <span className="inline-flex items-center rounded-md bg-info-soft text-info text-[13px] font-medium px-2 py-0.5">
                               {announcement.target_audience === 'bucket'
-                                ? `📦 ${announcement.target_bucket}`
+                                ? announcement.target_bucket
                                 : announcement.target_audience === 'location'
-                                  ? `📍 ${announcement.target_state}`
+                                  ? announcement.target_state
                                   : announcement.target_audience === 'program_stages'
-                                    ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
+                                    ? announcement.target_program_stages?.join(', ') || 'Multiple Stages'
                                     : announcement.target_audience === 'locations'
-                                      ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple Locations'}`
+                                      ? announcement.target_locations?.join(', ') || 'Multiple Locations'
                                       : announcement.target_audience === 'both'
-                                        ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
-                                        : `🎯 ${announcement.target_audience}`
+                                        ? `${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                        : announcement.target_audience
                               }
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       </div>

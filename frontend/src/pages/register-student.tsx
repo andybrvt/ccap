@@ -96,18 +96,18 @@ export default function RegisterStudentPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                <Card className="bg-black border border-gray-800 shadow-lg">
+                <Card className="bg-white border border-line shadow-card rounded-[10px]">
                     <CardHeader className="space-y-6 text-center pb-8">
-                        <div className="mx-auto w-16 h-16 bg-white rounded-2xl flex items-center justify-center">
-                            <UserPlus className="w-8 h-8 text-black" />
+                        <div className="mx-auto w-14 h-14 bg-brand-soft rounded-2xl flex items-center justify-center">
+                            <UserPlus className="w-7 h-7 text-brand" />
                         </div>
                         <div className="space-y-2">
-                            <CardTitle className="text-3xl font-bold text-white">
+                            <CardTitle className="text-[28px] font-semibold text-ink tracking-tight">
                                 Create Your Account
                             </CardTitle>
-                            <p className="text-gray-400">
+                            <p className="text-[15px] text-inkmuted">
                                 Join C•CAP and start building your culinary career
                             </p>
                         </div>
@@ -116,67 +116,67 @@ export default function RegisterStudentPage() {
                     <CardContent className="space-y-6 px-8 pb-8">
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-white font-medium">
+                                <Label htmlFor="email" className="text-ink font-medium">
                                     Email Address
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                                     <Input
                                         id="email"
                                         type="email"
                                         placeholder="personal email address"
-                                        className="pl-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                                        className="pl-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                                         {...form.register("email")}
                                     />
                                 </div>
-                                <p className="text-yellow-400 text-sm font-medium">
+                                <p className="text-warning text-sm font-medium">
                                     **Do not use your school email address**
                                 </p>
                                 {form.formState.errors.email && (
-                                    <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
+                                    <p className="text-danger text-sm flex items-center gap-1 mt-1">
                                         {form.formState.errors.email.message}
                                     </p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="username" className="text-white font-medium">
+                                <Label htmlFor="username" className="text-ink font-medium">
                                     Username
                                 </Label>
                                 <div className="relative">
-                                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                                     <Input
                                         id="username"
                                         type="text"
                                         placeholder="Choose a username"
-                                        className="pl-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                                        className="pl-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                                         {...form.register("username")}
                                     />
                                 </div>
                                 {form.formState.errors.username && (
-                                    <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
+                                    <p className="text-danger text-sm flex items-center gap-1 mt-1">
                                         {form.formState.errors.username.message}
                                     </p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-white font-medium">
+                                <Label htmlFor="password" className="text-ink font-medium">
                                     Password
                                 </Label>
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                                     <Input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Create a password"
-                                        className="pl-12 pr-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                                        className="pl-12 pr-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                                         {...form.register("password")}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-inkmuted hover:text-ink transition-colors"
                                     >
                                         {showPassword ? (
                                             <EyeOff className="h-5 w-5" />
@@ -186,29 +186,29 @@ export default function RegisterStudentPage() {
                                     </button>
                                 </div>
                                 {form.formState.errors.password && (
-                                    <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
+                                    <p className="text-danger text-sm flex items-center gap-1 mt-1">
                                         {form.formState.errors.password.message}
                                     </p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="confirmPassword" className="text-white font-medium">
+                                <Label htmlFor="confirmPassword" className="text-ink font-medium">
                                     Confirm Password
                                 </Label>
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-inkmuted h-5 w-5" />
                                     <Input
                                         id="confirmPassword"
                                         type={showConfirmPassword ? "text" : "password"}
                                         placeholder="Confirm your password"
-                                        className="pl-12 pr-12 h-12 bg-black border-gray-700 focus:border-white focus:ring-white/10 rounded-lg text-white placeholder-gray-500"
+                                        className="pl-12 pr-12 h-12 bg-white border-line rounded-lg text-ink placeholder:text-inkmuted/70"
                                         {...form.register("confirmPassword")}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-inkmuted hover:text-ink transition-colors"
                                     >
                                         {showConfirmPassword ? (
                                             <EyeOff className="h-5 w-5" />
@@ -218,7 +218,7 @@ export default function RegisterStudentPage() {
                                     </button>
                                 </div>
                                 {form.formState.errors.confirmPassword && (
-                                    <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
+                                    <p className="text-danger text-sm flex items-center gap-1 mt-1">
                                         {form.formState.errors.confirmPassword.message}
                                     </p>
                                 )}
@@ -226,12 +226,12 @@ export default function RegisterStudentPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full h-12 bg-white hover:bg-gray-200 text-black font-semibold rounded-lg transition-all duration-200"
+                                className="w-full h-12 font-semibold rounded-lg"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? (
                                     <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-black/20 rounded animate-pulse" />
+                                        <div className="w-4 h-4 bg-white/30 rounded animate-pulse" />
                                         Creating Account...
                                     </div>
                                 ) : (
@@ -241,11 +241,11 @@ export default function RegisterStudentPage() {
                         </form>
 
                         <div className="text-center">
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-inkmuted">
                                 Already have an account?{" "}
                                 <button
                                     onClick={() => setLocation("/login")}
-                                    className="text-white hover:underline font-medium"
+                                    className="text-brand hover:underline font-medium"
                                 >
                                     Sign in
                                 </button>
@@ -253,13 +253,13 @@ export default function RegisterStudentPage() {
                         </div>
 
                         <div className="text-center">
-                            <p className="text-xs text-gray-400">
+                            <p className="text-[13px] text-inkmuted/80">
                                 By creating an account, you agree to our{" "}
-                                <a href="#" className="text-white hover:underline font-medium">
+                                <a href="#" className="text-brand hover:underline font-medium">
                                     Terms of Service
                                 </a>{" "}
                                 and{" "}
-                                <a href="#" className="text-white hover:underline font-medium">
+                                <a href="#" className="text-brand hover:underline font-medium">
                                     Privacy Policy
                                 </a>
                             </p>
