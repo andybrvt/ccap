@@ -284,6 +284,7 @@ export default function Homepage() {
   const [, setLocation] = useLocation();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [visiblePostCount, setVisiblePostCount] = useState(4);
 
   // Announcements state
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -374,282 +375,227 @@ export default function Homepage() {
   return (
     <Layout>
       {/* Dashboard Hero */}
-      <section className="px-6 py-8 bg-gray-50">
+      <section className="px-6 py-8">
         <div className="max-w-7xl w-full mx-auto">
-          <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-4 items-center mb-6">
-            <p className="text-3xl font-bold text-black">
+          <div className="flex lg:flex-row flex-col md:justify-between justify-start gap-2 lg:items-center items-start mb-8">
+            <h1 className="text-[28px] font-semibold text-ink tracking-tight">
               C•CAP Application Management System
-            </p>
-            <p className="text-xl font-medium text-gray-800">
-              Welcome back, {user?.full_name}
+            </h1>
+            <p className="text-[15px] text-inkmuted">
+              Welcome back{user?.full_name ? `, ${user.full_name}` : ""}
             </p>
           </div>
 
-          {/* Two Column Layout - Start Application + Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* CTA cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Submissions Card */}
-            <div className="lg:col-span-1">
-              <Link href="/admin/submissions">
-                <div className="group min-h-36 relative bg-gradient-to-r from-black to-gray-800 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full">
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative z-10 h-full flex items-center">
-                    <div className="flex items-center w-full">
-                      <div className="flex-1 items-start gap-4 flex flex-col">
-                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                          <FileText className="h-5 w-5 text-gray-600 " />
-                        </div>
-                        <div className="flex-1">
-                          <h2 className="text-2xl font-bold text-white mb-1">
-                            Submissions
-                          </h2>
-                          <p className="text-gray-300">
-                            View and manage all your applications
-                          </p>
-                        </div>
-                      </div>
-
-                      <ChevronRight className="h-6 w-6 text-white group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
-                    </div>
-                  </div>
+            <Link href="/admin/submissions">
+              <div className="group h-full bg-white rounded-[10px] border border-line shadow-card p-6 flex items-center gap-5 cursor-pointer transition-all duration-200 hover:border-brand hover:-translate-y-0.5">
+                <div className="w-12 h-12 bg-brand-soft rounded-[10px] flex items-center justify-center flex-shrink-0">
+                  <FileText className="h-5 w-5 text-brand" />
                 </div>
-              </Link>
-            </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold text-ink mb-0.5">Submissions</h2>
+                  <p className="text-[15px] text-inkmuted">View and manage all your applications</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-inkmuted group-hover:text-brand group-hover:translate-x-1 transition-all duration-200 flex-shrink-0" />
+              </div>
+            </Link>
 
             {/* Portfolio Lookup Card */}
-            <div className="lg:col-span-1">
-              <Link href="/admin/portfolio-lookup">
-                <div className="group min-h-36 relative bg-gradient-to-r from-gray-800 to-black rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full">
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative z-10 h-full flex items-center">
-                    <div className="flex items-center w-full">
-                      <div className="flex-1 items-start gap-4 flex flex-col">
-                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
-                          <Search className="h-6 w-6 text-black" />
-                        </div>
-                        <div className="flex-1">
-                          <h2 className="text-2xl font-bold text-white mb-1">
-                            Portfolio Lookup
-                          </h2>
-                          <p className="text-gray-300">
-                            View students portfolio
-                          </p>
-                        </div>
-                      </div>
-
-                      <ChevronRight className="h-6 w-6 text-white group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
-                    </div>
-                  </div>
+            <Link href="/admin/portfolio-lookup">
+              <div className="group h-full bg-white rounded-[10px] border border-line shadow-card p-6 flex items-center gap-5 cursor-pointer transition-all duration-200 hover:border-brand hover:-translate-y-0.5">
+                <div className="w-12 h-12 bg-brand-soft rounded-[10px] flex items-center justify-center flex-shrink-0">
+                  <Search className="h-5 w-5 text-brand" />
                 </div>
-              </Link>
-            </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold text-ink mb-0.5">Portfolio Lookup</h2>
+                  <p className="text-[15px] text-inkmuted">View students portfolio</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-inkmuted group-hover:text-brand group-hover:translate-x-1 transition-all duration-200 flex-shrink-0" />
+              </div>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Posts and Announcements */}
-      <section className="px-6 py-0 bg-gray-50">
+      <section className="px-6 pb-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* Posts Column */}
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <MessageCircle className="h-4 w-4 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Community Posts</h2>
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <MessageCircle className="h-[18px] w-[18px] text-inkmuted" />
+                  <h2 className="text-lg font-semibold text-ink">Community Posts</h2>
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-xl bg-white flex-1 flex flex-col h-full p-6">
+              <div className="space-y-3">
                 {loadingPosts ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <MessageCircle className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600">Loading posts...</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <MessageCircle className="h-8 w-8 text-inkmuted/50 mx-auto mb-3 animate-pulse" />
+                    <p className="text-[15px] text-inkmuted">Loading posts...</p>
                   </div>
                 ) : posts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Posts</h3>
-                    <p className="text-gray-600">No student posts yet.</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <MessageCircle className="h-8 w-8 text-inkmuted/50 mx-auto mb-3" />
+                    <p className="text-[15px] text-inkmuted">No student posts yet.</p>
                   </div>
                 ) : (
-                  <div className="max-h-[550px] overflow-y-auto scrollbar-hide space-y-3">
-                    {posts.map((post) => (
-                      <div key={post.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                  <>
+                    {posts.slice(0, visiblePostCount).map((post) => (
+                      <div
+                        key={post.id}
+                        onClick={() => handleOpenPost(post)}
+                        className="group bg-white border border-line rounded-[10px] p-4 shadow-card cursor-pointer transition-all duration-200 hover:border-brand"
+                      >
                         {/* Post Header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
+                        <div className="flex items-center gap-3 mb-3">
+                          <div
+                            className="w-9 h-9 rounded-full bg-secondary border border-line flex items-center justify-center text-ink text-sm font-semibold cursor-pointer hover:border-brand transition-colors"
+                            onClick={(e) => post.author?.id && handleNavigateToPortfolio(post.author.id, e)}
+                          >
+                            {post.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span
+                              className="font-medium text-[15px] text-ink block cursor-pointer hover:underline truncate"
                               onClick={(e) => post.author?.id && handleNavigateToPortfolio(post.author.id, e)}
                             >
-                              {post.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
-                            </div>
-                            <div className="flex-1">
-                              <span
-                                className="font-semibold text-gray-900 block cursor-pointer hover:underline"
-                                onClick={(e) => post.author?.id && handleNavigateToPortfolio(post.author.id, e)}
-                              >
-                                {post.author?.username || 'Student'}
-                              </span>
-                              <span className="text-xs text-gray-500">{formatDate(post.created_at)}</span>
-                            </div>
+                              {post.author?.username || 'Student'}
+                            </span>
+                            <span className="text-[13px] text-inkmuted">{formatDate(post.created_at)}</span>
                           </div>
                         </div>
 
                         {/* Post Image */}
-                        <div
-                          className="rounded-lg overflow-hidden mb-3 cursor-pointer"
-                          onClick={() => handleOpenPost(post)}
-                        >
+                        <div className="rounded-lg overflow-hidden mb-3 aspect-video bg-secondary">
                           <img
                             src={post.image_url}
                             alt="Post"
-                            className="w-full h-48 object-cover hover:scale-105 transition-transform"
+                            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
                           />
-                        </div>
-
-                        {/* Post Actions */}
-                        <div className="flex items-center gap-4 mb-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenPost(post);
-                            }}
-                            className="flex items-center gap-1 hover:opacity-70 transition-opacity"
-                          >
-                            <span className="text-sm font-semibold">View Post</span>
-                          </button>
                         </div>
 
                         {/* Post Caption */}
                         {post.caption && (
-                          <p className="text-gray-900 text-sm mb-2 line-clamp-2">{post.caption}</p>
+                          <p className="text-ink text-[15px] mb-2 line-clamp-2">{post.caption}</p>
                         )}
 
                         {/* Featured Dish */}
                         {post.featured_dish && (
-                          <Badge variant="outline" className="border-orange-50 border text-xs bg-orange-200 text-orange-700">
+                          <span className="inline-flex items-center rounded-md bg-warning-soft text-warning text-[13px] font-medium px-2 py-0.5">
                             Featured: {post.featured_dish}
-                          </Badge>
+                          </span>
                         )}
                       </div>
                     ))}
 
-                    {/* Load More Button or Spinner */}
-                    {hasMorePosts && (
-                      <div className="text-center py-4">
+                    {/* Show more */}
+                    {(visiblePostCount < posts.length || hasMorePosts) && (
+                      <div className="text-center pt-1">
                         {loadingMorePosts ? (
-                          <div className="flex items-center justify-center">
-                            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                          <div className="flex items-center justify-center py-2">
+                            <Loader2 className="h-5 w-5 animate-spin text-inkmuted" />
                           </div>
                         ) : (
-                          <Button
-                            variant="outline"
-                            onClick={handleLoadMorePosts}
-                            className="w-full"
+                          <button
+                            onClick={() => {
+                              if (visiblePostCount >= posts.length && hasMorePosts) {
+                                handleLoadMorePosts();
+                              }
+                              setVisiblePostCount(visiblePostCount + 4);
+                            }}
+                            className="text-sm font-medium text-brand hover:underline"
                           >
-                            Load More Posts
-                          </Button>
+                            View more posts →
+                          </button>
                         )}
                       </div>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
             </div>
 
             {/* Announcements Column */}
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <Megaphone className="h-4 w-4 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Announcements</h2>
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <Megaphone className="h-[18px] w-[18px] text-inkmuted" />
+                  <h2 className="text-lg font-semibold text-ink">Announcements</h2>
                 </div>
                 <Link
                   href="/admin/announcements"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
+                  className="text-sm font-medium text-brand hover:underline"
                 >
                   View all →
                 </Link>
               </div>
 
-              <div className="border border-gray-200 rounded-xl p-6 bg-white flex-1 flex flex-col h-full">
+              <div className="space-y-3">
                 {loadingAnnouncements ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <Megaphone className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600">Loading announcements...</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <Megaphone className="h-8 w-8 text-inkmuted/50 mx-auto mb-3 animate-pulse" />
+                    <p className="text-[15px] text-inkmuted">Loading announcements...</p>
                   </div>
                 ) : announcements.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Megaphone className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Announcements</h3>
-                    <p className="text-gray-600">There are no announcements at this time. Check back later for updates.</p>
+                  <div className="bg-white rounded-[10px] border border-line p-12 text-center">
+                    <Megaphone className="h-8 w-8 text-inkmuted/50 mx-auto mb-3" />
+                    <p className="text-[15px] text-inkmuted">There are no announcements at this time.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
-                    {announcements.map((announcement) => (
-                      <div key={announcement.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow bg-white">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                            {renderAnnouncementIcon(announcement.icon)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-black text-sm mb-1">
-                              {announcement.title}
-                            </h4>
-                            <p className="text-sm text-gray-600 mb-2 leading-relaxed">
-                              {renderTextWithLinks(announcement.content)}
-                            </p>
-                            <p className="text-xs text-gray-500 mb-2">
-                              {formatDate(announcement.created_at)}
-                            </p>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge
-                                variant={announcement.priority === 'high' ? 'destructive' : announcement.priority === 'medium' ? 'secondary' : 'outline'}
-                                className="text-xs capitalize"
-                              >
-                                {announcement.priority}
-                              </Badge>
-                              <Badge
-                                variant="outline"
-                                className="text-xs capitalize bg-gray-50"
-                              >
-                                {announcement.category}
-                              </Badge>
-                              {announcement.target_audience !== 'all' && (
-                                <Badge variant="outline" className="text-xs">
-                                  {announcement.target_audience === 'bucket'
-                                    ? `📦 ${announcement.target_bucket}`
-                                    : announcement.target_audience === 'location'
-                                      ? `📍 ${announcement.target_state}`
-                                      : announcement.target_audience === 'program_stages'
-                                        ? `📦 ${announcement.target_program_stages?.join(', ') || 'Multiple Stages'}`
-                                        : announcement.target_audience === 'locations'
-                                          ? `📍 ${announcement.target_locations?.join(', ') || 'Multiple States'}`
-                                          : announcement.target_audience === 'both'
-                                            ? `📦📍 ${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
-                                            : `🎯 ${announcement.target_audience}`
-                                  }
-                                </Badge>
-                              )}
-                            </div>
+                  announcements.slice(0, 4).map((announcement) => (
+                    <div key={announcement.id} className="bg-white border border-line rounded-[10px] p-4 shadow-card">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-brand-soft rounded-[10px] flex items-center justify-center flex-shrink-0 [&_svg]:text-brand">
+                          {renderAnnouncementIcon(announcement.icon)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-ink text-[15px] mb-1">
+                            {announcement.title}
+                          </h4>
+                          <p className="text-[15px] text-inkmuted mb-2 leading-relaxed line-clamp-2">
+                            {renderTextWithLinks(announcement.content)}
+                          </p>
+                          <p className="text-[13px] text-inkmuted/80 mb-2">
+                            {formatDate(announcement.created_at)}
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`inline-flex items-center rounded-md text-[13px] font-medium px-2 py-0.5 capitalize ${announcement.priority === 'high'
+                              ? 'bg-danger-soft text-danger'
+                              : announcement.priority === 'medium'
+                                ? 'bg-warning-soft text-warning'
+                                : 'bg-secondary text-inkmuted'
+                              }`}>
+                              {announcement.priority}
+                            </span>
+                            <span className="inline-flex items-center rounded-md bg-secondary text-inkmuted text-[13px] font-medium px-2 py-0.5 capitalize">
+                              {announcement.category}
+                            </span>
+                            {announcement.target_audience !== 'all' && (
+                              <span className="inline-flex items-center rounded-md bg-info-soft text-info text-[13px] font-medium px-2 py-0.5">
+                                {announcement.target_audience === 'bucket'
+                                  ? announcement.target_bucket
+                                  : announcement.target_audience === 'location'
+                                    ? announcement.target_state
+                                    : announcement.target_audience === 'program_stages'
+                                      ? announcement.target_program_stages?.join(', ') || 'Multiple Stages'
+                                      : announcement.target_audience === 'locations'
+                                        ? announcement.target_locations?.join(', ') || 'Multiple States'
+                                        : announcement.target_audience === 'both'
+                                          ? `${(announcement.target_program_stages?.length || 0) + (announcement.target_locations?.length || 0)} selections`
+                                          : announcement.target_audience
+                                }
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
@@ -717,24 +663,6 @@ export default function Homepage() {
         </DialogContent>
       </Dialog>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 bg-black rounded-lg flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-black">
-                C•CAP
-              </span>
-            </div>
-            <div className="text-sm text-gray-600">
-              © 2025 C•CAP. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
     </Layout>
   );
 }
