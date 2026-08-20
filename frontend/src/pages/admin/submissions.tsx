@@ -1226,7 +1226,7 @@ export default function Submissions() {
                           {/* Credentials */}
                           <div className="flex flex-col gap-1 mt-2">
                             <span className="font-semibold text-ink flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-inkmuted" />Credentials</span>
-                            <div className="ml-7 flex flex-col gap-2 text-purple-900 text-sm">
+                            <div className="ml-7 flex flex-col gap-2 text-ink text-sm">
                               <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">Resume:</span> <span className="text-gray-900">
                                 {portfolioData.student_profile?.has_resume === "Yes" ? (
                                   <button onClick={handleAdminViewResume} className="text-brand font-medium hover:underline transition-colors">
@@ -1338,10 +1338,10 @@ export default function Submissions() {
                 {selectedPost.featured_dish && (
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <Utensils className="w-4 h-4 text-orange-500" />
-                      <span className="font-semibold text-gray-900">Featured Dish:</span>
+                      <Utensils className="w-4 h-4 text-warning" />
+                      <span className="font-semibold text-ink">Featured Dish:</span>
                     </div>
-                    <Badge variant="outline" className="border-orange-200 bg-orange-50 text-orange-700">
+                    <Badge variant="outline" className="rounded-md border-transparent bg-warning-soft text-warning">
                       {selectedPost.featured_dish}
                     </Badge>
                   </div>

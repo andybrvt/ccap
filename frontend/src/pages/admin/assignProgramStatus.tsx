@@ -484,10 +484,10 @@ export default function BulkBucketAssignPage() {
       render: (item) => (
         <div className="space-y-1">
           {item.bucket ? (
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-              item.bucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${item.bucket === 'Pre-Apprentice' ? 'bg-warning-soft text-warning' :
+              item.bucket === 'Apprentice' ? 'bg-info-soft text-info' :
                 item.bucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                  item.bucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                  item.bucket === 'Completed Apprentice' ? 'bg-success-soft text-success' :
                     'bg-gray-50 text-gray-700 border-gray-200'
               } border`}>
               {item.bucket}
@@ -525,12 +525,12 @@ export default function BulkBucketAssignPage() {
           {item.currentJob === "Yes" ? (
             <div className="flex items-center">
               <Briefcase className="w-4 h-4 text-gray-700 mr-2 flex-shrink-0" />
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Currently Working</span>
+              <span className="bg-info-soft text-info text-xs px-2 py-1 rounded-md">Currently Working</span>
             </div>
           ) : (
             <div className="flex items-center">
               <ClockIcon className="w-4 h-4 text-gray-600 mr-2 flex-shrink-0" />
-              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">No Current Job</span>
+              <span className="bg-secondary text-inkmuted text-xs px-2 py-1 rounded-md">No Current Job</span>
             </div>
           )}
           <div className="text-xs text-gray-500">{item.culinaryYears} years culinary</div>
@@ -574,7 +574,7 @@ export default function BulkBucketAssignPage() {
       <Layout>
         <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-600">Loading student data...</p>
           </div>
         </div>
@@ -589,7 +589,7 @@ export default function BulkBucketAssignPage() {
           <h1 className="text-2xl font-bold">Program Status Assignment</h1>
           {isLoading && !isInitialLoad && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand"></div>
               <span>Updating...</span>
             </div>
           )}
@@ -600,23 +600,23 @@ export default function BulkBucketAssignPage() {
             <div className="flex flex-wrap items-end gap-4">
               {/* Graduation Year Filter */}
               <div className="min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Graduation Year</label>
+                <label className="block text-[13px] font-medium text-inkmuted mb-1.5">Graduation Year</label>
                 <Select value={selectedGraduationYear || 'all'} onValueChange={value => setSelectedGraduationYear(value === 'all' ? null : value)}>
-                  <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                  <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                     <GraduationCap className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="All Years" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All Years</SelectItem>
+                  <SelectContent className="bg-white border-line">
+                    <SelectItem value="all" className="text-ink hover:bg-secondary">All Years</SelectItem>
                     {uniqueGraduationYears.map((year) => (
-                      <SelectItem key={year.value} value={year.value} className="text-gray-900 hover:bg-gray-100">{year.label}</SelectItem>
+                      <SelectItem key={year.value} value={year.value} className="text-ink hover:bg-secondary">{year.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               {/* State of Residence Filter */}
               <div className="min-w-[180px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">State of Residence</label>
+                <label className="block text-[13px] font-medium text-inkmuted mb-1.5">State of Residence</label>
                 <MultiSelect
                   options={uniqueStatesOfResidence}
                   onValueChange={setSelectedStatesOfResidence}
@@ -627,7 +627,7 @@ export default function BulkBucketAssignPage() {
               </div>
               {/* Bucket Filter */}
               <div className="min-w-[180px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bucket</label>
+                <label className="block text-[13px] font-medium text-inkmuted mb-1.5">Bucket</label>
                 <MultiSelect
                   options={uniqueBuckets}
                   onValueChange={setSelectedBuckets}
@@ -638,16 +638,16 @@ export default function BulkBucketAssignPage() {
               </div>
               {/* Status Filter */}
               <div className="min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+                <label className="block text-[13px] font-medium text-inkmuted mb-1.5">Status Filter</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                  <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
+                  <SelectContent className="bg-white border-line">
+                    <SelectItem value="all" className="text-ink hover:bg-secondary">All</SelectItem>
                     {filterOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">{option.label}</SelectItem>
+                      <SelectItem key={option.value} value={option.value} className="text-ink hover:bg-secondary">{option.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -666,7 +666,7 @@ export default function BulkBucketAssignPage() {
           </div>
           {/* Search Bar */}
           <div className="flex-1 min-w-[200px] max-w-[400px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search Candidates</label>
+            <label className="block text-[13px] font-medium text-inkmuted mb-1.5">Search Candidates</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -807,7 +807,7 @@ export default function BulkBucketAssignPage() {
                       <SelectTrigger className="w-full bg-gray-900 border-blue-500 text-white placeholder:text-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
                         <SelectValue placeholder="Choose a program status" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-blue-500">
+                      <SelectContent className="bg-white border-line">
                         {uniqueBuckets.map((bucket) => (
                           <SelectItem key={bucket.value} value={bucket.value} className="text-white hover:bg-blue-600 focus:bg-blue-600 focus:text-white">
                             {bucket.label}
@@ -822,7 +822,7 @@ export default function BulkBucketAssignPage() {
                     <Button
                       onClick={handleBulkAssign}
                       disabled={!assignBucket || isAssigning}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
+                      className="w-full bg-ink text-white hover:bg-ink/90 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
                     >
                       {isAssigning ? 'Updating...' : `Update Status for ${selected.length} Candidate${selected.length !== 1 ? 's' : ''}`}
                     </Button>
@@ -928,7 +928,7 @@ export default function BulkBucketAssignPage() {
                       <SelectTrigger className="w-full bg-gray-900 border-blue-500 text-white placeholder:text-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20">
                         <SelectValue placeholder="Choose a program status" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-blue-500">
+                      <SelectContent className="bg-white border-line">
                         {uniqueBuckets.map((bucket) => (
                           <SelectItem key={bucket.value} value={bucket.value} className="text-white hover:bg-blue-600 focus:bg-blue-600 focus:text-white">
                             {bucket.label}
@@ -943,7 +943,7 @@ export default function BulkBucketAssignPage() {
                     <Button
                       onClick={handleBulkAssign}
                       disabled={!assignBucket || isAssigning}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
+                      className="w-full bg-ink text-white hover:bg-ink/90 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 font-semibold shadow-lg"
                     >
                       {isAssigning ? 'Updating...' : `Update Status for ${selected.length} Candidate${selected.length !== 1 ? 's' : ''}`}
                     </Button>

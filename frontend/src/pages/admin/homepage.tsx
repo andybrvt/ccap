@@ -623,7 +623,7 @@ export default function Homepage() {
               <div className="md:w-2/5 flex flex-col bg-white">
                 {/* Post Header */}
                 <div className="p-4 border-b flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                  <div className="w-10 h-10 rounded-full bg-secondary border border-line flex items-center justify-center text-ink font-semibold">
                     {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                   </div>
                   <div className="flex-1">
@@ -636,10 +636,10 @@ export default function Homepage() {
                 {selectedPost.featured_dish && (
                   <div className="p-4 border-b">
                     <div className="flex items-center gap-2">
-                      <Utensils className="w-4 h-4 text-orange-500" />
-                      <span className="font-semibold text-gray-900">Featured Dish:</span>
+                      <Utensils className="w-4 h-4 text-warning" />
+                      <span className="font-semibold text-ink">Featured Dish:</span>
                     </div>
-                    <Badge variant="outline" className="mt-2 border-orange-200 text-sm bg-orange-50 text-orange-700">
+                    <Badge variant="outline" className="mt-2 rounded-md border-transparent text-sm bg-warning-soft text-warning">
                       {selectedPost.featured_dish}
                     </Badge>
                   </div>
@@ -648,7 +648,7 @@ export default function Homepage() {
                 {/* Chapter Reflection */}
                 <div className="p-4 flex-1">
                   <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-secondary border border-line flex items-center justify-center text-ink font-semibold flex-shrink-0">
                       {selectedPost.author?.username?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div className="flex-1">

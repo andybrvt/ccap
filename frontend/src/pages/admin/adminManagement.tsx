@@ -136,12 +136,12 @@ export default function AdminManagement() {
             minWidth: '300px',
             render: (admin) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <User className="w-5 h-5 text-blue-600" />
+                    <div className="w-9 h-9 rounded-full bg-secondary border border-line flex items-center justify-center">
+                        <span className="text-ink text-[13px] font-semibold">{(admin.username || admin.email || 'A').substring(0, 2).toUpperCase()}</span>
                     </div>
-                    <div>
-                        <div className="font-semibold text-gray-900">{admin.email}</div>
-                        <div className="text-sm text-gray-500">@{admin.username}</div>
+                    <div className="min-w-0">
+                        <div className="font-medium text-[15px] text-ink truncate">{admin.email}</div>
+                        <div className="text-[13px] text-inkmuted">@{admin.username}</div>
                     </div>
                 </div>
             ),
@@ -152,10 +152,7 @@ export default function AdminManagement() {
             header: 'Date Added',
             minWidth: '150px',
             render: (admin) => (
-                <div className="flex items-center gap-2 text-gray-700">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    <span>{formatDate(admin.created_at)}</span>
-                </div>
+                <span className="text-ink text-sm">{formatDate(admin.created_at)}</span>
             ),
             sortable: true,
         },
@@ -171,7 +168,7 @@ export default function AdminManagement() {
                         variant="outline"
                         onClick={() => handleResetPassword(admin.id)}
                         disabled={isResetting && resetAdminId === admin.id}
-                        className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                        className="text-ink bg-white border-line hover:bg-secondary"
                     >
                         <RefreshCw className={`w-4 h-4 mr-1 ${isResetting && resetAdminId === admin.id ? 'animate-spin' : ''}`} />
                         Reset Password
@@ -186,7 +183,7 @@ export default function AdminManagement() {
             <Layout>
                 <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
                         <p className="text-gray-600">Loading admin data...</p>
                     </div>
                 </div>
@@ -196,19 +193,13 @@ export default function AdminManagement() {
 
     return (
         <Layout>
-            <div className="py-4 px-6">
+            <div className="py-8 px-6 max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <Shield className="w-6 h-6" />
-                            Admin Management
-                        </h1>
-                        <p className="text-gray-600 text-sm mt-1">Manage administrator accounts and permissions</p>
+                        <h1 className="text-[28px] font-semibold text-ink tracking-tight">Admin Management</h1>
+                        <p className="text-inkmuted text-[15px] mt-1">Manage administrator accounts and permissions</p>
                     </div>
-                    <Button
-                        onClick={() => setCreateModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
+                    <Button onClick={() => setCreateModalOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Admin
                     </Button>
@@ -252,8 +243,8 @@ export default function AdminManagement() {
                                     A username will be auto-generated from the email
                                 </p>
                             </div>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                <p className="text-sm text-blue-800">
+                            <div className="bg-canvas border border-line rounded-lg p-3">
+                                <p className="text-sm text-inkmuted">
                                     <strong>Note:</strong> A temporary password will be generated and shown once. Make sure to copy and share it with the new admin.
                                 </p>
                             </div>
@@ -269,7 +260,7 @@ export default function AdminManagement() {
                             <Button
                                 onClick={handleCreateAdmin}
                                 disabled={isCreating || !newAdminEmail.trim()}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                
                             >
                                 {isCreating ? 'Creating...' : 'Create Admin'}
                             </Button>
@@ -282,38 +273,38 @@ export default function AdminManagement() {
                     <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                <CheckCircle className="w-5 h-5 text-success" />
                                 Temporary Password Generated
                             </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
-                            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
-                                <p className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Important - Save This Password!</p>
-                                <p className="text-sm text-yellow-800">
+                            <div className="bg-warning-soft border border-warning/30 rounded-lg p-4">
+                                <p className="text-sm font-semibold text-warning mb-2">Important — save this password</p>
+                                <p className="text-sm text-warning">
                                     This password will only be shown once. Copy it now and share it securely with the admin.
                                 </p>
                             </div>
 
                             <div className="space-y-2">
                                 <Label>Email</Label>
-                                <div className="bg-gray-100 rounded-lg p-3">
+                                <div className="bg-secondary border border-line rounded-lg p-3">
                                     <p className="text-sm font-mono text-gray-900">{generatedEmail}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <Label>Temporary Password</Label>
-                                <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-between">
+                                <div className="bg-secondary border border-line rounded-lg p-3 flex items-center justify-between">
                                     <p className="text-lg font-mono text-gray-900 font-bold">{generatedPassword}</p>
                                     <Button
                                         size="sm"
                                         variant="outline"
                                         onClick={copyPasswordToClipboard}
-                                        className={passwordCopied ? 'bg-green-50 border-green-500' : ''}
+                                        className={passwordCopied ? 'bg-success-soft border-success/40' : ''}
                                     >
                                         {passwordCopied ? (
                                             <>
-                                                <CheckCircle className="w-4 h-4 mr-1 text-green-600" />
+                                                <CheckCircle className="w-4 h-4 mr-1 text-success" />
                                                 Copied!
                                             </>
                                         ) : (
@@ -326,8 +317,8 @@ export default function AdminManagement() {
                                 </div>
                             </div>
 
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                <p className="text-sm text-red-800">
+                            <div className="bg-danger-soft border border-danger/20 rounded-lg p-3">
+                                <p className="text-sm text-danger">
                                     Once you close this window, you won't be able to see this password again. If lost, you'll need to reset the password.
                                 </p>
                             </div>
@@ -335,7 +326,7 @@ export default function AdminManagement() {
                         <DialogFooter>
                             <Button
                                 onClick={() => setPasswordModalOpen(false)}
-                                className="w-full bg-blue-600 hover:bg-blue-700"
+                                className="w-full"
                             >
                                 I've Saved the Password
                             </Button>

@@ -110,7 +110,7 @@ export default function EmailNotifications() {
             <Layout>
                 <div className="py-4 px-6 flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
                         <p className="text-gray-600">Loading email notifications...</p>
                     </div>
                 </div>
@@ -120,18 +120,18 @@ export default function EmailNotifications() {
 
     return (
         <Layout>
-            <div className="py-4 px-6">
+            <div className="py-8 px-6 max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold">Email Notifications</h1>
-                        <p className="text-gray-600 mt-1">
+                        <h1 className="text-[28px] font-semibold text-ink tracking-tight">Email Notifications</h1>
+                        <p className="text-inkmuted text-[15px] mt-1">
                             Manage email addresses that receive notifications when students complete onboarding
                         </p>
                     </div>
 
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-blue-600 hover:bg-blue-700">
+                            <Button>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Email
                             </Button>
@@ -145,7 +145,7 @@ export default function EmailNotifications() {
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                                         Email Address
                                     </label>
                                     <Input
@@ -164,7 +164,6 @@ export default function EmailNotifications() {
                                 <Button
                                     onClick={handleAddEmail}
                                     disabled={isAdding}
-                                    className="bg-blue-600 hover:bg-blue-700"
                                 >
                                     {isAdding ? 'Adding...' : 'Add Email'}
                                 </Button>
@@ -173,18 +172,17 @@ export default function EmailNotifications() {
                     </Dialog>
                 </div>
 
-                <div className="grid gap-4">
+                <div>
                     {emails.length === 0 ? (
                         <Card>
                             <CardContent className="py-8 text-center">
-                                <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">No Email Notifications</h3>
-                                <p className="text-gray-600 mb-4">
+                                <Mail className="h-8 w-8 text-inkmuted/50 mx-auto mb-3" />
+                                <h3 className="text-lg font-semibold text-ink mb-2">No Email Notifications</h3>
+                                <p className="text-[15px] text-inkmuted mb-4">
                                     No email addresses are configured to receive notifications.
                                 </p>
                                 <Button
                                     onClick={() => setIsDialogOpen(true)}
-                                    className="bg-blue-600 hover:bg-blue-700"
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
                                     Add First Email
@@ -192,51 +190,32 @@ export default function EmailNotifications() {
                             </CardContent>
                         </Card>
                     ) : (
-                        emails.map((email) => (
-                            <Card key={email.id}>
-                                <CardContent className="py-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <Mail className="h-5 w-5 text-gray-500" />
-                                            <div>
-                                                <p className="font-medium text-gray-900">{email.email}</p>
-                                                <div className="flex items-center space-x-2 mt-1">
-                                                    <Badge
-                                                        variant={email.is_active ? "default" : "secondary"}
-                                                        className={email.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
-                                                    >
-                                                        {email.is_active ? (
-                                                            <>
-                                                                <CheckCircle className="h-3 w-3 mr-1" />
-                                                                Active
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <XCircle className="h-3 w-3 mr-1" />
-                                                                Inactive
-                                                            </>
-                                                        )}
-                                                    </Badge>
-                                                    <span className="text-xs text-gray-500">
-                                                        Added {new Date(email.created_at).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                            </div>
+                        <div className="bg-white rounded-[10px] border border-line shadow-card divide-y divide-line">
+                        {emails.map((email) => (
+                                    <div key={email.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                                        <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <p className="font-medium text-[15px] text-ink truncate">{email.email}</p>
+                                            <span className={`inline-flex items-center rounded-md text-[13px] font-medium px-2 py-0.5 ${email.is_active ? "bg-success-soft text-success" : "bg-secondary text-inkmuted"}`}>
+                                                {email.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                            <span className="text-[13px] text-inkmuted">
+                                                Added {new Date(email.created_at).toLocaleDateString()}
+                                            </span>
                                         </div>
 
-                                        <div className="flex items-center space-x-2">
+                                        <div className="flex items-center space-x-2 flex-shrink-0">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleToggleActive(email.id)}
-                                                className={email.is_active ? "text-orange-600 border-orange-200 hover:bg-orange-50" : "text-green-600 border-green-200 hover:bg-green-50"}
+                                                className="text-ink bg-white border-line hover:bg-secondary"
                                             >
                                                 {email.is_active ? 'Deactivate' : 'Activate'}
                                             </Button>
 
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-inkmuted hover:text-danger hover:bg-danger-soft">
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </AlertDialogTrigger>
@@ -252,7 +231,7 @@ export default function EmailNotifications() {
                                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                         <AlertDialogAction
                                                             onClick={() => handleDeleteEmail(email.id)}
-                                                            className="bg-red-600 hover:bg-red-700"
+                                                            className="bg-danger hover:bg-danger/90 text-white"
                                                         >
                                                             Delete
                                                         </AlertDialogAction>
@@ -261,19 +240,18 @@ export default function EmailNotifications() {
                                             </AlertDialog>
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        ))
+                        ))}
+                        </div>
                     )}
                 </div>
 
                 {emails.length > 0 && (
-                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <div className="mt-6 p-4 bg-white border border-line rounded-[10px]">
                         <div className="flex items-start space-x-3">
-                            <Settings className="h-5 w-5 text-blue-600 mt-0.5" />
+                            <Settings className="h-4 w-4 text-inkmuted mt-0.5" />
                             <div>
-                                <h3 className="font-medium text-blue-900">How it works</h3>
-                                <p className="text-sm text-blue-700 mt-1">
+                                <h3 className="text-sm font-medium text-ink">How it works</h3>
+                                <p className="text-[13px] text-inkmuted mt-1">
                                     When a student completes their onboarding process, notification emails will be sent to all active email addresses listed above.
                                     You can activate or deactivate individual email addresses as needed.
                                 </p>
