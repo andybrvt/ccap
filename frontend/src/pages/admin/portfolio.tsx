@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFo
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
-import { PROGRAM_STAGE_OPTIONS } from '@/lib/constants';
+import { PROGRAM_STAGE_OPTIONS, getStageBadgeClasses } from '@/lib/constants';
 
 interface Post {
   id: string;
@@ -40,11 +40,11 @@ const getBucketStyling = (bucket: string) => {
     case 'Pre-Apprentice Candidate':
       return 'bg-orange-50 text-orange-700 border-orange-200';
     case 'Apprentice':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
+      return 'bg-blue-50 text-ink border-blue-200';
     case 'Completed Pre-Apprentice':
-      return 'bg-green-50 text-green-700 border-green-200';
+      return 'bg-green-50 text-ink border-green-200';
     case 'Completed Apprentice':
-      return 'bg-purple-50 text-purple-700 border-purple-200';
+      return 'bg-purple-50 text-ink border-purple-200';
     case 'Not Active':
       return 'bg-gray-50 text-gray-700 border-gray-200';
     default:
@@ -344,7 +344,7 @@ export default function Portfolio() {
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-600">Loading student profile...</p>
           </div>
         </div>
@@ -375,33 +375,33 @@ export default function Portfolio() {
 
   return (
     <Layout>
-      <div className="max-w-8xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* LinkedIn-style Bio - Fixed width on large screens */}
           <div className="lg:w-2/4">
             <div className="flex justify-end mb-3">
-              <Button variant="outline" size="sm" onClick={handleOpenEdit} className="border-blue-300 text-blue-700 hover:bg-blue-50">
+              <Button size="sm" onClick={handleOpenEdit}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
             </div>
-            <Card className="shadow-lg border-blue-100">
+            <Card className="shadow-card border-line">
               <CardContent className="p-8">
                 <div className="flex flex-col md:flex-row gap-8">
                   {/* Avatar and Name */}
-                  <div className="flex flex-col items-center md:items-start md:w-1/3 bg-blue-50 rounded-xl p-6 mb-4 md:mb-0">
-                    <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-500 mb-4 border-4 border-blue-200">
+                  <div className="flex flex-col items-center md:items-start md:w-1/3 bg-canvas border border-line rounded-xl p-6 mb-4 md:mb-0">
+                    <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center text-4xl font-bold text-ink mb-4 border-4 border-line">
                       {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                     </div>
-                    <h1 className="text-2xl font-bold text-blue-700 mb-1 text-center md:text-left">
+                    <h1 className="text-2xl font-bold text-ink mb-1 text-center md:text-left">
                       {user.firstName} {user.lastName}
                       {user.preferredName && (
-                        <span className="text-lg text-blue-400 ml-2">({user.preferredName})</span>
+                        <span className="text-lg text-inkmuted ml-2">({user.preferredName})</span>
                       )}
                     </h1>
                     <div className="flex flex-wrap gap-2 mb-2 justify-center md:justify-start">
                       {user.interestedOptions.map((option, i) => (
-                        <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">
+                        <Badge key={i} variant="outline" className="text-xs border-transparent text-inkmuted bg-secondary">
                           {option}
                         </Badge>
                       ))}
@@ -410,14 +410,14 @@ export default function Portfolio() {
                     <div className="flex justify-center md:justify-start mb-2">
                       <Badge
                         variant="outline"
-                        className={`text-xs font-medium ${getBucketStyling(user.bucket)}`}
+                        className={`text-[13px] font-medium rounded-md ${getStageBadgeClasses(user.bucket)}`}
                       >
                         {user.bucket || 'Pre-Apprentice Explorer'}
                       </Badge>
                     </div>
                     {/* Bio Section */}
                     {user.bio && (
-                      <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                      <div className="w-full mt-4 p-4 bg-white rounded-lg border border-line">
                         <p className="text-sm text-gray-700 leading-relaxed">{user.bio}</p>
                       </div>
                     )}
@@ -426,64 +426,64 @@ export default function Portfolio() {
                   {/* Main Info */}
                   <div className="flex-1 flex flex-col gap-6">
                     {/* Contact Row */}
-                    <div className="flex flex-wrap gap-4 text-blue-900 text-sm items-center">
-                      <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-blue-400" />{user.email}</span>
-                      <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-blue-400" />{user.mobileNumber}</span>
-                      <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-blue-400" />{user.city}, {user.state}</span>
+                    <div className="flex flex-wrap gap-4 text-ink text-sm items-center">
+                      <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-inkmuted" />{user.email}</span>
+                      <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-inkmuted" />{user.mobileNumber}</span>
+                      <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-inkmuted" />{user.city}, {user.state}</span>
                     </div>
-                    <hr className="my-2 border-blue-100" />
+                    <hr className="my-2 border-line" />
                     {/* Education */}
                     <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-blue-500" />Education</span>
-                      <span className="ml-7 text-blue-900 text-sm">
-                        <span className="font-semibold text-blue-600">{user.highSchool}</span> <span className="text-gray-500">({user.graduationYear})</span>
+                      <span className="font-semibold text-ink flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-inkmuted" />Education</span>
+                      <span className="ml-7 text-ink text-sm">
+                        <span className="font-medium text-ink">{user.highSchool}</span> <span className="text-gray-500">({user.graduationYear})</span>
                       </span>
                       {user.culinaryTeacher && (
-                        <span className="ml-7 text-blue-600 text-sm font-semibold">
+                        <span className="ml-7 text-ink text-sm font-medium">
                           Culinary Teacher: <span className="text-gray-700 font-normal">{user.culinaryTeacher}</span>
                         </span>
                       )}
                       {user.ccapConnection && (
-                        <span className="ml-7 text-blue-600 text-sm font-semibold">
+                        <span className="ml-7 text-ink text-sm font-medium">
                           C•CAP Connection: <span className="text-gray-700 font-normal">{user.ccapConnection}</span>
                         </span>
                       )}
-                      <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{user.culinaryYears} years</span></span>
+                      <span className="ml-7 text-inkmuted text-sm">Culinary Education: <span className="text-gray-900">{user.culinaryYears} years</span></span>
                     </div>
                     {/* Work */}
                     <div className="flex flex-col gap-1 mt-2">
-                      <span className="font-semibold text-green-700 flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-green-500" />Work</span>
-                      <span className="ml-7 text-green-700 text-sm">
+                      <span className="font-semibold text-ink flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-inkmuted" />Work</span>
+                      <span className="ml-7 text-ink text-sm">
                         <span className="font-semibold">{user.currentJob === "Yes" ? "Currently at" : "Not currently working"}</span>
                         <span className="text-gray-900">{user.currentJob === "Yes" ? ` ${user.currentEmployer}` : ""}</span>
                       </span>
                       {user.pastJob === "Yes" && (
-                        <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{user.pastPosition} at {user.pastEmployer} ({user.pastHours} hrs/week)</span></span>
+                        <span className="ml-7 text-inkmuted text-xs">Past: <span className="text-gray-700">{user.pastPosition} at {user.pastEmployer} ({user.pastHours} hrs/week)</span></span>
                       )}
                     </div>
                     {/* Credentials */}
                     <div className="flex flex-col gap-1 mt-2">
-                      <span className="font-semibold text-purple-700 flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-purple-500" />Credentials</span>
-                      <div className="ml-7 flex flex-col gap-2 text-purple-900 text-sm">
-                        <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">
+                      <span className="font-semibold text-ink flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-inkmuted" />Credentials</span>
+                      <div className="ml-7 flex flex-col gap-2 text-ink text-sm">
+                        <span className="flex items-center gap-1"><FileCheck className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">Resume:</span> <span className="text-gray-900">
                           {user.hasResume === "Yes" ? (
-                            <button onClick={handleAdminViewResume} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                            <button onClick={handleAdminViewResume} className="text-brand font-medium hover:underline transition-colors">
                               View Resume
                             </button>
                           ) : (
                             "Not Provided"
                           )}
                         </span></span>
-                        <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">
+                        <span className="flex items-center gap-1"><Utensils className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">Food Handler:</span> <span className="text-gray-900">
                           {user.foodHandlersCard === "Yes" ? (
-                            <button onClick={handleAdminViewCredential} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                            <button onClick={handleAdminViewCredential} className="text-brand font-medium hover:underline transition-colors">View</button>
                           ) : (
                             user.foodHandlersCard || "No"
                           )}
                         </span></span>
-                        <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">
+                        <span className="flex items-center gap-1"><Shield className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">ServSafe:</span> <span className="text-gray-900">
                           {user.servsafeCredentials === "Yes" ? (
-                            <button onClick={handleAdminViewServSafe} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                            <button onClick={handleAdminViewServSafe} className="text-brand font-medium hover:underline transition-colors">View</button>
                           ) : (
                             user.servsafeCredentials || "No"
                           )}
@@ -492,15 +492,15 @@ export default function Portfolio() {
                     </div>
                     {/* Details */}
                     <div className="flex flex-col gap-1 mt-4">
-                      <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg">Details</span>
-                      <div className="ml-7 flex flex-col gap-y-1 text-xs text-gray-500 bg-blue-50 rounded-lg p-4 border border-blue-100 mt-1">
-                        <span><span className="font-semibold text-blue-700">Date of Birth:</span> <span className="text-gray-900">{user.dateOfBirth}</span></span>
-                        <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{user.transportation}</span></span>
-                        <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{user.availableTimes}</span></span>
-                        <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{user.availableWeekends}</span></span>
-                        <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{user.readyToWork}</span></span>
-                        <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{user.address} {user.address2}</span></span>
-                        <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{user.zipCode}</span></span>
+                      <span className="font-semibold text-ink flex items-center gap-2 text-lg">Details</span>
+                      <div className="ml-7 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm bg-white rounded-lg p-4 border border-line mt-1">
+                        <span className="text-inkmuted">Date of Birth</span><span className="text-ink">{user.dateOfBirth || '—'}</span>
+                        <span className="text-inkmuted">Transportation</span><span className="text-ink">{user.transportation || '—'}</span>
+                        <span className="text-inkmuted">Available Times</span><span className="text-ink">{user.availableTimes || '—'}</span>
+                        <span className="text-inkmuted">Available Weekends</span><span className="text-ink">{user.availableWeekends || '—'}</span>
+                        <span className="text-inkmuted">Ready to Work</span><span className="text-ink">{user.readyToWork || '—'}</span>
+                        <span className="text-inkmuted">Address</span><span className="text-ink">{user.address} {user.address2}</span>
+                        <span className="text-inkmuted">Zip</span><span className="text-ink">{user.zipCode || '—'}</span>
                       </div>
                     </div>
                   </div>
@@ -512,23 +512,23 @@ export default function Portfolio() {
           {/* Instagram-style Posts Grid - Scrollable on large screens */}
           <div className="lg:w-2/4">
             <div className="lg:sticky lg:top-6">
-              <h2 className="text-xl font-semibold mb-4 text-blue-700">Posts</h2>
+              <h2 className="text-xl font-semibold mb-4 text-ink">Posts</h2>
               <div className="lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-2">
                 {loadingPosts ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+                    <Loader2 className="h-8 w-8 animate-spin text-inkmuted" />
                   </div>
                 ) : posts.length === 0 ? (
-                  <div className="text-center py-12 border border-blue-200 rounded-lg bg-blue-50">
-                    <p className="text-blue-600 mb-4">No posts yet.</p>
-                    <p className="text-blue-500 text-sm">This student hasn't shared any posts.</p>
+                  <div className="text-center py-12 border border-line rounded-lg bg-canvas">
+                    <p className="text-inkmuted mb-4">No posts yet.</p>
+                    <p className="text-inkmuted text-sm">This student hasn't shared any posts.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-2 md:gap-4">
                     {posts.map((post) => (
                       <button
                         key={post.id}
-                        className="relative aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none group"
+                        className="relative aspect-square bg-secondary rounded-lg overflow-hidden border border-line focus:outline-none group"
                         onClick={() => handleOpenPost(post)}
                         style={{ width: "100%" }}
                       >
@@ -551,7 +551,7 @@ export default function Portfolio() {
             <div className="space-y-6 py-2">
               {/* Personal */}
               <div>
-                <h3 className="text-sm font-semibold text-blue-700 mb-3">Personal</h3>
+                <h3 className="text-sm font-semibold text-ink mb-3">Personal</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><Label className="mb-1 block">First Name</Label><Input value={editForm.first_name || ""} onChange={(e) => setField("first_name", e.target.value)} /></div>
                   <div><Label className="mb-1 block">Last Name</Label><Input value={editForm.last_name || ""} onChange={(e) => setField("last_name", e.target.value)} /></div>
@@ -564,7 +564,7 @@ export default function Portfolio() {
 
               {/* Address */}
               <div>
-                <h3 className="text-sm font-semibold text-blue-700 mb-3">Address</h3>
+                <h3 className="text-sm font-semibold text-ink mb-3">Address</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><Label className="mb-1 block">Address</Label><Input value={editForm.address || ""} onChange={(e) => setField("address", e.target.value)} /></div>
                   <div><Label className="mb-1 block">Address Line 2</Label><Input value={editForm.address_line2 || ""} onChange={(e) => setField("address_line2", e.target.value)} /></div>
@@ -576,7 +576,7 @@ export default function Portfolio() {
 
               {/* Education */}
               <div>
-                <h3 className="text-sm font-semibold text-blue-700 mb-3">Education</h3>
+                <h3 className="text-sm font-semibold text-ink mb-3">Education</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><Label className="mb-1 block">High School</Label><Input value={editForm.high_school || ""} onChange={(e) => setField("high_school", e.target.value)} /></div>
                   <div><Label className="mb-1 block">Culinary Teacher</Label><Input value={editForm.culinary_teacher || ""} onChange={(e) => setField("culinary_teacher", e.target.value)} /></div>
@@ -588,7 +588,7 @@ export default function Portfolio() {
 
               {/* Work */}
               <div>
-                <h3 className="text-sm font-semibold text-blue-700 mb-3">Work</h3>
+                <h3 className="text-sm font-semibold text-ink mb-3">Work</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="mb-1 block">Currently Employed</Label>
@@ -615,7 +615,7 @@ export default function Portfolio() {
 
               {/* Availability & Relocation */}
               <div>
-                <h3 className="text-sm font-semibold text-blue-700 mb-3">Availability</h3>
+                <h3 className="text-sm font-semibold text-ink mb-3">Availability</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><Label className="mb-1 block">Transportation</Label><Input value={editForm.transportation || ""} onChange={(e) => setField("transportation", e.target.value)} /></div>
                   <div>

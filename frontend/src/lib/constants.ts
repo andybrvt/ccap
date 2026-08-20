@@ -73,3 +73,22 @@ export const CHAPTER_DISH_DROPDOWN_OPTIONS = CHAPTER_DISH_OPTIONS.map(option => 
     value: option,
     label: option
 }));
+
+// Unified program-stage badge styling (tint background + darker text, one radius)
+export const getStageBadgeClasses = (stage?: string): string => {
+    switch (stage) {
+        case 'Pre-Apprentice Explorer':
+            return 'bg-secondary text-inkmuted border-transparent';
+        case 'Pre-Apprentice Candidate':
+            return 'bg-warning-soft text-warning border-transparent';
+        case 'Apprentice':
+            return 'bg-info-soft text-info border-transparent';
+        case 'Completed Pre-Apprentice':
+        case 'Completed Apprentice':
+            return 'bg-success-soft text-success border-transparent';
+        case 'Not Active':
+            return 'bg-secondary text-inkmuted border-transparent';
+        default:
+            return 'bg-secondary text-inkmuted border-transparent';
+    }
+};

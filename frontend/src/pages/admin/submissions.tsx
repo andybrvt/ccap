@@ -17,11 +17,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { MultiSelect } from '@/components/ui/multi-select';
 import DataTable, { Column, FilterOption } from '@/components/ui/data-table';
+import PaginationBar from '@/components/ui/pagination-bar';
 import Layout from '@/components/layout/AdminLayout';
 import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -29,7 +31,7 @@ import { useState as useReactState } from 'react';
 import { api } from '@/lib/apiService';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { toast } from 'sonner';
-import { CCAP_CONNECTION_DROPDOWN_OPTIONS, PROGRAM_STAGE_DROPDOWN_OPTIONS } from '@/lib/constants';
+import { CCAP_CONNECTION_DROPDOWN_OPTIONS, PROGRAM_STAGE_DROPDOWN_OPTIONS, getStageBadgeClasses } from '@/lib/constants';
 
 
 // Custom hook to calculate dynamic itemsPerPage based on available height
@@ -973,26 +975,21 @@ export default function Submissions() {
       header: 'Name',
       minWidth: '200px',
       render: (item) => (
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            <span className="text-gray-900 font-medium text-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-secondary border border-line flex items-center justify-center flex-shrink-0">
+            <span className="text-ink text-[13px] font-semibold">
+              {`${(item.firstName || ' ')[0] || ''}${(item.lastName || ' ')[0] || ''}`.toUpperCase() || '–'}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <span className="text-ink font-medium text-[15px] block truncate">
               {item.firstName} {item.lastName}
               {item.preferredName && (
-                <span className="text-gray-500 ml-1">({item.preferredName})</span>
+                <span className="text-inkmuted font-normal ml-1">({item.preferredName})</span>
               )}
             </span>
-          </div>
-          <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <Mail className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">
+            <span className="text-[13px] text-inkmuted block truncate">
               {item.email}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2 text-xs text-gray-600">
-            <Phone className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">
-              {item.mobileNumber}
             </span>
           </div>
         </div>
@@ -1004,12 +1001,9 @@ export default function Submissions() {
       header: 'Date of Birth',
       minWidth: '100px',
       render: (item) => (
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <span className="text-gray-700 text-sm whitespace-nowrap">
-            {item.dateOfBirth ? format(new Date(item.dateOfBirth), "MMM d, yyyy") : 'Not provided'}
-          </span>
-        </div>
+        <span className="text-ink text-sm whitespace-nowrap">
+          {item.dateOfBirth ? format(new Date(item.dateOfBirth), "MMM d, yyyy") : <span className="text-inkmuted">—</span>}
+        </span>
       ),
       sortable: true,
     },
@@ -1018,14 +1012,9 @@ export default function Submissions() {
       header: 'C•CAP Connection',
       minWidth: '140px',
       render: (item) => (
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <Building className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            <span className="text-gray-700 text-sm">
-              {item.ccapConnection || 'Not specified'}
-            </span>
-          </div>
-        </div>
+        <span className="text-ink text-sm">
+          {item.ccapConnection || <span className="text-inkmuted">—</span>}
+        </span>
       ),
       sortable: true,
     },
@@ -1047,16 +1036,13 @@ export default function Submissions() {
       header: 'Education',
       minWidth: '150px',
       render: (item) => (
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
-            <span className="text-gray-700 text-sm">
-              {item.highSchool}
-            </span>
-          </div>
-          <div className="text-xs text-gray-500">
+        <div>
+          <span className="text-ink text-sm block">
+            {item.highSchool}
+          </span>
+          <span className="text-[13px] text-inkmuted">
             Graduates: {item.graduationYear}
-          </div>
+          </span>
         </div>
       ),
       sortable: true,
@@ -1066,12 +1052,13 @@ export default function Submissions() {
       header: 'Photos',
       minWidth: '90px',
       render: (item) => (
-        <div className="flex items-center space-x-2">
-          <Utensils className={`h-4 w-4 flex-shrink-0 ${item.postCount > 0 ? 'text-orange-500' : 'text-gray-300'}`} />
-          <span className={`text-sm ${item.postCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-            {item.postCount > 0 ? item.postCount : 'None'}
+        item.postCount > 0 ? (
+          <span className="inline-flex items-center justify-center rounded-md bg-secondary text-ink text-[13px] font-medium px-2 py-0.5 min-w-[28px]">
+            {item.postCount}
           </span>
-        </div>
+        ) : (
+          <span className="text-inkmuted">—</span>
+        )
       ),
       sortable: true,
     },
@@ -1080,12 +1067,9 @@ export default function Submissions() {
       header: 'Submitted Date',
       minWidth: '110px',
       render: (item) => (
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
-          <span className="text-gray-700 text-sm whitespace-nowrap">
-            {format(new Date(item.submissionDate), "MMM d, yyyy")}
-          </span>
-        </div>
+        <span className="text-ink text-sm whitespace-nowrap">
+          {format(new Date(item.submissionDate), "MMM d, yyyy")}
+        </span>
       ),
       sortable: true,
     },
@@ -1102,24 +1086,25 @@ export default function Submissions() {
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white border-gray-200">
+            <DropdownMenuContent align="end" className="bg-white border-line p-1.5 w-44">
               <DropdownMenuItem
                 onClick={() => handleViewDetails(item)}
-                className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                className="text-ink opacity-100 rounded-md h-9 px-2.5 hover:bg-secondary focus:bg-secondary cursor-pointer"
               >
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="mr-2 h-4 w-4 text-inkmuted" />
                 View
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setLocation(`/admin/portfolio/${item.id}`)}
-                className="text-gray-900 hover:bg-gray-100 cursor-pointer"
+                className="text-ink opacity-100 rounded-md h-9 px-2.5 hover:bg-secondary focus:bg-secondary cursor-pointer"
               >
-                <Pencil className="mr-2 h-4 w-4" />
+                <Pencil className="mr-2 h-4 w-4 text-inkmuted" />
                 Edit Profile
               </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-line my-1" />
               <DropdownMenuItem
                 onClick={() => handleDeleteClick(item)}
-                className="text-red-600 hover:bg-red-50 cursor-pointer"
+                className="text-danger rounded-md h-9 px-2.5 hover:bg-danger-soft focus:bg-danger-soft focus:text-danger cursor-pointer"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -1143,30 +1128,19 @@ export default function Submissions() {
           {isLoadingPortfolio ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading portfolio...</p>
               </div>
             </div>
           ) : portfolioData && selectedStudent ? (
             <div className="p-6 w-full">
-              {/* Back Button */}
+              {/* Header actions */}
               <div className="mb-6 flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    setShowPortfolioModal(false);
-                    setSelectedStudent(null);
-                    setPortfolioData(null);
-                  }}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span className="font-medium">Back to Submissions</span>
-                </button>
+                <h2 className="text-lg font-semibold text-ink">Student Profile</h2>
                 <Button
-                  variant="outline"
                   size="sm"
                   onClick={() => setLocation(`/admin/portfolio/${selectedStudent.id}`)}
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  className="mr-8"
                 >
                   <Pencil className="h-4 w-4 mr-2" />
                   Open Full Profile
@@ -1176,23 +1150,23 @@ export default function Submissions() {
               <div className="flex flex-col lg:flex-row gap-8">
                 {/* LinkedIn-style Bio - Fixed width on large screens */}
                 <div className="lg:w-2/4">
-                  <Card className="shadow-lg border-blue-100">
+                  <Card className="shadow-card border-line">
                     <CardContent className="p-8">
                       <div className="flex flex-col md:flex-row gap-8">
                         {/* Avatar and Name */}
-                        <div className="flex flex-col items-center md:items-start md:w-1/3 bg-blue-50 rounded-xl p-6 mb-4 md:mb-0">
-                          <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-500 mb-4 border-4 border-blue-200">
+                        <div className="flex flex-col items-center md:items-start md:w-1/3 bg-canvas border border-line rounded-xl p-6 mb-4 md:mb-0">
+                          <div className="w-32 h-32 rounded-full bg-secondary flex items-center justify-center text-4xl font-bold text-ink mb-4 border-4 border-line">
                             {portfolioData.student_profile?.first_name?.charAt(0)}{portfolioData.student_profile?.last_name?.charAt(0)}
                           </div>
-                          <h1 className="text-2xl font-bold text-blue-700 mb-1 text-center md:text-left">
+                          <h1 className="text-2xl font-bold text-ink mb-1 text-center md:text-left">
                             {portfolioData.student_profile?.first_name} {portfolioData.student_profile?.last_name}
                             {portfolioData.student_profile?.preferred_name && (
-                              <span className="text-lg text-blue-400 ml-2">({portfolioData.student_profile?.preferred_name})</span>
+                              <span className="text-lg text-inkmuted ml-2">({portfolioData.student_profile?.preferred_name})</span>
                             )}
                           </h1>
                           <div className="flex flex-wrap gap-2 mb-2 justify-center md:justify-start">
                             {(portfolioData.student_profile?.interests || []).map((option: string, i: number) => (
-                              <Badge key={i} variant="outline" className="text-xs border-blue-300 text-blue-700 bg-blue-100">
+                              <Badge key={i} variant="outline" className="text-xs border-transparent text-inkmuted bg-secondary">
                                 {option}
                               </Badge>
                             ))}
@@ -1205,7 +1179,7 @@ export default function Submissions() {
                           </div>
                           {/* Bio Section */}
                           {portfolioData.student_profile?.bio && (
-                            <div className="w-full mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                            <div className="w-full mt-4 p-4 bg-white rounded-lg border border-line">
                               <p className="text-sm text-gray-700 leading-relaxed">{portfolioData.student_profile?.bio}</p>
                             </div>
                           )}
@@ -1214,64 +1188,64 @@ export default function Submissions() {
                         {/* Main Info */}
                         <div className="flex-1 flex flex-col gap-6">
                           {/* Contact Row */}
-                          <div className="flex flex-wrap gap-4 text-blue-900 text-sm items-center">
-                            <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-blue-400" />{portfolioData.email}</span>
-                            <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-blue-400" />{portfolioData.student_profile?.phone || 'N/A'}</span>
-                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-blue-400" />{portfolioData.student_profile?.city || 'N/A'}, {portfolioData.student_profile?.state || 'N/A'}</span>
+                          <div className="flex flex-wrap gap-4 text-ink text-sm items-center">
+                            <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-inkmuted" />{portfolioData.email}</span>
+                            <span className="flex items-center gap-1"><Phone className="w-4 h-4 text-inkmuted" />{portfolioData.student_profile?.phone || 'N/A'}</span>
+                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-inkmuted" />{portfolioData.student_profile?.city || 'N/A'}, {portfolioData.student_profile?.state || 'N/A'}</span>
                           </div>
-                          <hr className="my-2 border-blue-100" />
+                          <hr className="my-2 border-line" />
                           {/* Education */}
                           <div className="flex flex-col gap-1">
-                            <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-blue-500" />Education</span>
-                            <span className="ml-7 text-blue-900 text-sm">
-                              <span className="font-semibold text-blue-600">{portfolioData.student_profile?.high_school || 'N/A'}</span> <span className="text-gray-500">({portfolioData.student_profile?.graduation_year || 'N/A'})</span>
+                            <span className="font-semibold text-ink flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-inkmuted" />Education</span>
+                            <span className="ml-7 text-ink text-sm">
+                              <span className="font-medium text-ink">{portfolioData.student_profile?.high_school || 'N/A'}</span> <span className="text-gray-500">({portfolioData.student_profile?.graduation_year || 'N/A'})</span>
                             </span>
                             {portfolioData.student_profile?.culinary_teacher && (
-                              <span className="ml-7 text-blue-600 text-sm font-semibold">
+                              <span className="ml-7 text-ink text-sm font-medium">
                                 Culinary Teacher: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.culinary_teacher}</span>
                               </span>
                             )}
                             {portfolioData.student_profile?.ccap_connection && (
-                              <span className="ml-7 text-blue-600 text-sm font-semibold">
+                              <span className="ml-7 text-ink text-sm font-medium">
                                 C•CAP Connection: <span className="text-gray-700 font-normal">{portfolioData.student_profile?.ccap_connection}</span>
                               </span>
                             )}
-                            <span className="ml-7 text-blue-600 text-sm">Culinary Education: <span className="text-gray-900">{portfolioData.student_profile?.culinary_class_years || 0} years</span></span>
+                            <span className="ml-7 text-inkmuted text-sm">Culinary Education: <span className="text-gray-900">{portfolioData.student_profile?.culinary_class_years || 0} years</span></span>
                           </div>
                           {/* Work */}
                           <div className="flex flex-col gap-1 mt-2">
-                            <span className="font-semibold text-green-700 flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-green-500" />Work</span>
-                            <span className="ml-7 text-green-700 text-sm">
+                            <span className="font-semibold text-ink flex items-center gap-2 text-lg"><Briefcase className="w-5 h-5 text-inkmuted" />Work</span>
+                            <span className="ml-7 text-ink text-sm">
                               <span className="font-semibold">{portfolioData.student_profile?.currently_employed === "Yes" ? "Currently at" : "Not currently working"}</span>
                               <span className="text-gray-900">{portfolioData.student_profile?.currently_employed === "Yes" ? ` ${portfolioData.student_profile?.current_employer || 'N/A'}` : ""}</span>
                             </span>
                             {portfolioData.student_profile?.previous_employment === "Yes" && (
-                              <span className="ml-7 text-green-500 text-xs">Past: <span className="text-gray-700">{portfolioData.student_profile?.previous_position || 'N/A'} at {portfolioData.student_profile?.previous_employer || 'N/A'} ({portfolioData.student_profile?.previous_hours_per_week || 0} hrs/week)</span></span>
+                              <span className="ml-7 text-inkmuted text-xs">Past: <span className="text-gray-700">{portfolioData.student_profile?.previous_position || 'N/A'} at {portfolioData.student_profile?.previous_employer || 'N/A'} ({portfolioData.student_profile?.previous_hours_per_week || 0} hrs/week)</span></span>
                             )}
                           </div>
                           {/* Credentials */}
                           <div className="flex flex-col gap-1 mt-2">
-                            <span className="font-semibold text-purple-700 flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-purple-500" />Credentials</span>
+                            <span className="font-semibold text-ink flex items-center gap-2 text-lg"><FileCheck className="w-5 h-5 text-inkmuted" />Credentials</span>
                             <div className="ml-7 flex flex-col gap-2 text-purple-900 text-sm">
-                              <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Resume:</span> <span className="text-gray-900">
+                              <span className="flex items-center gap-2"><FileCheck className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">Resume:</span> <span className="text-gray-900">
                                 {portfolioData.student_profile?.has_resume === "Yes" ? (
-                                  <button onClick={handleAdminViewResume} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                                  <button onClick={handleAdminViewResume} className="text-brand font-medium hover:underline transition-colors">
                                     View Resume
                                   </button>
                                 ) : (
                                   "Not Provided"
                                 )}
                               </span></span>
-                              <span className="flex items-center gap-2"><Utensils className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">Food Handler:</span> <span className="text-gray-900">
+                              <span className="flex items-center gap-2"><Utensils className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">Food Handler:</span> <span className="text-gray-900">
                                 {portfolioData.student_profile?.has_food_handlers_card === "Yes" ? (
-                                  <button onClick={handleAdminViewCredential} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                                  <button onClick={handleAdminViewCredential} className="text-brand font-medium hover:underline transition-colors">View</button>
                                 ) : (
                                   portfolioData.student_profile?.has_food_handlers_card || "No"
                                 )}
                               </span></span>
-                              <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-purple-400" /><span className="font-semibold text-purple-700">ServSafe:</span> <span className="text-gray-900">
+                              <span className="flex items-center gap-2"><Shield className="w-4 h-4 text-inkmuted" /><span className="font-semibold text-ink">ServSafe:</span> <span className="text-gray-900">
                                 {portfolioData.student_profile?.has_servsafe === "Yes" ? (
-                                  <button onClick={handleAdminViewServSafe} className="underline text-blue-600 font-medium hover:text-blue-800 transition-colors">View</button>
+                                  <button onClick={handleAdminViewServSafe} className="text-brand font-medium hover:underline transition-colors">View</button>
                                 ) : (
                                   portfolioData.student_profile?.has_servsafe || "No"
                                 )}
@@ -1280,15 +1254,15 @@ export default function Submissions() {
                           </div>
                           {/* Details */}
                           <div className="flex flex-col gap-1 mt-4">
-                            <span className="font-semibold text-blue-700 flex items-center gap-2 text-lg">Details</span>
-                            <div className="ml-7 flex flex-col gap-y-1 text-xs text-gray-500 bg-blue-50 rounded-lg p-4 border border-blue-100 mt-1">
-                              <span><span className="font-semibold text-blue-700">Date of Birth:</span> <span className="text-gray-900">{portfolioData.student_profile?.date_of_birth || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Transportation:</span> <span className="text-gray-900">{portfolioData.student_profile?.transportation || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{portfolioData.student_profile?.availability?.join(", ") || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{portfolioData.student_profile?.weekend_availability || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{portfolioData.student_profile?.ready_to_work || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{portfolioData.student_profile?.address || 'N/A'} {portfolioData.student_profile?.address_line2 || ''}</span></span>
-                              <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{portfolioData.student_profile?.zip_code || 'N/A'}</span></span>
+                            <span className="font-semibold text-ink flex items-center gap-2 text-lg">Details</span>
+                            <div className="ml-7 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm bg-white rounded-lg p-4 border border-line mt-1">
+                              <span className="text-inkmuted">Date of Birth</span><span className="text-ink">{portfolioData.student_profile?.date_of_birth || '—'}</span>
+                              <span className="text-inkmuted">Transportation</span><span className="text-ink">{portfolioData.student_profile?.transportation || '—'}</span>
+                              <span className="text-inkmuted">Available Times</span><span className="text-ink">{portfolioData.student_profile?.availability?.join(", ") || '—'}</span>
+                              <span className="text-inkmuted">Available Weekends</span><span className="text-ink">{portfolioData.student_profile?.weekend_availability || '—'}</span>
+                              <span className="text-inkmuted">Ready to Work</span><span className="text-ink">{portfolioData.student_profile?.ready_to_work || '—'}</span>
+                              <span className="text-inkmuted">Address</span><span className="text-ink">{portfolioData.student_profile?.address || '—'} {portfolioData.student_profile?.address_line2 || ''}</span>
+                              <span className="text-inkmuted">Zip</span><span className="text-ink">{portfolioData.student_profile?.zip_code || '—'}</span>
                             </div>
                           </div>
                         </div>
@@ -1300,14 +1274,14 @@ export default function Submissions() {
                 {/* Instagram-style Posts Grid - Scrollable on large screens */}
                 <div className="lg:w-2/4">
                   <div className="lg:sticky lg:top-6">
-                    <h2 className="text-xl font-semibold mb-4 text-blue-700">Posts</h2>
+                    <h2 className="text-xl font-semibold mb-4 text-ink">Posts</h2>
                     <div className="lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-2">
                       {portfolioPosts.length > 0 ? (
                         <div className="grid grid-cols-3 gap-2 md:gap-4">
                           {portfolioPosts.map((post: any) => (
                             <button
                               key={post.id}
-                              className="relative aspect-square bg-blue-100 rounded-lg overflow-hidden border border-blue-200 focus:outline-none group hover:opacity-90 transition-opacity"
+                              className="relative aspect-square bg-secondary rounded-lg overflow-hidden border border-line focus:outline-none group hover:opacity-90 transition-opacity"
                               onClick={() => handleOpenPost(post)}
                             >
                               <img src={post.image_url} alt={post.caption || 'Post'} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
@@ -1315,9 +1289,9 @@ export default function Submissions() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-12 border border-blue-200 rounded-lg bg-blue-50">
-                          <p className="text-blue-600 mb-4">No posts yet.</p>
-                          <p className="text-blue-500 text-sm">This student hasn't shared any posts.</p>
+                        <div className="text-center py-12 border border-line rounded-lg bg-canvas">
+                          <p className="text-inkmuted mb-4">No posts yet.</p>
+                          <p className="text-inkmuted text-sm">This student hasn't shared any posts.</p>
                         </div>
                       )}
                     </div>
@@ -1385,12 +1359,12 @@ export default function Submissions() {
       )}
 
       {/* Submissions Table */}
-      <div className="py-4 px-6" ref={containerRef}>
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">C•CAP Student Management</h1>
+      <div className="py-8 px-6 max-w-7xl mx-auto" ref={containerRef}>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-[28px] font-semibold text-ink tracking-tight">C•CAP Student Management</h1>
           {isLoading && !isInitialLoad && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <div className="flex items-center gap-2 text-sm text-inkmuted">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand"></div>
               <span>Updating...</span>
             </div>
           )}
@@ -1398,10 +1372,22 @@ export default function Submissions() {
 
         {/* Initial loading state */}
         {isInitialLoad && isLoading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading student data...</p>
+          <div className="space-y-3">
+            <div className="bg-white rounded-[10px] border border-line p-4">
+              <div className="h-10 bg-secondary rounded-lg animate-pulse" />
+            </div>
+            <div className="bg-white rounded-[10px] border border-line overflow-hidden">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-line last:border-b-0">
+                  <div className="w-9 h-9 rounded-full bg-secondary animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-secondary rounded animate-pulse w-1/3" />
+                    <div className="h-3 bg-secondary rounded animate-pulse w-1/4" />
+                  </div>
+                  <div className="h-6 w-24 bg-secondary rounded-md animate-pulse hidden md:block" />
+                  <div className="h-6 w-16 bg-secondary rounded-md animate-pulse hidden md:block" />
+                </div>
+              ))}
             </div>
           </div>
         ) : (
@@ -1409,26 +1395,26 @@ export default function Submissions() {
 
         <div className="flex flex-col gap-2 pb-4">
           {/* Filter Bar */}
-          <div className="bg-white rounded-lg p-4 w-full">
+          <div className="bg-white rounded-[10px] border border-line shadow-card p-4 w-full">
             <div className="w-full">
               {/* Filters with responsive flex layout */}
               <div className="flex flex-wrap items-end  gap-4">
                 {/* Graduation Year Filter */}
                 <div className="min-w-[150px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     Graduation Year
                   </label>
                   <Select value={selectedGraduationYear || "all"} onValueChange={(value) => setSelectedGraduationYear(value === "all" ? null : value)}>
-                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                       <GraduationCap className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="All Years" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
+                    <SelectContent className="bg-white border-line">
+                      <SelectItem value="all" className="text-ink hover:bg-secondary">
                         All Years
                       </SelectItem>
                       {uniqueGraduationYears.map((year) => (
-                        <SelectItem key={year.value} value={year.value} className="text-gray-900 hover:bg-gray-100">
+                        <SelectItem key={year.value} value={year.value} className="text-ink hover:bg-secondary">
                           {year.label}
                         </SelectItem>
                       ))}
@@ -1438,7 +1424,7 @@ export default function Submissions() {
 
                 {/* State of Residence Filter */}
                 <div className="min-w-[180px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     State of Residence
                   </label>
                   <MultiSelect
@@ -1453,7 +1439,7 @@ export default function Submissions() {
 
                 {/* Bucket Filter */}
                 <div className="min-w-[180px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     Program Stages
                   </label>
                   <MultiSelect
@@ -1468,7 +1454,7 @@ export default function Submissions() {
 
                 {/* C•CAP Connection Filter */}
                 <div className="min-w-[180px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     C•CAP Connection
                   </label>
                   <MultiSelect
@@ -1483,23 +1469,23 @@ export default function Submissions() {
 
                 {/* Status Filter */}
                 <div className="min-w-[150px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     Status Filter
                   </label>
                   <Select value={statusFilter} onValueChange={handleFilterChange}>
-                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                       <Filter className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
+                    <SelectContent className="bg-white border-line">
+                      <SelectItem value="all" className="text-ink hover:bg-secondary">
                         <div className="flex items-center">
                           <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
                           All
                         </div>
                       </SelectItem>
                       {filterOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">
+                        <SelectItem key={option.value} value={option.value} className="text-ink hover:bg-secondary">
                           <div className="flex items-center">
                             {option.icon}
                             {option.label}
@@ -1512,64 +1498,64 @@ export default function Submissions() {
 
                 {/* Onboarding Status Filter */}
                 <div className="min-w-[150px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     Onboarding Status
                   </label>
                   <Select value={onboardingFilter} onValueChange={setOnboardingFilter}>
-                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                       <CheckCircle className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
-                      <SelectItem value="complete" className="text-gray-900 hover:bg-gray-100">Complete</SelectItem>
-                      <SelectItem value="incomplete" className="text-gray-900 hover:bg-gray-100">Incomplete</SelectItem>
+                    <SelectContent className="bg-white border-line">
+                      <SelectItem value="all" className="text-ink hover:bg-secondary">All</SelectItem>
+                      <SelectItem value="complete" className="text-ink hover:bg-secondary">Complete</SelectItem>
+                      <SelectItem value="incomplete" className="text-ink hover:bg-secondary">Incomplete</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Resume Filter */}
                 <div className="min-w-[150px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     Resume
                   </label>
                   <Select value={resumeFilter} onValueChange={setResumeFilter}>
-                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                       <FileCheck className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
-                      <SelectItem value="has" className="text-gray-900 hover:bg-gray-100">Has Resume</SelectItem>
-                      <SelectItem value="no" className="text-gray-900 hover:bg-gray-100">No Resume</SelectItem>
+                    <SelectContent className="bg-white border-line">
+                      <SelectItem value="all" className="text-ink hover:bg-secondary">All</SelectItem>
+                      <SelectItem value="has" className="text-ink hover:bg-secondary">Has Resume</SelectItem>
+                      <SelectItem value="no" className="text-ink hover:bg-secondary">No Resume</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Cooking Photos Filter */}
                 <div className="min-w-[150px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                     Cooking Photos
                   </label>
                   <Select value={photosFilter} onValueChange={setPhotosFilter}>
-                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-gray-50 border-gray-200 text-gray-900">
+                    <SelectTrigger className="w-full min-h-10 text-sm px-3 bg-white border-line text-ink">
                       <Utensils className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">All</SelectItem>
-                      <SelectItem value="has" className="text-gray-900 hover:bg-gray-100">Has Photos</SelectItem>
-                      <SelectItem value="no" className="text-gray-900 hover:bg-gray-100">No Photos</SelectItem>
+                    <SelectContent className="bg-white border-line">
+                      <SelectItem value="all" className="text-ink hover:bg-secondary">All</SelectItem>
+                      <SelectItem value="has" className="text-ink hover:bg-secondary">Has Photos</SelectItem>
+                      <SelectItem value="no" className="text-ink hover:bg-secondary">No Photos</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Reset Button */}
-                <div className="flex items-end">
+                <div className="flex items-end ml-auto">
                   <Button
                     onClick={handleResetFilters}
-                    variant="outline"
-                    className="border-gray-300 h-10 bg-white text-gray-700 hover:bg-gray-50 px-6"
+                    variant="ghost"
+                    className="h-10 text-inkmuted hover:text-ink hover:bg-secondary px-4"
                   >
                     Reset All Filters
                   </Button>
@@ -1582,16 +1568,16 @@ export default function Submissions() {
 
             {/* Search */}
             <div className="flex-1 min-w-[200px] max-w-[400px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-[13px] font-medium text-inkmuted mb-1.5">
                 Search Candidates
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-inkmuted h-4 w-4" />
                 <Input
                   placeholder="Search by name, email, or school"
                   value={searchKey}
                   onChange={(e) => setSearchKey(e.target.value)}
-                  className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
+                  className="pl-10 bg-white border-line text-ink placeholder:text-inkmuted/70"
                 />
                 {searchKey !== debouncedSearchKey && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1683,66 +1669,65 @@ export default function Submissions() {
           defaultSortOrder="desc"
           onRowClick={handleRowClick}
           emptyState={{
-            icon: <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />,
+            icon: <FileText className="h-12 w-12 text-inkmuted/40 mx-auto mb-4" />,
             title: "No submissions found",
             description: "Try adjusting your search or filter criteria",
           }}
+          renderMobileCard={(item) => (
+            <div className="bg-white rounded-[10px] border border-line shadow-card p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-full bg-secondary border border-line flex items-center justify-center flex-shrink-0">
+                  <span className="text-ink text-[13px] font-semibold">
+                    {`${(item.firstName || ' ')[0] || ''}${(item.lastName || ' ')[0] || ''}`.toUpperCase() || '–'}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-ink font-medium text-[15px] block truncate">{item.firstName} {item.lastName}</span>
+                  <span className="text-[13px] text-inkmuted block truncate">{item.email}</span>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-white border-line p-1.5 w-44">
+                    <DropdownMenuItem onClick={() => handleViewDetails(item)} className="text-ink rounded-md h-9 px-2.5 cursor-pointer">
+                      <Eye className="mr-2 h-4 w-4 text-inkmuted" />
+                      View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation(`/admin/portfolio/${item.id}`)} className="text-ink rounded-md h-9 px-2.5 cursor-pointer">
+                      <Pencil className="mr-2 h-4 w-4 text-inkmuted" />
+                      Edit Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-line my-1" />
+                    <DropdownMenuItem onClick={() => handleDeleteClick(item)} className="text-danger rounded-md h-9 px-2.5 cursor-pointer focus:bg-danger-soft focus:text-danger">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap text-[13px] text-inkmuted">
+                <span className={`inline-flex items-center rounded-md text-[13px] font-medium px-2 py-0.5 ${getStageBadgeClasses(item.bucket)}`}>
+                  {item.bucket || 'No stage'}
+                </span>
+                <span className="truncate">{item.highSchool}</span>
+                <span>·</span>
+                <span>{format(new Date(item.submissionDate), "MMM d, yyyy")}</span>
+              </div>
+            </div>
+          )}
         />
 
         {/* Server-side Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 px-2">
-            <div className="text-sm text-gray-600">
-              Showing page {currentPage} of {totalPages} ({totalStudents} total students)
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1 || isLoading}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
-                      disabled={isLoading}
-                      className="min-w-[40px]"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || isLoading}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          disabled={isLoading}
+          summary={`Page ${currentPage} of ${totalPages} (${totalStudents} total students)`}
+        />
         </>
         )}
 
@@ -1994,13 +1979,7 @@ function AssignBucketButton({ submission, onUpdate, currentBucket }: { submissio
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className={`text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${currentBucket === 'Pre-Apprentice Explorer' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-              currentBucket === 'Pre-Apprentice Candidate' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                currentBucket === 'Apprentice' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                  currentBucket === 'Completed Pre-Apprentice' ? 'bg-green-50 text-green-700 border-green-200' :
-                    currentBucket === 'Completed Apprentice' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                      'bg-gray-50 text-gray-700 border-gray-200'
-              }`}
+            className={`text-[13px] font-medium rounded-md cursor-pointer hover:opacity-80 transition-opacity ${getStageBadgeClasses(currentBucket)}`}
             onClick={() => setOpen(true)}
           >
             {currentBucket}
@@ -2029,9 +2008,9 @@ function AssignBucketButton({ submission, onUpdate, currentBucket }: { submissio
               <SelectTrigger className="w-full bg-gray-50 border-gray-200 text-gray-900">
                 <SelectValue placeholder="Select Program Stage" />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
+              <SelectContent className="bg-white border-line">
                 {bucketOptions.map((bucket) => (
-                  <SelectItem key={bucket} value={bucket} className="text-gray-900 hover:bg-gray-100">
+                  <SelectItem key={bucket} value={bucket} className="text-ink hover:bg-secondary">
                     {bucket}
                   </SelectItem>
                 ))}

@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Table as UITable,
   TableBody,
@@ -8,15 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import PaginationBar from '@/components/ui/pagination-bar';
 
 export interface Column<T> {
   key: string;
@@ -51,25 +42,26 @@ export interface TableProps<T> {
   sortable?: boolean;
   defaultSortKey?: string;
   defaultSortOrder?: 'asc' | 'desc';
+  /** When provided, rows render as stacked cards below the md breakpoint. */
+  renderMobileCard?: (item: T) => React.ReactNode;
 }
 
 export default function Table<T extends Record<string, unknown>>({
   data,
   columns,
-  searchPlaceholder = "Search...",
   searchKeys = [],
   filterOptions,
-  onFilterChange,
   itemsPerPage = 10,
   emptyState,
   className = "",
   onRowClick,
   sortable = false,
   defaultSortKey,
-  defaultSortOrder = 'desc'
+  defaultSortOrder = 'desc',
+  renderMobileCard,
 }: TableProps<T>) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm] = useState("");
+  const [statusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState(defaultSortKey || "");
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
@@ -87,7 +79,6 @@ export default function Table<T extends Record<string, unknown>>({
       // Status filtering (if filterOptions provided)
       let matchesFilter = true;
       if (filterOptions && statusFilter !== "all") {
-        // This is a simplified filter - you might need to customize based on your data structure
         matchesFilter = item.status === statusFilter || item.is_analyzed === (statusFilter === "analyzed");
       }
 
@@ -139,22 +130,11 @@ export default function Table<T extends Record<string, unknown>>({
     setCurrentPage(1);
   };
 
-  const handleFilterChange = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-    onFilterChange?.(value);
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
-
   const renderSortIcon = (columnKey: string) => {
     if (!sortable || sortKey !== columnKey) return null;
 
     return (
-      <span className="ml-1">
+      <span className="ml-1 text-inkmuted">
         {sortOrder === 'asc' ? '↑' : '↓'}
       </span>
     );
@@ -162,74 +142,25 @@ export default function Table<T extends Record<string, unknown>>({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {/* Filter Bar */}
-      {/* {(searchKeys.length > 0 || filterOptions) && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              {searchKeys.length > 0 && (
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder={searchPlaceholder}
-                    value={searchTerm}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className="pl-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 focus:border-black focus:ring-1 focus:ring-black"
-                  />
-                </div>
-              )}
-              {filterOptions && (
-                <div className="flex gap-3">
-                  <Select value={statusFilter} onValueChange={handleFilterChange}>
-                    <SelectTrigger className="w-40 bg-gray-50 border-gray-200 text-gray-900">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="all" className="text-gray-900 hover:bg-gray-100">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
-                          All
-                        </div>
-                      </SelectItem>
-                      {filterOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100">
-                          <div className="flex items-center">
-                            {option.icon}
-                            {option.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          </div>
+      {/* Mobile stacked cards */}
+      {renderMobileCard && (
+        <div className="md:hidden space-y-3">
+          {paginatedData.map((item, index) => (
+            <React.Fragment key={index}>{renderMobileCard(item)}</React.Fragment>
+          ))}
         </div>
-      )} */}
-
-      {/* Results count */}
-      {/* <div className="text-sm text-gray-600">
-        Showing {paginatedData.length} of {filteredData.length} items
-        {filteredData.length !== data.length && (
-          <span className="ml-1">
-            (filtered from {data.length} total)
-          </span>
-        )}
-      </div> */}
+      )}
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto min-w-full">
+      <div className={`bg-white rounded-[10px] border border-line shadow-card overflow-hidden ${renderMobileCard ? 'hidden md:block' : ''}`}>
+        <div className="overflow-x-auto min-w-full max-h-[75vh] overflow-y-auto">
           <UITable className="min-w-full">
-            <TableHeader>
-              <TableRow className="bg-gray-50 border-gray-200 hover:bg-gray-50">
+            <TableHeader className="sticky top-0 z-10">
+              <TableRow className="bg-canvas border-line hover:bg-canvas">
                 {columns.map((column) => (
                   <TableHead
                     key={column.key}
-                    className={`font-semibold text-gray-900 border-gray-200 ${column.minWidth ? `min-w-[${column.minWidth}]` : ''
-                      } ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''} ${sortable && column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                    className={`font-semibold text-[13px] text-inkmuted uppercase tracking-wide bg-canvas border-line h-11 ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''} ${sortable && column.sortable ? 'cursor-pointer hover:text-ink' : ''
                       }`}
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
@@ -245,14 +176,13 @@ export default function Table<T extends Record<string, unknown>>({
               {paginatedData.map((item, index) => (
                 <TableRow
                   key={index}
-                  className={`border-gray-200 hover:bg-gray-50 transition-colors`}
+                  className={`border-line hover:bg-canvas/60 transition-colors ${onRowClick ? 'cursor-default' : ''}`}
                   onClick={() => onRowClick?.(item)}
                 >
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}
-                      className={`border-gray-200 ${column.minWidth ? `min-w-[${column.minWidth}]` : ''
-                        } ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}
+                      className={`border-line py-3.5 ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : ''}`}
                     >
                       {column.render ? column.render(item) : String(item[column.key] || '')}
                     </TableCell>
@@ -267,154 +197,32 @@ export default function Table<T extends Record<string, unknown>>({
         {paginatedData.length === 0 && emptyState && (
           <div className="text-center py-12">
             {emptyState.icon}
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-ink mb-1">
               {emptyState.title}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-[15px] text-inkmuted">
               {emptyState.description}
             </p>
           </div>
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4 sm:px-6">
-          {/* Mobile Layout */}
-          <div className="flex flex-col space-y-4 sm:hidden">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-900 font-medium">
-                Page {currentPage} of {totalPages}
-              </div>
-              <div className="text-xs text-gray-600">
-                {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <div className="flex items-center space-x-1">
-                {(() => {
-                  const pages = [];
-                  const showPages = 3;
-                  let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-                  const endPage = Math.min(totalPages, startPage + showPages - 1);
-
-                  if (endPage - startPage + 1 < showPages) {
-                    startPage = Math.max(1, endPage - showPages + 1);
-                  }
-
-                  for (let i = startPage; i <= endPage; i++) {
-                    pages.push(
-                      <Button
-                        key={i}
-                        variant={currentPage === i ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setCurrentPage(i)}
-                        className={
-                          currentPage === i
-                            ? "bg-black hover:bg-gray-800 text-white border-black min-w-[32px] h-8 shadow-sm"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent min-w-[32px] h-8 transition-all duration-200"
-                        }
-                      >
-                        {i}
-                      </Button>
-                    );
-                  }
-                  return pages;
-                })()}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Desktop Layout */}
-          <div className="hidden sm:flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-900 font-medium">
-                Page {currentPage} of {totalPages}
-              </div>
-              <div className="text-xs text-gray-600">
-                Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} items
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
-
-              <div className="flex items-center space-x-1">
-                {(() => {
-                  const pages = [];
-                  const showPages = 3;
-                  let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-                  const endPage = Math.min(totalPages, startPage + showPages - 1);
-
-                  if (endPage - startPage + 1 < showPages) {
-                    startPage = Math.max(1, endPage - showPages + 1);
-                  }
-
-                  for (let i = startPage; i <= endPage; i++) {
-                    pages.push(
-                      <Button
-                        key={i}
-                        variant={currentPage === i ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setCurrentPage(i)}
-                        className={
-                          currentPage === i
-                            ? "bg-black hover:bg-gray-800 text-white border-black min-w-[36px] h-9 shadow-sm"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent min-w-[36px] h-9 transition-all duration-200"
-                        }
-                      >
-                        {i}
-                      </Button>
-                    );
-                  }
-                  return pages;
-                })()}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </div>
+      {/* Mobile empty state */}
+      {renderMobileCard && paginatedData.length === 0 && emptyState && (
+        <div className="md:hidden bg-white rounded-[10px] border border-line text-center py-12">
+          {emptyState.icon}
+          <h3 className="text-lg font-semibold text-ink mb-1">{emptyState.title}</h3>
+          <p className="text-[15px] text-inkmuted">{emptyState.description}</p>
         </div>
       )}
+
+      {/* Pagination */}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        summary={`Showing ${filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredData.length)} of ${filteredData.length} items`}
+      />
     </div>
   );
 }
