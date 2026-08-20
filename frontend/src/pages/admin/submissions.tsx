@@ -1287,7 +1287,6 @@ export default function Submissions() {
                               <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{portfolioData.student_profile?.availability?.join(", ") || 'N/A'}</span></span>
                               <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{portfolioData.student_profile?.weekend_availability || 'N/A'}</span></span>
                               <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{portfolioData.student_profile?.ready_to_work || 'N/A'}</span></span>
-                              <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{portfolioData.student_profile?.willing_to_relocate || 'N/A'} {portfolioData.student_profile?.relocation_states && portfolioData.student_profile.relocation_states.length > 0 && `(${portfolioData.student_profile.relocation_states.join(", ")})`}</span></span>
                               <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{portfolioData.student_profile?.address || 'N/A'} {portfolioData.student_profile?.address_line2 || ''}</span></span>
                               <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{portfolioData.student_profile?.zip_code || 'N/A'}</span></span>
                             </div>
@@ -1448,21 +1447,6 @@ export default function Submissions() {
                     onValueChange={setSelectedStatesOfResidence}
                     defaultValue={selectedStatesOfResidence}
                     placeholder="Select State of Residence"
-                    maxCount={3}
-                  />
-                </div>
-
-                {/* State of Relocation Filter */}
-                <div className="min-w-[180px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    State of Relocation
-                  </label>
-                  <MultiSelect
-                    key={`states-relocation-${selectedStatesOfRelocation.length}`}
-                    options={uniqueStatesOfRelocation}
-                    onValueChange={setSelectedStatesOfRelocation}
-                    defaultValue={selectedStatesOfRelocation}
-                    placeholder="Select State of Relocation"
                     maxCount={3}
                   />
                 </div>
@@ -1960,11 +1944,6 @@ const filterOptions: FilterOption[] = [
     value: 'servsafe',
     label: 'ServSafe Certified',
     icon: <Shield className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
-    value: 'will_relocate',
-    label: 'Willing to Relocate',
-    icon: <MapPin className="w-3 h-3 text-gray-700 mr-2" />,
   },
   {
     value: 'ready_to_work',

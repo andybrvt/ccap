@@ -499,7 +499,6 @@ export default function Portfolio() {
                         <span><span className="font-semibold text-blue-700">Available Times:</span> <span className="text-gray-900">{user.availableTimes}</span></span>
                         <span><span className="font-semibold text-blue-700">Available Weekends:</span> <span className="text-gray-900">{user.availableWeekends}</span></span>
                         <span><span className="font-semibold text-blue-700">Ready to Work:</span> <span className="text-gray-900">{user.readyToWork}</span></span>
-                        <span><span className="font-semibold text-blue-700">Will Relocate:</span> <span className="text-gray-900">{user.willRelocate} {user.relocationStates.length > 0 && `(${user.relocationStates.join(", ")})`}</span></span>
                         <span><span className="font-semibold text-blue-700">Address:</span> <span className="text-gray-900">{user.address} {user.address2}</span></span>
                         <span><span className="font-semibold text-blue-700">Zip:</span> <span className="text-gray-900">{user.zipCode}</span></span>
                       </div>
@@ -616,7 +615,7 @@ export default function Portfolio() {
 
               {/* Availability & Relocation */}
               <div>
-                <h3 className="text-sm font-semibold text-blue-700 mb-3">Availability & Relocation</h3>
+                <h3 className="text-sm font-semibold text-blue-700 mb-3">Availability</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><Label className="mb-1 block">Transportation</Label><Input value={editForm.transportation || ""} onChange={(e) => setField("transportation", e.target.value)} /></div>
                   <div>
@@ -634,14 +633,6 @@ export default function Portfolio() {
                     </Select>
                   </div>
                   <div><Label className="mb-1 block">Available Date</Label><Input placeholder="YYYY-MM-DD" value={editForm.available_date || ""} onChange={(e) => setField("available_date", e.target.value)} /></div>
-                  <div>
-                    <Label className="mb-1 block">Willing to Relocate</Label>
-                    <Select value={editForm.willing_to_relocate || ""} onValueChange={(v) => setField("willing_to_relocate", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem><SelectItem value="Maybe">Maybe</SelectItem></SelectContent>
-                    </Select>
-                  </div>
-                  <div><Label className="mb-1 block">Relocation States (comma-separated)</Label><Input placeholder="CA, NY, TX" value={editForm.relocation_states || ""} onChange={(e) => setField("relocation_states", e.target.value)} /></div>
                 </div>
               </div>
             </div>

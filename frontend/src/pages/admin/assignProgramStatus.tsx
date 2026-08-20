@@ -148,11 +148,6 @@ const filterOptions: FilterOption[] = [
     icon: <Shield className="w-3 h-3 text-gray-700 mr-2" />,
   },
   {
-    value: 'will_relocate',
-    label: 'Willing to Relocate',
-    icon: <MapPin className="w-3 h-3 text-gray-700 mr-2" />,
-  },
-  {
     value: 'ready_to_work',
     label: 'Ready to Work',
     icon: <ClockIcon className="w-3 h-3 text-gray-700 mr-2" />,
@@ -627,17 +622,6 @@ export default function BulkBucketAssignPage() {
                   onValueChange={setSelectedStatesOfResidence}
                   defaultValue={selectedStatesOfResidence}
                   placeholder="Select State of Residence"
-                  maxCount={3}
-                />
-              </div>
-              {/* State of Relocation Filter */}
-              <div className="min-w-[180px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">State of Relocation</label>
-                <MultiSelect
-                  options={uniqueStatesOfRelocation}
-                  onValueChange={setSelectedStatesOfRelocation}
-                  defaultValue={selectedStatesOfRelocation}
-                  placeholder="Select State of Relocation"
                   maxCount={3}
                 />
               </div>

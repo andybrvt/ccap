@@ -1011,35 +1011,6 @@ export default function EditPortfolio() {
                   />
                 </div>
               </div>
-              <div className="space-y-4">
-                <Label>Are you willing to relocate? *</Label>
-                <RadioGroup value={formData.willingToRelocate} onValueChange={(value) => handleInputChange('willingToRelocate', value)}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Yes" id="relocate-yes" />
-                    <Label htmlFor="relocate-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="No" id="relocate-no" />
-                    <Label htmlFor="relocate-no">No</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Maybe" id="relocate-maybe" />
-                    <Label htmlFor="relocate-maybe">Maybe</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              {["Yes", "Maybe"].includes(formData.willingToRelocate) && (
-                <div className="space-y-2">
-                  <Label>Please select one or more states that you are considering for relocation</Label>
-                  <MultiSelect
-                    options={STATES_OPTIONS}
-                    onValueChange={(values) => handleInputChange('relocationStates', values)}
-                    defaultValue={formData.relocationStates}
-                    placeholder="Select relocation states"
-                    maxCount={10}
-                  />
-                </div>
-              )}
             </CardContent>
           </Card>
 
